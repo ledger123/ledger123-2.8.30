@@ -1936,6 +1936,8 @@ sub save {
   }
   
   $form->isblank("transdate", $msg);
+  $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
+  $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
 
   $msg = ucfirst $form->{vc};
   $form->isblank($form->{vc}, $locale->text($msg . " missing!"));

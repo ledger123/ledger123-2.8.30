@@ -1105,6 +1105,8 @@ sub post {
 
   $form->isblank("transdate", $locale->text('Invoice Date missing!'));
   $form->isblank("customer", $locale->text('Customer missing!'));
+  $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
+  $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
 
   # if oldcustomer ne customer redo form
   if (&check_name(customer)) {

@@ -1077,7 +1077,9 @@ sub post {
 
   $form->isblank("transdate", $locale->text('Invoice Date missing!'));
   $form->isblank("vendor", $locale->text('Vendor missing!'));
-  
+  $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
+  $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
+ 
   # if the vendor changed get new values
   if (&check_name(vendor)) {
     &update;

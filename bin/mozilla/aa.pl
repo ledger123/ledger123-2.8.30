@@ -1234,6 +1234,7 @@ sub post {
   # check if there is an invoice number, invoice and due date
   $form->isblank("transdate", $locale->text('Invoice Date missing!'));
   $form->isblank($form->{vc}, $label);
+  $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
   
   $transdate = $form->datetonum(\%myconfig, $form->{transdate});
 
