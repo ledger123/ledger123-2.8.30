@@ -382,11 +382,14 @@ sub form_header {
 |;
 
   if ($form->{type} !~ /_quotation$/) {
+    my $quolabel = ($form->{type} eq 'sales_order') ?  'Quotation Number' : 'RFQ Number';
     $ordnumber = qq|
 	      <tr>
 		<th width=70% align=right nowrap>|.$locale->text('Order Number').qq|</th>
-                <td><input name=ordnumber size=20 value="|.$form->quote($form->{ordnumber}).qq|"></td>|
-		.$form->hide_form(qw(quonumber)).qq|
+                <td><input name=ordnumber size=20 value="|.$form->quote($form->{ordnumber}).qq|"></td>
+	      <tr>
+		<th align=right nowrap>|.$locale->text($quolabel).qq|</th>
+		<td>$form->{quonumber}</td>|.$form->hide_form(qw(quonumber)).qq|
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Order Date').qq| <font color=red>*</font></th>
