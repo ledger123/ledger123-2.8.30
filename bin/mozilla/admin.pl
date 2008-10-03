@@ -493,6 +493,14 @@ sub form_header {
 	  <th align=right>|.$locale->text('Company').qq|</th>
 	  <td><input name=company size=35 value="|.$form->quote($myconfig->{company}).qq|"></td>
 	</tr>
+	<tr>
+	  <th align=right>|.$locale->text('Department').qq|</th>
+	  <td><input name=department size=20 value="|.$form->quote($myconfig->{department}).qq|"></td>
+	</tr>
+	<tr>
+	  <th align=right>|.$locale->text('Warehouse').qq|</th>
+	  <td><input name=warehouse size=20 value="|.$form->quote($myconfig->{warehouse}).qq|"></td>
+	</tr>
       </table>
     </td>
     <td>

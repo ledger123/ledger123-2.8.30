@@ -878,6 +878,21 @@ sub save_member {
     $self->error("$memberfile : $!");
   }
   
+  $self->{department_id} = '';
+  if ($self->{department}){
+     $department = lc $self->{department};
+     my $dbh = DBI->connect($self->{dbconnect}, $self->{dbuser}, $self->{dbpasswd}, {AutoCommit => 0}) or $self->error($DBI::errstr);
+     $self->{department_id} = $dbh->selectrow_array("SELECT id FROM department WHERE LOWER(description) = '$department'");
+     $dbh->disconnect;
+  }
+  $self->{warehouse_id} = '';
+  if ($self->{warehouse}){
+     $warehouse = lc $self->{warehouse};
+     my $dbh = DBI->connect($self->{dbconnect}, $self->{dbuser}, $self->{dbpasswd}, {AutoCommit => 0}) or $self->error($DBI::errstr);
+     $self->{warehouse_id} = $dbh->selectrow_array("SELECT id FROM warehouse WHERE LOWER(description) = '$warehouse'");
+     $dbh->disconnect;
+  }
+
   @config = <CONF>;
   
   seek(CONF, 0, 0);
@@ -999,7 +1014,8 @@ sub config_vars {
              dbconnect dbdriver dbhost dbname dboptions dbpasswd
 	     dbport dbuser email fax menuwidth name numberformat password
 	     outputformat printer role sessionkey sid signature
-	     stylesheet tel templates timeout vclimit);
+	     stylesheet tel templates timeout vclimit
+	     department department_id warehouse warehouse_id);
 
   @conf;
 
