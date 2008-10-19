@@ -172,9 +172,13 @@ sub create_links {
 
   # departments
   if (@{ $form->{all_department} }) {
-    $form->{department} = "$form->{department}--$form->{department_id}";
-    $form->{selectdepartment} = "\n";
-    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{department} = "$form->{department}--$form->{department_id}";
+    	$form->{selectdepartment} = "\n";
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
   }
 
   for (qw(department projectnumber accno currency)) { $form->{"select$_"} = $form->escape($form->{"select$_"},1) }
@@ -189,9 +193,12 @@ sub search {
   $form->all_departments(\%myconfig);
   # departments
   if (@{ $form->{all_department} }) {
-    $selectdepartment = "<option>\n";
-    for (@{ $form->{all_department} }) { $selectdepartment .= qq|<option value="|.$form->quote($_->{description}).qq|--$_->{id}">$_->{description}\n| }
-
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+	$form->{selectdepartment} = qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{department}\n|;
+    } else {
+	$form->{selectdepartment} = "<option>\n";
+	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|<option value="|.$form->quote($_->{description}).qq|--$_->{id}">$_->{description}\n| }
+    }
     @l_department = (qq|<input name="l_department" class=checkbox type=checkbox value=Y>|, $locale->text('Department'));
 
     $department = qq|

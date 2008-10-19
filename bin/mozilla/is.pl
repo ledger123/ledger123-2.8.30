@@ -107,18 +107,26 @@ sub invoice_links {
 
   # departments
   if (@{ $form->{all_department} }) {
-    $form->{selectdepartment} = "\n";
-    $form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
-
-    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{selectdepartment} = "\n";
+    	$form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
+    
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
   }
 
   # warehouses
   if (@{ $form->{all_warehouse} }) {
-    $form->{selectwarehouse} = "\n"; 
-    $form->{warehouse} = "$form->{warehouse}--$form->{warehouse_id}" if $form->{warehouse_id};
+    if ($myconfig{warehouse_id} and $myconfig{role} eq 'user'){
+    	$form->{selectwarehouse} = qq|$myconfig{warehouse}--$myconfig{warehouse_id}\n|;
+    } else { 
+    	$form->{selectwarehouse} = "\n"; 
+    	$form->{warehouse} = "$form->{warehouse}--$form->{warehouse_id}" if $form->{warehouse_id};
 
-    for (@{ $form->{all_warehouse} }) { $form->{selectwarehouse} .= qq|$_->{description}--$_->{id}\n| }
+    	for (@{ $form->{all_warehouse} }) { $form->{selectwarehouse} .= qq|$_->{description}--$_->{id}\n| }
+    }
   }
   
   $form->{employee} = "$form->{employee}--$form->{employee_id}";

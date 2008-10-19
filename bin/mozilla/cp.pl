@@ -43,11 +43,15 @@ sub edit {
   CP->retrieve(\%myconfig, \%$form);
 
   # departments
-  if (@{ $form->{all_department} }) { 
-    $form->{selectdepartment} = "\n";
-    $form->{department} = "$form->{department}--$form->{department_id}" if $form->{department};
-
-    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+  if (@{ $form->{all_department} }) {
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{selectdepartment} = "\n";
+    	$form->{department} = "$form->{department}--$form->{department_id}" if $form->{department};
+    
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
   }
 
   if (@{ $form->{all_language} }) {
@@ -177,12 +181,23 @@ sub payment {
 
   CP->paymentaccounts(\%myconfig, \%$form);
 
-  foreach $item (qw(department business paymentmethod)) {
+  foreach $item (qw(business paymentmethod)) {
     if (@{ $form->{"all_$item"} }) { 
       $form->{"select$item"} = "\n";
       $form->{$item} = qq|$form->{$item}--$form->{"${item}_id"}| if $form->{$item};
 
       for (@{ $form->{"all_$item"} }) { $form->{"select$item"} .= qq|$_->{description}--$_->{id}\n| }
+    }
+  }
+
+  if (@{ $form->{all_department} }) {
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{selectdepartment} = "\n";
+    	$form->{department} = qq|$form->{department}--$form->{department_id}| if $form->{department};
+    
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
     }
   }
 
@@ -336,12 +351,23 @@ sub payments {
     for (@{ $form->{all_language} }) { $form->{selectlanguage} .= qq|$_->{code}--$_->{description}\n| }
   }
   
-  foreach $item (qw(department business paymentmethod)) {
+  foreach $item (qw(business paymentmethod)) {
     if (@{ $form->{"all_$item"} }) { 
       $form->{"select$item"} = "\n";
       $form->{$item} = qq|$form->{$item}--$form->{"${item}_id"}| if $form->{$item};
 
       for (@{ $form->{"all_$item"} }) { $form->{"select$item"} .= qq|$_->{description}--$_->{id}\n| }
+    }
+  }
+
+  if (@{ $form->{all_department} }) {
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{selectdepartment} = "\n";
+    	$form->{department} = qq|$form->{department}--$form->{department_id}| if $form->{department};
+    
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
     }
   }
 
