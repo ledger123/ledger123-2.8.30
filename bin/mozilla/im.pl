@@ -14,6 +14,7 @@
 
 use SL::IM;
 use SL::CP;
+use SL::GL;
  
 1;
 # end of main
@@ -22,11 +23,13 @@ use SL::CP;
 sub import {
 
   %title = ( sales_invoice => 'Sales Invoices',
-	     payment => 'Payments'
+	     payment => 'Payments',
+	     gl => 'General Ledger'
 	   );
 
 # $locale->text('Import Sales Invoices')
 # $locale->text('Import Payments')
+# $locale->text('Import General Ledger')
 
   $msg = "Import $title{$form->{type}}";
   $form->{title} = $locale->text($msg);
@@ -949,4 +952,177 @@ Content-Disposition: attachment; filename="$form->{file}.$form->{filetype}"\n\n|
 
 sub continue { &{ $form->{nextsub} } };
 
+sub im_gl {
+
+  $form->error($locale->text('Import File missing!')) if ! $form->{data};
+
+  @column_index = qw(reference description transdate notes accno accdescription debit credit source memo);
+  @flds = @column_index;
+  unshift @column_index, qw(runningnumber ndx);
+
+  $form->{callback} = "$form->{script}?action=import";
+  for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
+  
+  &xrefhdr;
+  
+  IM->gl(\%myconfig, \%$form);
+
+  $column_data{runningnumber} = "&nbsp;";
+  $column_data{reference} = $locale->text('Reference');
+  $column_data{description} = $locale->text('Description');
+  $column_data{transdate} = $locale->text('Date');
+  $column_data{notes} = $locale->text('Notes');
+  $column_data{accno} = $locale->text('Account');
+  $column_data{accdescription} = $locale->text('Account Description');
+  $column_data{debit} = $locale->text('Debit');
+  $column_data{credit} = $locale->text('Credit');
+  $column_data{source} = $locale->text('Source');
+  $column_data{memo} = $locale->text('Memo');
+
+  $form->header;
+ 
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr class=listheading>
+|;
+
+  for (@column_index) { print "\n<th>$column_data{$_}</th>" }
+
+  print qq|
+        </tr>
+|;
+  my $debit_total, $credit_total;
+  for $i (1 .. $form->{rowcount}) {
+    
+    $j++; $j %= 2;
+ 
+    print qq|
+      <tr class=listrow$j>
+|;
+
+    for (@column_index) { $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>| }
+    $column_data{debit} = qq|<td>|. $form->format_amount(\%myconfig, $form->{"debit_$i"}, $form->{precision}) . qq|</td>|;
+    $column_data{credit} = qq|<td>| . $form->format_amount(\%myconfig, $form->{"credit_$i"}, $form->{precision}) . qq|</td>|;
+
+    $column_data{runningnumber} = qq|<td align=right>$i</td>|;
+    if ($form->{"accdescription_$i"} eq '*****'){
+       $column_data{ndx} = qq|<td>&nbsp;</td>|;
+    } else {
+       $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='Y' checked></td>|;
+       $debit_total += $form->{"debit_$i"};
+       $credit_total += $form->{"credit_$i"};
+    }
+    for (@column_index) { print $column_data{$_} }
+
+    print qq|
+	</tr>
+|;
+    $form->hide_form(map { "${_}_$i" } @flds);
+  }
+  # print total
+  for (@column_index) { $column_data{$_} = qq|<td>&nbsp;</td>| }
+  $column_data{debit} = qq|<td>|. $form->format_amount(\%myconfig, $debit_total, $form->{precision}) . qq|</td>|;
+  $column_data{credit} = qq|<td>| . $form->format_amount(\%myconfig, $credit_total, $form->{precision}) . qq|</td>|;
+
+  print qq|
+        <tr class=listtotal>
+|;
+
+  for (@column_index) { print "\n$column_data{$_}" }
+  
+  print qq|
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+
+</table>
+|;
+  
+  $form->hide_form(qw(precision rowcount type login path callback));
+
+  if ($debit_total == $credit_total){
+    print qq|
+<input name=action class=submit type=submit value="|.$locale->text('Import GL').qq|">|;
+  } else {
+    $form->error($locale->text('Debits and credits are not equal. Cannot import'));
+  }
+
+print qq|
+</form>
+
+</body>
+</html>
+|;
+
+}
+
+sub import_gl {
+
+  my $m = 0;
+
+  $newform = new Form;
+  my $reference = 'null';
+  my $linenum = 1;
+  
+  for my $i (1 .. $form->{rowcount}) {
+    if ($form->{"ndx_$i"}) {
+
+      $m++;
+      if ($form->{"reference_$i"} ne $reference){
+	# Post if it is a new transaction or last transaction.
+	if ($reference ne 'null'){
+	   $newform->{rowcount} = $linenum;
+      	   $form->info("${m}. ".$locale->text('Posting gl transaction ...'));
+      	   if (GL->post_transaction(\%myconfig, \%$newform)) {
+		$form->info(qq| $reference|);
+		$form->info(" ... ".$locale->text('ok')."\n");
+      		for (keys %$newform) { delete $newform->{$_} };
+      	   } else {
+		$form->error($locale->text('Posting failed!'));
+      	   }
+	   # start new transaction
+	   $linenum = 1;
+	}
+	$reference = $form->{"reference_$i"};
+      }
+      
+      $newform->{reference} = $form->{"reference_$i"};
+      $newform->{transdate} = $form->{"transdate_$i"};
+      $newform->{description} = $form->{"description_$i"};
+      $newform->{defaultcurrency} = 'GBP';
+      $newform->{"accno_$linenum"} = qq|$form->{"accno_$i"}--$form->{"accdescription_$i"}|;
+      $newform->{"debit_$linenum"} = $form->{"debit_$i"};
+      $newform->{"credit_$linenum"} = $form->{"credit_$i"};
+      $newform->{"source_$linenum"} = $form->{"source_$i"};
+      $newform->{"memo_$linenum"} = $form->{"memo_$i"};
+      $linenum++;
+    }
+  }
+
+  # Now post last transaction. (Code duplicated from above loop)
+  $newform->{rowcount} = $linenum;
+  $form->info("${m}. ".$locale->text('Posting last gl transaction ...'));
+  if (GL->post_transaction(\%myconfig, \%$newform)) {
+     $form->info(qq| $reference|);
+     $form->info(" ... ".$locale->text('ok')."\n");
+     for (keys %$newform) { delete $newform->{$_} };
+  } else {
+     $form->error($locale->text('Posting failed!'));
+  }
+}
 

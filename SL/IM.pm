@@ -609,6 +609,44 @@ sub unreconciled_payments {
 
 }
 
+sub gl {
+  my ($self, $myconfig, $form) = @_;
+
+  my $dbh = $form->dbconnect($myconfig);
+
+  my $query;
+  my $ref;
+  
+  my %defaults = $form->get_defaults($dbh, \@{['precision']});
+  $form->{precision} = $defaults{precision};
+
+  $query = qq|SELECT id, description FROM chart WHERE accno = ?|;
+  my $cth = $dbh->prepare($query) || $form->dberror($query);
+ 
+  my @d = split /\n/, $form->{data};
+  shift @d if ! $form->{mapfile};
+
+  for (@d) {
+    @a = &ndxline($form);
+    if (@a) {
+      $i++;
+      for (keys %{$form->{$form->{type}}}) {
+	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
+	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
+      }
+      $cth->execute("$a[$form->{$form->{type}}->{accno}{ndx}]");
+      if ($ref = $cth->fetchrow_hashref(NAME_lc)) {
+	$form->{"accdescription_$i"} = $ref->{description};
+      } else {
+	$form->{"accdescription_$i"} = '*****';
+      }
+    }
+    $form->{rowcount} = $i;
+  }
+  $cth->finish;
+  $dbh->disconnect;
+  chop $form->{ndx};
+}
 
 1;
 
