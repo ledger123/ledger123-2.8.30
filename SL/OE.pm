@@ -1522,6 +1522,27 @@ sub project_description {
 
 }
 
+sub get_warehouses {
+  my ($self, $myconfig, $form) = @_;
+  
+  my $dbh = $form->dbconnect($myconfig);
+  # setup warehouses
+  my $query = qq|SELECT id, description
+                 FROM warehouse
+		 ORDER BY 2|;
+
+  my $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{all_warehouse} }, $ref;
+  }
+  $sth->finish;
+
+  $dbh->disconnect;
+
+}
+
 
 sub save_inventory {
   my ($self, $myconfig, $form) = @_;
@@ -1855,6 +1876,56 @@ sub get_inventory {
   $sth->finish;
 
   $dbh->disconnect;
+
+}
+
+sub transfer {
+  my ($self, $myconfig, $form) = @_;
+  
+  my $dbh = $form->dbconnect_noauto($myconfig);
+  
+  ($form->{employee}, $form->{employee_id}) = $form->get_employee($dbh);
+  
+  my @a = localtime;
+  $a[5] += 1900;
+  $a[4]++;
+  $a[4] = substr("0$a[4]", -2);
+  $a[3] = substr("0$a[3]", -2);
+  $shippingdate = "$a[5]$a[4]$a[3]";
+
+  my %total = ();
+
+  my $query = qq|INSERT INTO inventory
+                 (warehouse_id, parts_id, qty, shippingdate, employee_id)
+		 VALUES (?, ?, ?, '$shippingdate', $form->{employee_id})|;
+  $sth = $dbh->prepare($query) || $form->dberror($query);
+
+  my $qty;
+  
+  for my $i (1 .. $form->{rowcount}) {
+    $qty = $form->parse_amount($myconfig, $form->{"transfer_$i"});
+
+    $qty = $form->{"qty_$i"} if ($qty > $form->{"qty_$i"});
+
+    if ($qty > 0) {
+      # to warehouse
+      if ($form->{warehouse_id}) {
+	$sth->execute($form->{warehouse_id}, $form->{"id_$i"}, $qty) || $form->dberror;
+	$sth->finish;
+      }
+      
+      # from warehouse
+      if ($form->{"warehouse_id_$i"}) {
+	$sth->execute($form->{"warehouse_id_$i"}, $form->{"id_$i"}, $qty * -1) || $form->dberror;
+	$sth->finish;
+      }
+    }
+  }
+
+  my $rc = $dbh->commit;
+  $dbh->disconnect;
+
+  $rc;
 
 }
 
