@@ -11,11 +11,39 @@
 #
 #======================================================================
 
-
 use SL::BP;
 
 1;
 # end of main
+
+
+# this is for our long dates
+# $locale->text('January')
+# $locale->text('February')
+# $locale->text('March')
+# $locale->text('April')
+# $locale->text('May ')
+# $locale->text('June')
+# $locale->text('July')
+# $locale->text('August')
+# $locale->text('September')
+# $locale->text('October')
+# $locale->text('November')
+# $locale->text('December')
+
+# this is for our short month
+# $locale->text('Jan')
+# $locale->text('Feb')
+# $locale->text('Mar')
+# $locale->text('Apr')
+# $locale->text('May')
+# $locale->text('Jun')
+# $locale->text('Jul')
+# $locale->text('Aug')
+# $locale->text('Sep')
+# $locale->text('Oct')
+# $locale->text('Nov')
+# $locale->text('Dec')
 
 
 sub search {
@@ -397,6 +425,8 @@ sub print {
 
       do "$form->{path}/$form->{script}";
 
+      $form->{shipto} = 1;
+      
       if ($myform->{"module_$i"} eq 'oe') {
 	&order_links;
 	&prepare_order;
@@ -858,7 +888,7 @@ function CheckAll() {
   
   $format = qq|<select name=format>$selectformat</select>|;
   $format =~ s/(<option value="\Q$form->{format}\E")/$1 selected/;
-  $format = qq|<td width=1%>$format</td>|;
+  $format = qq|<td>$format</td>|;
  
   if ($form->{batch} eq 'email') {
     $message = qq|<tr>
@@ -874,7 +904,7 @@ function CheckAll() {
   if ($form->{batch} eq 'queue') {
     $format = "";
     $copies = "";
-    $media = "" if ! %printer;
+    $media = "" unless %printer;
   }
 
 

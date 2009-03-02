@@ -78,8 +78,8 @@ sub new {
 
   $self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
-  $self->{version} = "2.8.18";
-  $self->{dbversion} = "2.8.8";
+  $self->{version} = "2.8.23";
+  $self->{dbversion} = "2.8.9";
 
   bless $self, $type;
   
@@ -644,9 +644,9 @@ sub parse_template {
 	
 	# this one we need for the count
 	chomp $var;
-	$var =~ s/.*?<%foreach (.+?)%>/$1/;
+	$var =~ s/.*?<%foreach\s+?(.+?)%>/$1/;
 	while ($_ = shift) {
-	  last if (/<%end \Q$var\E%>/);
+	  last if /<%end \Q$var\E%>/;
 
 	  # store line in $par
 	  $par .= $_;
@@ -710,31 +710,42 @@ sub parse_template {
 	  }
 
 	  # don't parse par, we need it for each line
-	  print OUT $self->format_line($par, 1, $i);
+	  print OUT $self->format_line($par, $i);
 	  
 	}
 	next;
       }
 
       # if not comes before if!
-      if (/<%if not /) {
+      if (/<%if\s+?not /) {
 	# check if it is not set and display
 	chop;
-	s/.*?<%if not (.+?)%>/$1/;
+	s/.*?<%if\s+?not\s+?(.+?)%>/$1/;
 
-	if (! $self->{$_}) {
-	  while ($_ = shift) {
-	    last if /<%end /;
+	$var = $1;
 
-	    # store line in $par
-	    $par .= $_;
+	if (! $self->{$var}) {
+	  s/^$var//;
+
+	  if (/<%end /) {
+	    s/<%end\s+?$var%>//;
+	    $par = $_;
+	  } else {
+	    $par = $_;
+	    while ($_ = shift) {
+	      last if /<%end /;
+	      # store line in $par
+	      $par .= $_;
+	    }
 	  }
 	  
-	  $_ = $par;
+	  $_ = $var = $par;
 	  
 	} else {
-	  while ($_ = shift) {
-	    last if /<%end /;
+	  if (! /<%end /) {
+	    while ($_ = shift) {
+	      last if /<%end /;
+	    }
 	  }
 	  next;
 	}
@@ -743,27 +754,38 @@ sub parse_template {
       if (/<%if /) {
 	# check if it is set and display
 	chop;
-	s/.*?<%if (.+?)%>/$1/;
+	s/.*?<%if\s+?(.+?)%>/$1/;
 
-	if (/\s/) {
-	  @a = split;
-	  $ok = eval "$self->{$a[0]} $a[1] $a[2]";
+	$var = $1;
+
+	if ($var =~ /\s/) {
+	  @a = split / /, $var, 3;
+	  $ok = eval qq|$self->{$a[0]} $a[1] "$a[2]"|;
 	} else {
-	  $ok = $self->{$_};
+	  $ok = $self->{$var};
 	}
 	  
 	if ($ok) {
-	  while ($_ = shift) {
-	    last if /<%end /;
-	    # store line in $par
-	    $par .= $_;
+	  s/^$var//;
+	  if (/<%end /) {
+	    s/<%end\s+?$var%>//;
+	    $par = $_;
+	  } else {
+	    $par = $_;
+	    while ($_ = shift) {
+	      last if /<%end /;
+	      # store line in $par
+	      $par .= $_;
+	    }
 	  }
 	  
-	  $_ = $par;
+	  $_ = $var = $par;
 	  
 	} else {
-	  while ($_ = shift) {
-	    last if /<%end /;
+	  if (! /<%end /) {
+	    while ($_ = shift) {
+	      last if /<%end /;
+	    }
 	  }
 	  next;
 	}
@@ -774,7 +796,7 @@ sub parse_template {
 	
 	# get the filename
 	chomp $var;
-	$var =~ s/.*?<%include (.+?)%>/$1/;
+	$var =~ s/.*?<%include\s+?(.+?)%>/$1/;
 
 	# remove / .. for security reasons
 	$var =~ s/(\/|\.\.)//g;
@@ -954,7 +976,6 @@ sub format_line {
   my $self = shift;
 
   $_ = shift;
-  my $arr = shift;
   my $i = shift;
   
   my $str;
@@ -982,31 +1003,36 @@ sub format_line {
       }
     }
 
-    $str = ($arr) ? $self->{$var}[$i] : $self->{$var};
+    if (defined $i) {
+      $str = $self->{$var}[$i];
+    } else {
+      $str = $self->{$var};
+    }
     $newstr = $str;
 
     $var = $1;
+
     if ($var =~ /^if\s+not\s+/) {
       if ($str) {
-	$var =~ s/if\s+not\s+//;
-	s/<%if\s+not\s+$var%>.*?(<%end\s+$var%>|$)//s;
+	$var =~ s/if\s+?not\s+?//;
+	s/<%if\s+not\s+?$var%>.*?(<%end\s+?$var%>|$)//s;
       } else {
 	s/<%$var%>//;
       }
       next;
     }
 
-    if ($var =~ /^if\s+/) {
+    if ($var =~ /^if /) {
       if ($str) {
 	s/<%$var%>//;
       } else {
-	$var =~ s/if\s+//;
-	s/<%if\s+$var%>.*?(<%end\s+$var%>|$)//s;
+	$var =~ s/if\s+?//;
+	s/<%if\s+?$var%>.*?(<%end\s+?$var%>|$)//s;
       }
       next;
     }
 
-    if ($var =~ /^end\s+/) {
+    if ($var =~ /^end /) {
       s/<%$var%>//;
       next;
     }
@@ -1586,7 +1612,13 @@ sub save_exchangerate {
 
 
 sub get_exchangerate {
-  my ($self, $dbh, $curr, $transdate, $fld) = @_;
+  my ($self, $myconfig, $dbh, $curr, $transdate, $fld) = @_;
+  
+  my $disconnect = ($dbh) ? 0 : 1;
+
+  if (! $dbh) {
+    $dbh = $self->dbconnect($myconfig);
+  }
   
   my $exchangerate = 1;
 
@@ -1596,6 +1628,8 @@ sub get_exchangerate {
 		   AND transdate = '$transdate'|;
     ($exchangerate) = $dbh->selectrow_array($query);
   }
+
+  $dbh->disconnect if $disconnect;
 
   $exchangerate;
 
@@ -1736,11 +1770,10 @@ sub get_name {
 sub get_currencies {
   my ($self, $dbh, $myconfig) = @_;
   
-  my $disconnect = 0;
+  my $disconnect = ($dbh) ? 0 : 1;
   
   if (! $dbh) {
     $dbh = $self->dbconnect($myconfig);
-    $disconnect = 1;
   }
 
   my $currencies;
@@ -1802,14 +1835,14 @@ sub get_defaults {
 sub all_vc {
   my ($self, $myconfig, $vc, $module, $dbh, $transdate, $job, $openinv) = @_;
   
-  my $ref;
-  my $disconnect = 0;
+  my $disconnect = ($dbh) ? 0 : 1;
   
   if (! $dbh) {
     $dbh = $self->dbconnect($myconfig);
-    $disconnect = 1;
   }
+
   my $sth;
+  my $ref;
   
   my $query;
   my $arap = lc $module;
@@ -1978,6 +2011,7 @@ sub all_projects {
   my ($self, $myconfig, $dbh, $transdate, $job) = @_;
 
   my $disconnect = ($dbh) ? 0 : 1;
+
   if (! $dbh) {
     $dbh = $self->dbconnect($myconfig);
   }
@@ -2024,10 +2058,10 @@ sub all_projects {
 sub all_departments {
   my ($self, $myconfig, $dbh, $vc) = @_;
   
-  my $disconnect = 0;
+  my $disconnect = ($dbh) ? 0 : 1;
+  
   if (! $dbh) {
     $dbh = $self->dbconnect($myconfig);
-    $disconnect = 1;
   }
   
   my $where = "1 = 1";
@@ -2061,10 +2095,10 @@ sub all_departments {
 sub all_warehouses {
   my ($self, $myconfig, $dbh, $vc) = @_;
   
-  my $disconnect = 0;
+  my $disconnect = ($dbh) ? 0 : 1;
+  
   if (! $dbh) {
     $dbh = $self->dbconnect($myconfig);
-    $disconnect = 1;
   }
   
   my $query = qq|SELECT id, description
@@ -2088,10 +2122,10 @@ sub all_warehouses {
 sub all_years {
   my ($self, $myconfig, $dbh) = @_;
   
-  my $disconnect = 0;
+  my $disconnect = ($dbh) ? 0 : 1;
+
   if (! $dbh) {
     $dbh = $self->dbconnect($myconfig);
-    $disconnect = 1;
   }
  
   # get years
@@ -2319,14 +2353,12 @@ sub create_lock {
   my ($self, $myconfig, $dbh, $id, $module) = @_;
   
   my $query;
-  
-  my $disconnect = 0;
   my $expires = time;
   
+  my $disconnect = ($dbh) ? 0 : 1;
   
   if (! $dbh) {
     $dbh = $self->dbconnect($myconfig);
-    $disconnect = 1;
   }
  
   # remove expired locks
@@ -2334,10 +2366,9 @@ sub create_lock {
               WHERE expires < '$expires'|;
   $dbh->do($query) || $self->dberror($query);
 	      
-  $expires = time + $myconfig{timeout};
+  $expires = time + $myconfig->{timeout};
   
   if ($id) {
-    $self->{readonly} = 1;
     $query = qq|SELECT id, login FROM semaphore
 		WHERE id = $id|;
     my ($readonly, $login) = $dbh->selectrow_array($query);
@@ -2347,11 +2378,11 @@ sub create_lock {
       $query = qq|SELECT name FROM employee
 		  WHERE login = '$login'|;
       ($self->{haslock}) = $dbh->selectrow_array($query);
+      $self->{readonly} = 1;
     } else {
       $query = qq|INSERT INTO semaphore (id, login, module, expires)
 		  VALUES ($id, '$self->{login}', '$module', '$expires')|;
       $dbh->do($query) || $self->dberror($query);
-      $self->{readonly} = 0;
     }
   }
    
@@ -2363,10 +2394,10 @@ sub create_lock {
 sub remove_locks {
   my ($self, $myconfig, $dbh, $module) = @_;
   
-  my $disconnect = 0;
+  my $disconnect = ($dbh) ? 0 : 1;
+
   if (! $dbh) {
     $dbh = $self->dbconnect($myconfig);
-    $disconnect = 1;
   }
 
   my $query = qq|DELETE FROM semaphore
@@ -2731,10 +2762,10 @@ sub get_recurring {
 sub save_recurring {
   my ($self, $dbh, $myconfig) = @_;
 
-  my $disconnect = 0;
+  my $disconnect = ($dbh) ? 0 : 1;
+
   if (! $dbh) {
     $dbh = $self->dbconnect_noauto($myconfig);
-    $disconnect = 1;
   }
   
   my $query;
@@ -3297,11 +3328,10 @@ sub audittrail {
 
   my $query;
   my $rv;
-  my $disconnect;
+  my $disconnect = ($dbh) ? 0 : 1;
 
   if (! $dbh) {
     $dbh = $self->dbconnect($myconfig);
-    $disconnect = 1;
   }
     
   # if we have an id add audittrail, otherwise get a new timestamp
