@@ -302,7 +302,8 @@ function CheckAll() {
     for (@{ $temp{name} }) { $column_data{name} .= "$_<br>" }
     $column_data{name} .= "</td>";
     $column_data{source} = qq|<td>$temp{source}&nbsp;</td>
-    <input type=hidden name="id_$i" value="$ref->{id}">|;
+    <input type=hidden name="id_$i" value="$ref->{id}">
+    <input type=hidden name="payment_id_$i" value="$ref->{payment_id}">|;
     
     $column_data{debit} = "<td>&nbsp;</td>";
     $column_data{credit} = "<td>&nbsp;</td>";

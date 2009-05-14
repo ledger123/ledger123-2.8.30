@@ -65,7 +65,6 @@ sub payment_transactions {
 
   if ($form->{fromdate}) {
     $transdate = qq| AND ac.transdate < date '$form->{fromdate}'|;
-    $cleared = qq| AND ac.cleared < date '$form->{fromdate}'|;
   } else {
     $cleared = qq| AND ac.cleared IS NOT NULL|;
   }
@@ -79,7 +78,7 @@ sub payment_transactions {
 	      $transdate
 	      $cleared
 	      |;
-  ($form->{beginningbalance}) = $dbh->selectrow_array($query) if $form->{fromdate};
+  ($form->{beginningbalance}) = $dbh->selectrow_array($query);
 
   # fx balance
   $query = qq|SELECT sum(ac.amount)
@@ -98,7 +97,6 @@ sub payment_transactions {
   $cleared = "";
   if ($form->{todate}) {
     $transdate = qq| AND ac.transdate <= date '$form->{todate}'|;
-    $cleared = qq| AND (ac.cleared <= date '$form->{todate}' OR ac.cleared IS NULL)|;
   }
  
   # get statement balance
@@ -144,9 +142,11 @@ sub payment_transactions {
  
   $transdate = "";
   $cleared = "";
-  
+
   if ($form->{fromdate}) {
-    $transdate .= qq| AND (ac.transdate >= '$form->{fromdate}' OR ac.cleared >= '$form->{fromdate}')|;
+    $transdate .= qq| AND ac.transdate >= '$form->{fromdate}'|;
+  } else {
+    $cleared = qq| AND ac.cleared IS NULL|;
   }
   if ($form->{todate}) {
     $transdate .= qq| AND ac.transdate <= '$form->{todate}'|;
@@ -180,7 +180,7 @@ sub payment_transactions {
   for (1 .. 2) {
     $query .= qq|$union
 		SELECT ac.transdate, ac.source, ac.fx_transaction,
-		ac.amount, ac.cleared, g.id, g.description
+		ac.amount, ac.cleared, g.id, g.description, ac.id AS payment_id
 		FROM acc_trans ac
 		JOIN chart ch ON (ac.chart_id = ch.id)
 		JOIN gl g ON (g.id = ac.trans_id)
@@ -191,7 +191,7 @@ sub payment_transactions {
 		$cleared
 		UNION ALL
 		SELECT ac.transdate, ac.source, ac.fx_transaction,
-		ac.amount, ac.cleared, a.id, n.name
+		ac.amount, ac.cleared, a.id, n.name, ac.id AS payment_id
 		FROM acc_trans ac
 		JOIN chart ch ON (ac.chart_id = ch.id)
 		JOIN ar a ON (a.id = ac.trans_id)
@@ -203,7 +203,7 @@ sub payment_transactions {
 		$cleared
 		UNION ALL
 		SELECT ac.transdate, ac.source, ac.fx_transaction,
-		ac.amount, ac.cleared, a.id, n.name
+		ac.amount, ac.cleared, a.id, n.name, ac.id AS payment_id
 		FROM acc_trans ac
 		JOIN chart ch ON (ac.chart_id = ch.id)
 		JOIN ap a ON (a.id = ac.trans_id)
@@ -215,7 +215,7 @@ sub payment_transactions {
 		$cleared|;
 
     last if $form->{report};
-    
+    last; # armaghan: Run single loop only just like for report.
     $union = "UNION ALL";
     
     $transdate = "";
@@ -265,6 +265,7 @@ sub payment_transactions {
 	  push @{ $form->{PR}->[$i]->{name} }, $ref->{description} if $ref->{description} ne $samename;
 	  $form->{PR}->[$i]->{amount} += $ref->{amount};
 	  $form->{PR}->[$i]->{id} .= " $ref->{id}" if $form->{PR}->[$i]->{id} !~ /$ref->{id}/;
+	  $form->{PR}->[$i]->{payment_id} .= " $ref->{payment_id}";
 	}
       } else {
 	push @{ $ref->{name} }, $ref->{description};
@@ -309,12 +310,24 @@ sub reconcile {
 
       $cleared = ($form->{"cleared_$i"}) ? $form->{recdate} : '';
       foreach $trans_id (split / /, $form->{"id_$i"}) {
-	$query = qq|UPDATE acc_trans SET
+	if ($form->{"payment_id_$i"}){
+	   foreach $payment_id (split / /, $form->{"payment_id_$i"}){
+	      $query = qq|UPDATE acc_trans SET
+	            cleared = |.$form->dbquote($cleared, SQL_DATE).qq|
+                    WHERE trans_id = $trans_id 
+		    AND id = $payment_id
+	            AND transdate = '$form->{"transdate_$i"}'
+	            AND chart_id = $chart_id|;
+              $dbh->do($query) || $form->dberror($query);
+	   }
+	} else {
+	   $query = qq|UPDATE acc_trans SET
 	            cleared = |.$form->dbquote($cleared, SQL_DATE).qq|
                     WHERE trans_id = $trans_id 
 	            AND transdate = '$form->{"transdate_$i"}'
 	            AND chart_id = $chart_id|;
-        $dbh->do($query) || $form->dberror($query);
+           $dbh->do($query) || $form->dberror($query);
+	}
       }
       
     }
