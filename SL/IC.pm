@@ -1398,9 +1398,9 @@ sub all_parts {
 	push @a, $_;
 	
 	while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-          if ($ref->{onhand} > 0) {
+          #if ($ref->{onhand} > 0) {
 	    push @a, $ref;
-	  }
+	  #}
 	}
       }
       
