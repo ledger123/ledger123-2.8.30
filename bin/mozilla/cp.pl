@@ -107,6 +107,7 @@ sub edit {
       $i++;
 
       for (qw(id invnumber invdescription transdate duedate calcdiscount discountterms cashdiscount)) { $form->{"${_}_$i"} = $ref->{$_} }
+      $form->{"$form->{vc}_id_$i"} = $ref->{"$form->{vc}_id"};
       $ref->{exchangerate} ||= 1;
       $form->{"netamount_$i"} = $form->round_amount($ref->{netamount} / $ref->{exchangerate}, $form->{precision});
       $form->{amount} += $ref->{paid};
@@ -117,7 +118,6 @@ sub edit {
     }
   }
   $form->{rowcount} = $i;
-  
   $form->{oldcurrency} = $form->{currency};
   $form->{exchangerate} = $form->check_exchangerate(\%myconfig, $form->{currency}, $form->{datepaid}, ($form->{vc} eq 'customer') ? "buy" : "sell");
 
@@ -952,8 +952,10 @@ sub update_payment {
   $currency = $form->{currency};
   $paymentmethod = $form->{paymentmethod};
 
-  if (! $form->{all_vc}) {
+  # Avoid the loop below
+  $form->{$form->{ARAP}} = $form->{"old$form->{ARAP}"};
 
+  if (! $form->{all_vc}) {
     if ($form->{$form->{ARAP}} ne $form->{"old$form->{ARAP}"} ||
 	$form->{business} ne $form->{oldbusiness}) {
       $form->{"old$form->{ARAP}"} = $form->{$form->{ARAP}};

@@ -422,7 +422,7 @@ sub get_openinvoices {
   # remove locks
   $form->remove_locks($myconfig, $dbh, $form->{arap});
   
-  my $where = qq|WHERE a.$form->{vc}_id = $form->{"$form->{vc}_id"}
+  my $where = qq|WHERE vc.$form->{vc}number = '$form->{"$form->{vc}number"}'
 	         AND a.amount != a.paid
 		 AND a.approved = '1'
 		 AND a.onhold = '0'
