@@ -406,7 +406,7 @@ sub gl_search {
 #-------------------------------
 sub gl_list {
   # callback to report list
-   my $callback = qq|$form->{script}?action=onhandvalue_list|;
+   my $callback = qq|$form->{script}?action=gl_list|;
    for (qw(path login)) { $callback .= "&$_=$form->{$_}" }
 
    my $glwhere = qq| (1 = 1)|;
@@ -416,6 +416,8 @@ sub gl_list {
    $glwhere .= qq| AND ac.transdate <= '$form->{todate}'| if $form->{todate};
    my $arwhere = $glwhere;
    my $apwhere = $glwhere;
+
+   for (qw(fromaccount toaccount fromdate todate)){ $callback .= "&$_=".$form->escape($form->{$_},1) }
 
    @columns = qw(id transdate reference description source debit credit balance);
    # if this is first time we are running this report.
@@ -495,7 +497,8 @@ sub gl_list {
 		 ac.amount, c.accno, g.notes, 
 		 ac.cleared, d.description AS department,
 		 ac.memo, '0' AS name_id, '' AS db,
-		 c.description AS accdescription
+		 c.description AS accdescription,
+		 'gl' AS module, FALSE AS invoice
                  FROM gl g
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -509,7 +512,8 @@ sub gl_list {
 		 ac.amount, c.accno, a.notes,
 		 ac.cleared, d.description AS department,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
-		 c.description AS accdescription
+		 c.description AS accdescription,
+		 'ar' AS module, invoice
 		 FROM ar a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -525,7 +529,8 @@ sub gl_list {
 		 ac.amount, c.accno, a.notes,
 		 ac.cleared, d.description AS department,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
-		 c.description AS accdescription
+		 c.description AS accdescription,
+		 'ap' AS module, invoice
 		 FROM ap a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -576,12 +581,12 @@ sub gl_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=onhandvalue_detail&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
 	if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
 	   if ($groupbreak ne 'none'){
 	      for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
               $column_data{debit} = rpt_dec($debit_subtotal * -1);
 	      $column_data{credit} = rpt_dec($credit_subtotal);
+   	      $column_data{balance} = rpt_dec($balance * -1);
 	      print "<tr valign=top class=listsubtotal>";
 	      for (@column_index) { print "\n$column_data{$_}" }
 	      print "</tr>";
@@ -618,9 +623,23 @@ sub gl_list {
 	     }
 	   }
         }
+	my $script;
+        if ($ref->{module} eq 'ar'){
+	   $script = ($ref->{invoice}) ? 'is.pl' : 'ar.pl';
+	} elsif ($ref->{module} eq 'ap') {
+	   $script = ($ref->{invoice}) ? 'ir.pl' : 'ap.pl';
+	} else {
+           $script = 'gl.pl';
+        }
+	  
+   	$link = qq|$script?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
 	$column_data{no}   		= rpt_txt($no);
    	$column_data{transdate}		= rpt_txt($ref->{transdate});
-   	$column_data{reference} 	= rpt_txt($ref->{reference});
+	if ($form->{l_group}){
+   	   $column_data{reference} 	= rpt_txt($ref->{reference});
+	} else {
+   	   $column_data{reference} 	= rpt_txt($ref->{reference}, $link);
+	}
    	$column_data{description} 	= rpt_txt($ref->{description});
    	$column_data{source}    	= rpt_txt($ref->{source});
 	if ($ref->{amount} > 0){
@@ -650,12 +669,14 @@ sub gl_list {
    # subtotal for last group
    $column_data{debit} = rpt_dec($debit_subtotal * -1);
    $column_data{credit} = rpt_dec($credit_subtotal);
+   $column_data{balance} = rpt_dec($balance * -1);
    print "<tr valign=top class=listsubtotal>";
    for (@column_index) { print "\n$column_data{$_}" }
    print "</tr>";
 
    $column_data{debit} = rpt_dec($debit_total * -1);
    $column_data{credit} = rpt_dec($credit_total);
+   $column_data{balance} = rpt_txt('&nbsp;');
 
    # grand totals
    print "<tr valign=top class=listtotal>";
