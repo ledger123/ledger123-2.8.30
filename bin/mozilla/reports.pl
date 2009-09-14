@@ -39,7 +39,8 @@ sub onhandvalue_search {
    &print_checkbox('l_description', $locale->text('Description'), 'checked', '');
    &print_checkbox('l_partsgroup', $locale->text('Group'), 'checked', '');
    &print_checkbox('l_unit', $locale->text('Unit'), 'checked', '<br>');
-   &print_checkbox('l_onhand_qty', $locale->text('Onhand Qty'), 'checked', '<br>');
+   &print_checkbox('l_onhand_qty', $locale->text('Onhand Qty'), 'checked', '');
+   &print_checkbox('l_components', $locale->text('Components'), '', '');
    &print_checkbox('l_onhand_amt', $locale->text('Onhand Amount'), 'checked', '<br>');
    &print_checkbox('l_subtotal', $locale->text('Subtotal'), '', '');
    &print_checkbox('l_csv', $locale->text('CSV'), '', '');
@@ -75,6 +76,9 @@ sub onhandvalue_list {
    #$where .= qq| AND (i.warehouse_id = $form->{warehouse_id})| if $form->{warehouse};
    $subwhere .= qq| AND (i.transdate <= '$form->{dateto}')| if $form->{dateto};
 
+   my $componentswhere;
+   $componentswhere = qq| AND i.assemblyitem IS FALSE| if !$form->{l_components};
+
    @columns = qw(id warehouse partnumber description partsgroup unit onhand_qty onhand_amt);
    # if this is first time we are running this report.
    $form->{sort} = 'partnumber' if !$form->{sort};
@@ -105,7 +109,7 @@ sub onhandvalue_list {
        $callback .= "&l_$item=Y";
      }
    }
-   $callback .= "&l_subtotal=$form->{l_subtotal}";
+   $callback .= "&l_subtotal=$form->{l_subtotal}&l_components=$form->{l_components}";
    my $href = $callback;
    $form->{callback} = $form->escape($callback,1);
 
@@ -125,6 +129,7 @@ sub onhandvalue_list {
 		WHERE $where
 		AND i.qty < 0
 		AND p.inventory_accno_id IS NOT NULL
+		$componentswhere
 
 		GROUP BY 1,2,3,4,5
 		HAVING SUM(0-(i.qty+i.allocated)) <> 0
@@ -173,7 +178,7 @@ sub onhandvalue_list {
    # print data
    my $i = 1; my $no = 1;
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=onhandvalue_detail&id=$ref->{id}&l_sql=$form->{l_sql}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
+   	$form->{link} = qq|$form->{script}?action=onhandvalue_detail&id=$ref->{id}&l_components=$form->{l_components}&l_sql=$form->{l_sql}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
 
 	$column_data{no}   		= rpt_txt($no);
    	$column_data{partnumber}	= rpt_txt($ref->{partnumber});
@@ -216,6 +221,9 @@ sub onhandvalue_detail {
    my $where = qq| (1 = 1)|;
    $where .= qq| AND parts_id = $form->{id}|;
 
+   my $componentswhere;
+   $componentswhere = qq| AND i.assemblyitem IS FALSE| if !$form->{l_components};
+
    @columns = qw(transdate invnumber qty sellprice extended);
    # if this is first time we are running this report.
    $form->{sort} = 'transdate' if !$form->{sort};
@@ -233,13 +241,7 @@ sub onhandvalue_detail {
 
    # No. columns should always come first
    splice @columns, 0, 0, 'no';
-
-$form->{l_no} = 'Y';
-$form->{l_invnumber} = 'Y';
-$form->{l_transdate} = 'Y';
-$form->{l_qty} = 'Y';
-$form->{l_sellprice} = 'Y';
-$form->{l_extended} = 'Y';
+   for (qw(no invnumber transdate qty sellprice extended)) { $form->{"l_$_"} = 'Y' }
 
    # Select columns selected for report display
    foreach $item (@columns) {
@@ -270,6 +272,7 @@ $form->{l_extended} = 'Y';
 		JOIN invoice i ON (i.trans_id = ap.id)
 		WHERE $where 
 		AND i.qty + i.allocated < 0
+		$componentswhere
 
 	      UNION ALL
 
@@ -285,6 +288,7 @@ $form->{l_extended} = 'Y';
 		JOIN invoice i ON (i.trans_id = ar.id)
 		WHERE $where 
 		AND i.qty + i.allocated < 0
+		$componentswhere
 
 	      ORDER BY $form->{sort} $form->{direction}
 	|;
