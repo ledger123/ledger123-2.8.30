@@ -564,14 +564,10 @@ sub gl_list {
    $form->{title} = $locale->text('General Ledger');
    &print_title;
    &print_criteria('fromdate','From');
-   &print_criteria('towhere', 'To');
+   &print_criteria('todate', 'To');
    &print_criteria('fromaccount', 'Account >=');
    &print_criteria('toaccount', 'Account <=');
 
-   print qq|<table width=100%><tr class=listheading>|;
-   # print header
-   for (@column_index) { print "\n$column_header{$_}" }
-   print qq|</tr>|; 
 
    # Subtotal and total variables
    my $debit_total, $credit_total, $debit_subtotal, $credit_subtotal, $balance;
@@ -580,39 +576,40 @@ sub gl_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-	# Print group heading for first group break.
-	if ($groupbreak eq 'none'){
-	   $groupbreak = qq|$ref->{accno}--$ref->{accdescription}|;
-	   print qq|<tr valign=top>|;
-	   print qq|<th align=left colspan=6><br />|.$locale->text('Account') . qq| $groupbreak</th>|;
-	   print qq|</tr>|;
-        }
    	$form->{link} = qq|$form->{script}?action=onhandvalue_detail&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
 	if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
-	   for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
-           $column_data{debit} = rpt_dec($debit_subtotal * -1);
-	   $column_data{credit} = rpt_dec($credit_subtotal);
-	   print "<tr valign=top class=listsubtotal>";
-	   for (@column_index) { print "\n$column_data{$_}" }
+	   if ($groupbreak ne 'none'){
+	      for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
+              $column_data{debit} = rpt_dec($debit_subtotal * -1);
+	      $column_data{credit} = rpt_dec($credit_subtotal);
+	      print "<tr valign=top class=listsubtotal>";
+	      for (@column_index) { print "\n$column_data{$_}" }
+	      print "</tr>";
+	   }
 	   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
-	   print "</tr>";
 	   print qq|<tr valign=top>|;
 	   print qq|<th align=left colspan=6><br />|.$locale->text('Account') . qq| $groupbreak</th>|;
 	   print qq|</tr>|;
+
+   	   # print header
+   	   print qq|<table width=100%><tr class=listheading>|;
+   	   for (@column_index) { print "\n$column_header{$_}" }
+   	   print qq|</tr>|; 
+
 	   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
-	   if ($form->{datefrom}){
+	   if ($form->{fromdate}){
    	      my $openingquery = qq|
 		SELECT SUM(amount) 
 		FROM acc_trans
 		WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')
-		AND transdate < '$form->{datefrom}'
+		AND transdate < '$form->{fromdate}'
 	     |;
-	     my $openingbalance = $dbh->selectrow_array($openingquery);
-	     if ($openinbalance != 0){
-	        $onhand = $openingqty;
+	     ($balance) = $dbh->selectrow_array($openingquery);
+	     if ($balance != 0){
+	        for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
    		$column_data{debit} 	= rpt_dec(0);
    		$column_data{credit} 	= rpt_dec(0);
-   		$column_data{balance} 	= rpt_dec($balance);
+   		$column_data{balance} 	= rpt_dec(0 - $balance);
 
 		# print footer
 		print "<tr valign=top class=listrow0>";
