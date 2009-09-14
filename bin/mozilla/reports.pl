@@ -258,7 +258,7 @@ sub onhandvalue_detail {
 
    $dbh = $form->dbconnect(\%myconfig);
    $query = qq|SELECT partnumber, description FROM parts WHERE id=$form->{id}|;
-   ($form->{partnumber}) = $dbh->selectrow_array($query);
+   ($form->{partnumber}, $form->{description}) = $dbh->selectrow_array($query);
 
    $query = qq|SELECT
 		ap.id,
@@ -311,7 +311,7 @@ sub onhandvalue_detail {
 
    $form->{title} = $locale->text('Inventory Onhand Value Detail');
    &print_title;
-   &print_criteria('partnumber','Number');
+   print $locale->text('Number') . qq|: $form->{partnumber} / $form->{description}|;
 
    $form->info($query) if $form->{l_sql};
    print qq|<table width=100%><tr class=listheading>|;
