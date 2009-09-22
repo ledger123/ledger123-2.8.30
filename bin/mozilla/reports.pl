@@ -455,42 +455,47 @@ sub gl_list {
    $form->{callback} = $form->escape($callback,1);
 
    my $query;
-
    if ($form->{l_group}){
      $query = qq|SELECT c.accno, c.description AS accdescription,
-		 ac.transdate, g.reference, SUM(ac.amount) AS amount
+		 ac.transdate, g.reference, g.id AS id, 'gl' AS module,
+		 0 AS invoice,
+		 SUM(ac.amount) AS amount
                  FROM gl g
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 LEFT JOIN department d ON (d.id = g.department_id)
                  WHERE $glwhere
-		 GROUP BY 1,2,3,4
+		 GROUP BY 1,2,3,4,5,6
 
 		 UNION ALL
 
 	         SELECT c.accno, c.description AS accdescription,
-		 ac.transdate, a.invnumber, SUM(ac.amount) AS amount
+		 ac.transdate, a.invnumber, a.id AS id, 'ar' AS module,
+		 SUM(CAST(a.invoice AS INTEGER)) AS invoice,
+		 SUM(ac.amount) AS amount
 		 FROM ar a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 JOIN customer ct ON (a.customer_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 WHERE $arwhere
-		 GROUP BY 1,2,3,4
+		 GROUP BY 1,2,3,4,5
 
 		 UNION ALL
 
 	         SELECT c.accno, c.description AS accdescription,
-		 ac.transdate, a.invnumber, SUM(ac.amount) as amount
+		 ac.transdate, a.invnumber, a.id AS id, 'ap' AS module, 
+		 SUM(CAST(a.invoice AS INTEGER)) AS invoice, 
+		 SUM(ac.amount) as amount
 		 FROM ap a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 JOIN vendor ct ON (a.vendor_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 WHERE $apwhere
-		 GROUP BY 1,2,3,4
+		 GROUP BY 1,2,3,4,5
 
-         	 ORDER BY 1,2,3,4|;
+         	 ORDER BY 1,2,3,4,5|;
    } else {
      $query = qq|SELECT g.id, 'gl' AS type, g.reference,
                  g.description, ac.transdate, ac.source,
@@ -636,11 +641,7 @@ sub gl_list {
    	$link = qq|$script?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
 	$column_data{no}   		= rpt_txt($no);
    	$column_data{transdate}		= rpt_txt($ref->{transdate});
-	if ($form->{l_group}){
-   	   $column_data{reference} 	= rpt_txt($ref->{reference});
-	} else {
-   	   $column_data{reference} 	= rpt_txt($ref->{reference}, $link);
-	}
+   	$column_data{reference} 	= rpt_txt($ref->{reference}, $link);
    	$column_data{description} 	= rpt_txt($ref->{description});
    	$column_data{source}    	= rpt_txt($ref->{source});
 	if ($ref->{amount} > 0){
