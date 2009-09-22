@@ -304,9 +304,9 @@ sub rpt_int {
 ###############################
 # format decimal column
 sub rpt_dec {
-  my ($column_data, $precision) = @_;
+  my ($column_data, $precision, $dash) = @_;
   $precision = $form->{precision} if !($precision);
-  my $str = qq|<td align=right>| . $form->format_amount(\%myconfig, $column_data, $precision) . qq|</td>|;
+  my $str = qq|<td align=right>| . $form->format_amount(\%myconfig, $column_data, $precision, $dash) . qq|</td>|;
   $str;
 }
 

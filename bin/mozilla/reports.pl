@@ -585,9 +585,9 @@ sub gl_list {
 	if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
 	   if ($groupbreak ne 'none'){
 	      for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
-	      $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}) . qq|</th>|;
-	      $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}) . qq|</th>|;
-	      $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}) . qq|</th>|;
+	      $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0") . qq|</th>|;
+	      $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0") . qq|</th>|;
+	      $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0") . qq|</th>|;
 	      print "<tr valign=top class=listsubtotal>";
 	      for (@column_index) { print "\n$column_data{$_}" }
 	      print "</tr>";
@@ -613,9 +613,9 @@ sub gl_list {
 	     ($balance) = $dbh->selectrow_array($openingquery);
 	     if ($balance != 0){
 	        for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
-   		$column_data{debit} 	= rpt_dec(0);
-   		$column_data{credit} 	= rpt_dec(0);
-   		$column_data{balance} 	= rpt_dec(0 - $balance);
+   		$column_data{debit} 	= rpt_dec(0, $form->{precision}, '0');
+   		$column_data{credit} 	= rpt_dec(0, $form->{precision}, '0');
+   		$column_data{balance} 	= rpt_dec(0 - $balance, $form->{precision}, '0');
 
 		# print footer
 		print "<tr valign=top class=listrow0>";
@@ -644,14 +644,14 @@ sub gl_list {
    	$column_data{description} 	= rpt_txt($ref->{description});
    	$column_data{source}    	= rpt_txt($ref->{source});
 	if ($ref->{amount} > 0){
-  	  $column_data{debit}    	= rpt_dec(0);
-   	  $column_data{credit}    	= rpt_dec($ref->{amount});
+  	  $column_data{debit}    	= rpt_dec(0, $form->{precision}, '0');
+   	  $column_data{credit}    	= rpt_dec($ref->{amount}, $form->{precision}, '0');
 	} else {
-  	  $column_data{debit}    	= rpt_dec(0 - $ref->{amount});
-   	  $column_data{credit}    	= rpt_dec(0);
+  	  $column_data{debit}    	= rpt_dec(0 - $ref->{amount}, $form->{precision}, '0');
+   	  $column_data{credit}    	= rpt_dec(0, $form->{precision}, '0');
 	}
 	$balance += $ref->{amount};
-	$column_data{balance} 		= rpt_dec($balance * -1);
+	$column_data{balance} 		= rpt_dec($balance * -1, $form->{precision}, '0');
 
 	print "<tr valign=top class=listrow$i>";
 	for (@column_index) { print "\n$column_data{$_}" }
@@ -668,16 +668,16 @@ sub gl_list {
    for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') }
 
    # subtotal for last group
-   $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}) . qq|</th>|;
-   $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}) . qq|</th>|;
-   $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}) . qq|</th>|;
+   $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0") . qq|</th>|;
+   $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0") . qq|</th>|;
+   $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0") . qq|</th>|;
 
    print "<tr valign=top class=listsubtotal>";
    for (@column_index) { print "\n$column_data{$_}" }
    print "</tr>";
 
-   $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_total * -1, $form->{precision}) . qq|</th>|;
-   $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_total, $form->{precision}) . qq|</th>|;
+   $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_total * -1, $form->{precision}, "0") . qq|</th>|;
+   $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_total, $form->{precision}, "0") . qq|</th>|;
    $column_data{balance} = rpt_txt('&nbsp;');
 
    # grand totals
