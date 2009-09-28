@@ -14,12 +14,10 @@ sub ask_repost {
    $form->{title} = $locale->text("Repost COGS");
    &print_title;
    &start_form;
-   &bld_warehouse;
  
    print qq|<h2 class=confirm> Continue with COGS reposting?</h1>|;
    print qq|
 <table>
-<tr><th align=right>Warehouse</th><td><select name=warehouse>$form->{selectwarehouse}</select></td></tr>
 <tr><th></th><td nowrap="nowrap"><input name="build_invoicetax" class="checkbox" value="Y" type="checkbox"> Build invoicetax table (not normally needed, see wiki.ledger123.com)</td></tr>
 </table>
 <br>
