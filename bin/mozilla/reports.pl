@@ -120,7 +120,7 @@ sub onhandvalue_list {
 		pg.partsgroup,
 		p.unit,
 		SUM(0-(i.qty+i.allocated)) AS onhand_qty,
-		SUM((0-(i.qty+i.allocated))*i.sellprice) AS onhand_amt
+		SUM((0-(i.qty+i.allocated))*i.lastcost) AS onhand_amt
 
 		FROM parts p
 		JOIN invoice i ON (i.parts_id = p.id)
