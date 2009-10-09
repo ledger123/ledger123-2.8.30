@@ -264,8 +264,10 @@ sub repost_cogs {
 
    # Reverse COGS for sale returns / credit invoices
    $query = qq|SELECT i.id, i.trans_id, i.transdate,
-			i.qty * i.lastcost AS amount,
+			i.qty * i.lastcost AS cogs,
+			i.qty * i.sellprice AS sale,
 			p.inventory_accno_id, p.expense_accno_id,
+			p.income_accno_id,
 			i.parts_id, i.sellprice, i.warehouse_id,
 			i.qty, i.lastcost
 		FROM invoice i JOIN parts p ON (p.id = i.parts_id)
@@ -274,13 +276,24 @@ sub repost_cogs {
    |;
    $sth = $dbh->prepare($query) || $form->dberror($query);
    $sth->execute;
+
+   my $query = qq|DELETE FROM acc_trans 
+		WHERE chart_id = ?
+		AND trans_id = ?|;
+   my $saledelete = $dbh->prepare($query) || $form->dberror($query);
+
    while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+	   $saledelete->execute($ref->{income_accno_id}, $ref->{trans_id});
+           $cogssth->execute(
+		$ref->{trans_id}, $ref->{income_accno_id}, 
+		$ref->{sale}, $ref->{transdate}, $ref->{id});
+
            $cogssth->execute(
 		$ref->{trans_id}, $ref->{inventory_accno_id}, 
-		$ref->{amount}, $ref->{transdate}, $ref->{id});
+		$ref->{cogs}, $ref->{transdate}, $ref->{id});
            $cogssth->execute(
 		$ref->{trans_id}, $ref->{expense_accno_id},
-		0-($ref->{amount}), $ref->{transdate}, $ref->{id});
+		0-($ref->{cogs}), $ref->{transdate}, $ref->{id});
 
 	   $fifoadd->execute($ref->{trans_id}, "$ref->{transdate}", $ref->{parts_id},
 		$ref->{qty}, $ref->{lastcost}, $ref->{sellprice},

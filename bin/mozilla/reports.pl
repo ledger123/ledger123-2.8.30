@@ -127,7 +127,7 @@ sub onhandvalue_list {
 		LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
 
 		WHERE $where
-		AND i.qty < 0
+		AND (i.qty+i.allocated) <> 0
 		AND p.inventory_accno_id IS NOT NULL
 		$componentswhere
 
@@ -271,7 +271,7 @@ sub onhandvalue_detail {
 		FROM ap
 		JOIN invoice i ON (i.trans_id = ap.id)
 		WHERE $where 
-		AND i.qty + i.allocated < 0
+		AND i.qty + i.allocated <> 0
 		$componentswhere
 
 	      UNION ALL
@@ -287,7 +287,7 @@ sub onhandvalue_detail {
 		FROM ar
 		JOIN invoice i ON (i.trans_id = ar.id)
 		WHERE $where 
-		AND i.qty + i.allocated < 0
+		AND i.qty + i.allocated <> 0
 		$componentswhere
 
 	      ORDER BY $form->{sort} $form->{direction}
