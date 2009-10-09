@@ -247,6 +247,7 @@ sub search {
   push @a, (qq|<input name="l_memo" class=checkbox type=checkbox value=Y>|, $locale->text('Memo'));
   push @a, (qq|<input name="l_lineitem" class=checkbox type=checkbox value=Y>|, $locale->text('Line Item'));
   push @a, (qq|<input name="l_accno" class=checkbox type=checkbox value=Y checked>|, $locale->text('Account'));
+  push @a, (qq|<input name="l_accdescription" class=checkbox type=checkbox value=Y>|, $locale->text('Account Description'));
   push @a, (qq|<input name="l_gifi_accno" class=checkbox type=checkbox value=Y>|, $locale->text('GIFI'));
 
 
@@ -542,11 +543,11 @@ sub transactions {
   }
 
 
-  @columns = $form->sort_columns(qw(transdate id reference description name vcnumber address notes lineitem source memo debit credit accno gifi_accno department));
+  @columns = $form->sort_columns(qw(transdate id reference description name vcnumber address notes lineitem source memo debit credit accno accdescription gifi_accno department));
   pop @columns if $form->{department};
 
   if ($form->{link} =~ /_paid/) {
-    @columns = $form->sort_columns(qw(transdate id reference description name vcnumber address notes lineitem source memo cleared debit credit accno gifi_accno));
+    @columns = $form->sort_columns(qw(transdate id reference description name vcnumber address notes lineitem source memo cleared debit credit accno accdescription gifi_accno));
     $form->{l_cleared} = "Y";
   }
 
@@ -594,6 +595,7 @@ sub transactions {
   $column_header{debit} = "<th class=listheading>".$locale->text('Debit')."</th>";
   $column_header{credit} = "<th class=listheading>".$locale->text('Credit')."</th>";
   $column_header{accno} = "<th><a class=listheading href=$href&sort=accno>".$locale->text('Account')."</a></th>";
+  $column_header{accdescription} = "<th><a class=listheading href=$href&sort=accno>".$locale->text('Account Description')."</a></th>";
   $column_header{gifi_accno} = "<th><a class=listheading href=$href&sort=gifi_accno>".$locale->text('GIFI')."</a></th>";
   $column_header{balance} = "<th>".$locale->text('Balance')."</th>";
   $column_header{cleared} = qq|<th>|.$locale->text('R').qq|</th>|;
@@ -698,6 +700,7 @@ sub transactions {
     $column_data{credit} = "<td align=right>$ref->{credit}</td>";
     
     $column_data{accno} = "<td><a href=$href&accno=$ref->{accno}&callback=$callback>$ref->{accno}</a></td>";
+    $column_data{accdescription} = "<td><a href=$href&accdescription=$ref->{accdescription}&callback=$callback>$ref->{accdescription}</a></td>";
     $column_data{gifi_accno} = "<td><a href=$href&gifi_accno=$ref->{gifi_accno}&callback=$callback>$ref->{gifi_accno}</a>&nbsp;</td>";
     $column_data{balance} = "<td align=right>".$form->format_amount(\%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0)."</td>";
     $column_data{cleared} = ($ref->{cleared}) ? "<td>*</td>" : "<td>&nbsp;</td>";
