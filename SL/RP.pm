@@ -170,6 +170,12 @@ sub income_statement {
 		);
   
   my $str;
+  my $tmpstr;
+  my $translink = qq|ca.pl?action=list_transactions|;
+  for (qw(path login fromdate todate)){ $translink .= qq|&$_=$form->{$_}| }
+  for (qw(projectnumber department)){ 
+     $translink .= "&$_=" . $form->escape($form->{$_});
+  }
   
   foreach $category (@categories) {
     
@@ -179,7 +185,9 @@ sub income_statement {
       $str = ($form->{l_heading}) ? $form->{padding} : "";
       
       if ($form->{$category}{$key}{charttype} eq "A") {
-	$str .= ($form->{l_accno}) ? "$form->{$category}{$key}{accno} - $form->{$category}{$key}{description}" : "$form->{$category}{$key}{description}";
+	$tmpstr = ($form->{l_accno}) ? "$form->{$category}{$key}{accno} - $form->{$category}{$key}{description}" : "$form->{$category}{$key}{description}";
+	$tmpstr = qq|<a href=$translink&accno=$form->{$category}{$key}{accno} target=_blank>| . $tmpstr . qq|</a>|;
+	$str .= $tmpstr;
       }
       if ($form->{$category}{$key}{charttype} eq "H") {
 	if ($account{$category}{subtotal} && $form->{l_subtotal}) {
