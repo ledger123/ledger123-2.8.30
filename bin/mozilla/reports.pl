@@ -872,6 +872,177 @@ sub audit_list {
    $dbh->disconnect;
 }
 
+#===================================
+#
+# Income statement by project
+#
+#==================================
+#-------------------------------
+sub income_statement {
+   $form->{title} = $locale->text('Income Statement');
+   $form->header;
+   print qq|
+<body>
+<table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
+<form method=post action='$form->{script}'>
+
+<table>
+<tr>
+  <th align=right>From</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'></td>
+</tr><tr>
+  <th align=right>To</th><td><input name=dateto size=11 title='$myconfig{dateformat}'></td>
+</tr>
+<tr>
+<th>Include:</th>
+<td>|;
+
+   my $dbh = $form->dbconnect(\%myconfig);
+   my $query = qq|SELECT id, projectnumber FROM project ORDER BY projectnumber|;
+   my $sth = $dbh->prepare($query) || $form->dberror($query);
+   $sth->execute || $form->dberror($query);
+   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1 checked>$ref->{projectnumber}<br>\n|;
+   }
+
+print qq|
+</td></tr>
+</table>
+<hr>
+<input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">|;
+   $form->{nextsub} = 'generate_income_statement';
+   $form->hide_form(qw(title path nextsub login));
+   print qq|
+</form>
+</body>
+|;
+
+}
+
+#-------------------------------
+sub generate_income_statement {
+  $form->header;
+  print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br />|;
+  print qq|<h4>INCOME STATEMENT</h4>|;
+  print qq|<h4>for Period</h4>|;
+  print qq|<h4>From $form->{datefrom}</h4>| if $form->{datefrom};
+  print qq|<h4>To $form->{dateto}</h4>| if $form->{dateto};
+  my $dbh = $form->dbconnect(\%myconfig);
+  my $query = qq|SELECT id, projectnumber FROM project ORDER BY projectnumber|;
+  my $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute || $form->dberror($query);
+
+  my %projects;
+  my $is_query = qq|SELECT c.accno, c.description, c.category, charttype,\n|;
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+     if ($form->{"p_$ref->{id}"}){
+	$projects{"p_$ref->{id}"} = $ref->{projectnumber};
+        $is_query .= qq|SUM(CASE WHEN ac.project_id = $ref->{id} THEN ac.amount ELSE 0 END) AS p_$ref->{id},\n|
+     }
+  }
+  $sth->finish;
+  chop $is_query;
+  chop $is_query;
+  my $where = qq|c.category IN ('I', 'E')|;
+  my $ywhere = qq| 1 = 1 |;
+  if ($form->{datefrom}){
+    $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
+    $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
+  }
+  if ($form->{dateto}){
+    $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
+    $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
+  }
+  $where .= qq| AND ac.trans_id NOT IN (SELECT trans_id FROM yearend WHERE $ywhere)|;
+
+  $is_query .= qq| 
+		FROM acc_trans ac
+		JOIN chart c ON (c.id = ac.chart_id)
+		WHERE $where
+		GROUP BY c.accno, c.description, c.category, c.charttype
+		ORDER BY c.accno
+  |;
+
+  $sth = $dbh->prepare($is_query) || $form->dberror($is_query);
+  $sth->execute || $form->dberror($is_query);
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+	$form->{$ref->{category}}{$ref->{accno}}{accno} = "$ref->{accno}";
+	$form->{$ref->{category}}{$ref->{accno}}{charttype} = "$ref->{charttype}";
+	$form->{$ref->{category}}{$ref->{accno}}{category} = "$ref->{category}";
+	$form->{$ref->{category}}{$ref->{accno}}{description} = "$ref->{description}";
+	for (keys %projects){
+	   $form->{$ref->{category}}{$ref->{accno}}{$_} = "$ref->{$_}";
+	}
+  }
+  $sth->finish;
+
+  print qq|
+<table>
+<tr>
+<th>&nbsp;</th><th>&nbsp;</th>
+|;
+
+  for (keys %projects){ print qq|<th>$projects{$_}</th>| }
+  print qq|
+</tr>
+|;
+
+  # Print INCOME
+  print qq|<tr><td colspan=2><b>INCOME<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
+  foreach $accno (sort keys %{ $form->{I} }){
+     print qq|<tr>|;
+     print qq|<td>$form->{I}{$accno}{accno}</td>|;
+     print qq|<td>$form->{I}{$accno}{description}</td>|;
+     for (keys %projects){ 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
+	$form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
+     }
+     print qq|</tr>|;
+  }
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %projects){ print qq|<td><hr noshade size=1></td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2 align=right><b>TOTAL INCOME</b></td>|;
+  for (keys %projects){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %projects){ print qq|<td><hr noshade size=2></td>|; }
+  print qq|</tr>|;
+
+  # Print EXPENSES
+  print qq|<tr><td colspan=2><b>EXPENSES<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
+  foreach $accno (sort keys %{ $form->{E} }){
+     print qq|<tr>|;
+     print qq|<td>$form->{E}{$accno}{accno}</td>|;
+     print qq|<td>$form->{E}{$accno}{description}</td>|;
+     for (keys %projects){ 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
+	$form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
+     }
+     print qq|</tr>|;
+  }
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %projects){ print qq|<td><hr noshade size=1></td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2 align=right><b>TOTAL EXPENSES</b></td>|;
+  for (keys %projects){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %projects){ print qq|<td><hr noshade size=2></td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2 align=right><b>INCOME (LOSS)</b></td>|;
+  for (keys %projects){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %projects){ print qq|<td><hr noshade size=2></td>|; }
+  print qq|</tr>|;
+}
+
 #######
 ## EOF
 #######
