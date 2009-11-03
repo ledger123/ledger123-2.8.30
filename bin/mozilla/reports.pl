@@ -3231,6 +3231,245 @@ sub build_list {
    $dbh->disconnect;
 }
 
+#===================================
+#
+# Projects report
+#
+#==================================
+#-------------------------------
+sub projects_search {
+   $form->{title} = $locale->text('Projects Summary');
+   &print_title;
+
+   &start_form;
+   &start_table;
+
+   &bld_department;
+
+   &print_text('projectnumber', 'Project Number', 30);
+   &print_text('description', 'Description');
+   &print_select('department', 'Department');
+   &print_date('datefrom', 'From');
+   &print_date('dateto', 'To');
+ 
+   print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
+
+   &print_checkbox('l_no', $locale->text('No.'), '', '');
+   &print_checkbox('l_projectnumber', $locale->text('Project Number'), 'checked', '');
+   &print_checkbox('l_description', $locale->text('Description'), 'checked', '');
+   &print_checkbox('l_startdate', $locale->text('From'), 'checked', '');
+   &print_checkbox('l_enddate', $locale->text('To'), 'checked', '<br>');
+   &print_checkbox('l_income', $locale->text('Income'), 'checked', '');
+   &print_checkbox('l_expenses', $locale->text('Expenses'), 'checked', '');
+   &print_checkbox('l_net', $locale->text('Net'), 'checked', '<br>');
+   &print_checkbox('l_subtotal', $locale->text('Subtotal'), '', '');
+   &print_checkbox('l_csv', $locale->text('CSV'), '', '');
+   #&print_checkbox('l_sql', $locale->text('SQL'), '');
+   print qq|</td></tr>|;
+   &end_table;
+   print('<hr size=3 noshade>');
+   $form->{nextsub} = 'projects_list';
+   &print_hidden('nextsub');
+   &add_button('Continue');
+   &end_form;
+}
+
+#-------------------------------
+sub projects_list {
+  # callback to report list
+   my $callback = qq|$form->{script}?action=projects_list|;
+   for (qw(path login sessionid)) { $callback .= "&$_=$form->{$_}" }
+
+   &split_combos('department,warehouse,partsgroup');
+   $form->{department_id} *= 1;
+   $projectnumber = $form->like(lc $form->{projectnumber});
+   $description = $form->like(lc $form->{description});
+   
+   my $where = qq| (1 = 1)|;
+   my $subwhere;
+   $where .= qq| AND (LOWER(p.projectnumber) LIKE '$projectnumber')| if $form->{projectnumber};
+   $where .= qq| AND (LOWER(p.description) LIKE '$description')| if $form->{description};
+
+   $subwhere .= qq| AND (ac.transdate >= '$form->{datefrom}')| if $form->{datefrom};
+   $subwhere .= qq| AND (ac.transdate <= '$form->{dateto}')| if $form->{dateto};
+   $subwhere .= qq| AND (ac.trans_id IN (SELECT trans_id FROM dpt_trans WHERE department_id = $form->{department_id}))| if $form->{department};
+
+   @columns = qw(id projectnumber description startdate enddate income expenses net);
+   # if this is first time we are running this report.
+   $form->{sort} = 'projectnumber' if !$form->{sort};
+   $form->{oldsort} = 'none' if !$form->{oldsort};
+   $form->{direction} = 'ASC' if !$form->{direction};
+   @columns = $form->sort_columns(@columns);
+
+   my %ordinal = (	id => 1,
+			projectnumber => 2,
+			description => 3,
+			startdate => 4,
+			enddate => 5,
+			income => 6,
+			expenses => 7,
+			net => 8,
+   );
+   my $sort_order = $form->sort_order(\@columns, \%ordinal);
+
+   # No. columns should always come first
+   splice @columns, 0, 0, 'no';
+
+   # Select columns selected for report display
+   foreach $item (@columns) {
+     if ($form->{"l_$item"} eq "Y") {
+       push @column_index, $item;
+
+       # add column to href and callback
+       $callback .= "&l_$item=Y";
+     }
+   }
+   $callback .= "&l_subtotal=$form->{l_subtotal}";
+   my $href = $callback;
+   $form->{callback} = $form->escape($callback,1);
+
+   $query = qq|SELECT 
+		p.id, 
+		p.projectnumber, 
+		p.description, 
+		p.startdate,
+		p.enddate,
+
+		(SELECT SUM(amount) 
+		 FROM acc_trans ac
+		 JOIN chart c ON (c.id = ac.chart_id)
+		 WHERE c.category = 'I'
+		 AND ac.project_id = p.id
+		 $subwhere) AS income,
+
+		(SELECT SUM(0-amount) 
+		 FROM acc_trans ac
+		 JOIN chart c ON (c.id = ac.chart_id)
+		 WHERE c.category = 'E'
+		 AND ac.project_id = p.id
+		 $subwhere) AS expenses
+
+		FROM project p
+		WHERE $where
+		ORDER BY $form->{sort} $form->{direction}|;
+
+   # store oldsort/direction information
+   $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
+
+   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
+   $column_header{projectnumber} 	= rpt_hdr('projectnumber', $locale->text('Number'), $href);
+   $column_header{description} 		= rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{startdate}  		= rpt_hdr('startdate', $locale->text('Startdate'), $href);
+   $column_header{enddate}  		= rpt_hdr('enddate', $locale->text('Enddate'), $href);
+   $column_header{income}  		= rpt_hdr('income', $locale->text('Income'), $href);
+   $column_header{expenses}  		= rpt_hdr('expenses', $locale->text('Expenses'), $href);
+   $column_header{net}  		= rpt_hdr('net', $locale->text('Income/(Loss)'));
+
+   $form->error($query) if $form->{l_sql};
+   $dbh = $form->dbconnect(\%myconfig);
+   my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
+   for (keys %defaults) { $form->{$_} = $defaults{$_} }
+
+   if ($form->{l_csv} eq 'Y'){
+	&export_to_csv($dbh, $query, 'parts_onhand');
+	exit;
+   }
+   $sth = $dbh->prepare($query);
+   $sth->execute || $form->dberror($query);
+
+   $form->{title} = $locale->text('Projects Summary');
+   &print_title;
+   &print_criteria('projectnumber','Project Number');
+   &print_criteria('description', 'Description');
+   &print_criteria('department_name', 'Department');
+   &print_criteria('datefrom', 'From');
+   &print_criteria('dateto', 'To');
+
+   print qq|<table width=100%><tr class=listheading>|;
+   # print header
+   for (@column_index) { print "\n$column_header{$_}" }
+   print qq|</tr>|; 
+
+   # Subtotal and total variables
+   my $qty_subtotal = 0;
+   my $qty_total = 0;
+   my $amount_subtotal = 0;
+   my $amount_total = 0;
+
+   # print data
+   my $i = 1; my $no = 1;
+   my $groupbreak = 'none';
+   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+   	$form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
+	if ($form->{l_subtotal}){
+	   if ($groupbreak ne $ref->{$form->{sort}}){
+		$groupbreak = $ref->{$form->{sort}};
+		# prepare data for footer
+
+		for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') };
+   		$column_data{income} 	= rpt_dec($income_subtotal);
+   		$column_data{expenses} 	= rpt_dec($expenses_subtotal);
+   		$column_data{net} 	= rpt_dec($income_subtotal - $expenses_subtotal);
+
+		# print footer
+		print "<tr valign=top class=listsubtotal>";
+		for (@column_index) { print "\n$column_data{$_}" }
+		print "</tr>";
+
+		$income_subtotal = 0;
+		$expenses_subtotal = 0;
+		$net_subtotal = 0;
+	   }
+	}
+
+	$column_data{no}   		= rpt_txt($no);
+   	$column_data{projectnumber}	= rpt_txt($ref->{projectnumber}, $form->{link});
+   	$column_data{description}	= rpt_txt($ref->{description});
+   	$column_data{startdate} 	= rpt_txt($ref->{startdate});
+   	$column_data{enddate}    	= rpt_txt($ref->{enddate});
+   	$column_data{income}    	= rpt_dec($ref->{income});
+   	$column_data{expenses}    	= rpt_dec($ref->{expenses});
+   	$column_data{net}    		= rpt_dec($ref->{income} - $ref->{expenses});
+
+	print "<tr valign=top class=listrow$i>";
+	for (@column_index) { print "\n$column_data{$_}" }
+	print "</tr>";
+	$i++; $i %= 2; $no++;
+
+	$income_subtotal += $ref->{income};
+	$income_total += $ref->{income};
+	$expenses_subtotal += $ref->{expenses};
+	$expenses_total += $ref->{expenses};
+   }
+
+   # prepare data for footer
+   for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') };
+   $column_data{income}   = rpt_dec($income_subtotal);
+   $column_data{expenses} = rpt_dec($expenses_subtotal);
+   $column_data{net} 	  = rpt_dec($income_subtotal - $expenses_subtotal);
+
+   if ($form->{l_subtotal}){
+	# print last subtotal
+	print "<tr valign=top class=listsubtotal>";
+	for (@column_index) { print "\n$column_data{$_}" }
+	print "</tr>";
+   }
+   # grand total
+   $column_data{income}   = rpt_dec($income_total);
+   $column_data{expenses} = rpt_dec($expenses_total);
+   $column_data{net} 	  = rpt_dec($income_total - $expenses_total);
+
+   # print footer
+   print "<tr valign=top class=listtotal>";
+   for (@column_index) { print "\n$column_data{$_}" }
+   print "</tr>";
+
+   print qq|</table>|;
+   $sth->finish;
+   $dbh->disconnect;
+}
+
 #######
 ## EOF
 #######
