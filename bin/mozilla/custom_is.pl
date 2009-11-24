@@ -56,6 +56,7 @@ sub repost_cogs {
 		   VALUES (?, ?, ?, ?)|;
       my $itins = $dbh->prepare($query) || $form->dberror($query);
 
+      ## 1. First AR
       $query = qq|SELECT ar.id, ar.customer_id, ctax.chart_id 
 		FROM ar
 		JOIN customertax ctax ON (ar.customer_id = ctax.customer_id)|;
@@ -68,6 +69,21 @@ sub repost_cogs {
 			$itref->{chart_id}, $itref->{taxamount});
 	 }
       }
+
+      ## 2. Now AP
+      $query = qq|SELECT ap.id, ap.vendor_id, vtax.chart_id 
+		FROM ap
+		JOIN vendortax vtax ON (ap.vendor_id = vtax.vendor_id)|;
+      $sth = $dbh->prepare($query) || $form->dberror($query);
+      $sth->execute;
+      while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+	 $itsth->execute($ref->{id}, $ref->{chart_id});
+	 while ($itref = $itsth->fetchrow_hashref(NAME_lc)){
+	    $itins->execute($itref->{trans_id}, $itref->{id}, 
+			$itref->{chart_id}, $itref->{taxamount});
+	 }
+      }
+
    }
 
    $form->info("Reposting COGS<br>\n");
