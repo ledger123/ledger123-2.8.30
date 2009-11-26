@@ -603,12 +603,8 @@ sub post_inventory {
 		description,
 		itemnotes,
 		serialnumber,
-		reporttype,
-		lotnum,
-		expiry,
 		qty,
 		cost,
-		cogs,
 		employee_id,
 		linetype)
 	VALUES (
@@ -621,12 +617,8 @@ sub post_inventory {
 		$inventory->{description},
 		$inventory->{itemnotes},
 		$inventory->{serialnumber},
-		$inventory->{reporttype},
-		$inventory->{lotnum},
-		$inventory->{expiry},
 		$inventory->{qty},
 		$inventory->{cost},
-		$inventory->{cogs},
 		$inventory->{employee_id},
 		$inventory->{linetype}
 	)|;
@@ -655,14 +647,12 @@ sub post_trf {
 
   $query = qq|UPDATE trf SET
 		trfnumber = '$trf->{trfnumber}',
-		ctrfnumber = '$trf->{ctrfnumber}',
 		transdate = '$trf->{transdate}',
 		description = '$trf->{description}',
 		notes = '$trf->{notes}',
 		department_id = $trf->{department_id},
 		from_warehouse_id = $trf->{from_warehouse_id},
 		to_warehouse_id = $trf->{to_warehouse_id},
-		trftype = '$trf->{trftype}',
 		employee_id = $trf->{employee_id}
 	WHERE id = $trf_id|;
   $dbh->do($query) || $form->dberror($query);
