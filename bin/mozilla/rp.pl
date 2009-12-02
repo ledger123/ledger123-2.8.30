@@ -418,7 +418,7 @@ sub report {
     
     RP->get_taxaccounts(\%myconfig, \%$form);
 
-    $form->{nextsub} = "generate_tax_report";
+    $form->{nextsub} = "$form->{reportsub}";
     
     print qq|
 	<tr>
@@ -540,7 +540,7 @@ sub report {
 
     $form->{db} = ($form->{report} =~ /_sales/) ? "ar" : "ap";
 
-    $form->{nextsub} = "generate_tax_report";
+    $form->{nextsub} = "$form->{reportsub}";
 
     if ($form->{db} eq 'ar') {
       $vc = qq|
@@ -2500,6 +2500,66 @@ sub statement_details {
 
 }
  
+sub generate_tax_report_all {
+
+  my $dbh = $form->dbconnect(\%myconfig);
+  my $query = qq|SELECT accno FROM chart WHERE link LIKE '%_tax%' ORDER BY accno|;
+  my $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute;
+  my $all_taxaccounts;
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+     $all_taxaccounts .= "$ref->{accno} ";
+  }
+  $sth->finish;
+  $dbh->disconnect;
+
+  $search_form = new Form;
+  for (keys %$form){ $search_form->{$_} = $form->{$_} }
+  my $header = 0;
+
+  # AR
+  for (split(/ /, $all_taxaccounts)){
+     for (keys %$form) { delete $form->{$_} }
+     for (keys %$search_form) { $form->{$_} = $search_form->{$_} }
+     $form->{title} = $locale->text('Tax collected');
+     $form->{header} = $header;
+     $form->{nextsub} = 'generate_tax_report';
+     $form->{db} = "ar";
+     $form->{accno} = $_;
+     &generate_tax_report;
+     $header = 1;
+  }
+
+  for (keys %$form) { delete $form->{$_} }
+  for (keys %$search_form) { $form->{$_} = $search_form->{$_} }
+  $form->{title} = $locale->text('Non-taxable Sales');
+  $form->{header} = 1;
+  delete $form->{accno};
+  $form->{report} = 'nontaxable';
+  &generate_tax_report;
+
+  # AP
+  for (split(/ /, $all_taxaccounts)){
+     for (keys %$form) { delete $form->{$_} }
+     for (keys %$search_form) { $form->{$_} = $search_form->{$_} }
+     $form->{title} = $locale->text('Tax paid');
+     $form->{header} = $header;
+     $form->{nextsub} = 'generate_tax_report';
+     $form->{db} = "ap";
+     $form->{accno} = $_;
+     &generate_tax_report;
+     $header = 1;
+  }
+
+  for (keys %$form) { delete $form->{$_} }
+  for (keys %$search_form) { $form->{$_} = $search_form->{$_} }
+  $form->{title} = $locale->text('Non-taxable Purchases');
+  $form->{header} = 1;
+  delete $form->{accno};
+  $form->{report} = 'nontaxable';
+  $form->{db} = "ap";
+  &generate_tax_report;
+}
 
 sub generate_tax_report {
 
@@ -2555,6 +2615,7 @@ sub generate_tax_report {
   push @columns, qw(netamount tax);
   @columns = $form->sort_columns(@columns);
 
+  my @column_index;
   foreach $item (@columns) {
     if ($form->{"l_$item"} eq "Y") {
       push @column_index, $item;
@@ -2571,7 +2632,7 @@ sub generate_tax_report {
     $href .= "&l_subtotal=Y";
   }
   
-  
+  my $option; 
   if ($form->{department}) {
     ($department) = split /--/, $form->{department};
     $option = $locale->text('Department')." : $department";
@@ -2643,6 +2704,7 @@ sub generate_tax_report {
     $sameitem = $form->{TR}->[0]->{$form->{sort}};
   }
 
+  my $totalnetamount = 0, $totaltax = 0, $subtotalnetamount = 0, $subtotaltax = 0;
   foreach $ref (@{ $form->{TR} }) {
 
     $module = ($ref->{invoice}) ? $invoice : $arap;
@@ -2663,6 +2725,7 @@ sub generate_tax_report {
     
     for (qw(netamount tax)) { $ref->{$_} = $form->format_amount(\%myconfig, $ref->{$_}, $form->{precision}, "&nbsp;"); }
     
+    my %column_data;
     $column_data{id} = qq|<td>$ref->{id}</td>|;
     $column_data{invnumber} = qq|<td><a href=$module?path=$form->{path}&action=edit&id=$ref->{id}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
 
