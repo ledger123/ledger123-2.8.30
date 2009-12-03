@@ -3399,8 +3399,11 @@ sub projects_list {
    # print data
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
+   $form->{accounttype} = 'standard';
+   $form->{interval} = '1';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+   	$form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&projectnumber=$ref->{projectnumber}--$ref->{id}|;
+        for (qw(accounttype l_subtotal interval path login)){ $form->{link} .= "&$_=$form->{$_}" }
 	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
 	if ($form->{l_subtotal}){
 	   if ($groupbreak ne $ref->{$form->{sort}}){
