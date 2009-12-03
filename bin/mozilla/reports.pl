@@ -3251,6 +3251,7 @@ sub projects_search {
    &print_select('department', 'Department');
    &print_date('datefrom', 'From');
    &print_date('dateto', 'To');
+   &print_period;
  
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 
@@ -3284,7 +3285,12 @@ sub projects_list {
    $form->{department_id} *= 1;
    $projectnumber = $form->like(lc $form->{projectnumber});
    $description = $form->like(lc $form->{description});
-   
+ 
+  ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month}; 
+  
+   $datefrom = $locale->date(\%myconfig, $form->{datefrom}, 1);
+   $dateto = $locale->date(\%myconfig, $form->{dateto}, 1);
+
    my $where = qq| (1 = 1)|;
    my $subwhere;
    $where .= qq| AND (LOWER(p.projectnumber) LIKE '$projectnumber')| if $form->{projectnumber};
@@ -3382,8 +3388,9 @@ sub projects_list {
    &print_criteria('projectnumber','Project Number');
    &print_criteria('description', 'Description');
    &print_criteria('department_name', 'Department');
-   &print_criteria('datefrom', 'From');
-   &print_criteria('dateto', 'To');
+
+   print $locale->text('From') . ' ' . $datefrom . "<br />";
+   print $locale->text('To') . ' ' . $dateto;
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -3400,10 +3407,9 @@ sub projects_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    $form->{accounttype} = 'standard';
-   $form->{interval} = '1';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
    	$form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&projectnumber=$ref->{projectnumber}--$ref->{id}|;
-        for (qw(accounttype l_subtotal interval path login)){ $form->{link} .= "&$_=$form->{$_}" }
+        for (qw(accounttype datefrom dateto l_subtotal path login)){ $form->{link} .= "&$_=$form->{$_}" }
 	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
 	if ($form->{l_subtotal}){
 	   if ($groupbreak ne $ref->{$form->{sort}}){

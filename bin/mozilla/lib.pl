@@ -2,6 +2,43 @@
 1;
 
 ###############################
+sub print_period {
+  $form->all_years(\%myconfig);
+  if (@{ $form->{all_years} }) {
+    # accounting years
+    $selectaccountingyear = "<option>\n";
+    for (@{ $form->{all_years} }) { $selectaccountingyear .= qq|<option>$_\n| }
+    $selectaccountingmonth = "<option>\n";
+    for (sort keys %{ $form->{all_month} }) { $selectaccountingmonth .= qq|<option value=$_>|.$locale->text($form->{all_month}{$_}).qq|\n| }
+
+    $selectfrom = qq|
+        <tr>
+	  <th align=right>|.$locale->text('Period').qq|</th>
+	  <td colspan=3>
+	  <select name=month>$selectaccountingmonth</select>
+	  <select name=year>$selectaccountingyear</select>
+	  <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+	  <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+	  <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+	  <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+	  </td>
+	</tr>
+|;
+
+    $selectto = qq|
+        <tr>
+	  <th align=right></th>
+	  <td>
+	  <select name=month>$selectaccountingmonth</select>
+	  <select name=year>$selectaccountingyear</select>
+	  </td>
+	</tr>
+|;
+  }
+  print $selectfrom;
+}
+
+###############################
 sub bld_department {
     my ($selectname, $override) = @_;
     $selectname = 'selectdepartment' if !$selectname;
