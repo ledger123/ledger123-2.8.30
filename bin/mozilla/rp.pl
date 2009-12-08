@@ -427,17 +427,19 @@ sub report {
 	</tr>
 	$selectfrom
 	$summary
-	<tr>
+	<tr>|;
+    print qq|
 	  <th align=right>|.$locale->text('Report for').qq|</th>
 	  <td colspan=3>
-|;
+| if $form->{reportsub} ne 'generate_tax_report_all';
+
 
   $checked = "checked";
   foreach $ref (@{ $form->{taxaccounts} }) {
     
     print qq|<input name=accno class=radio type=radio value="|.$form->quote($ref->{accno}).qq|" $checked>&nbsp;$ref->{description}
 
-    <input name="$ref->{accno}_description" type=hidden value="|.$form->quote($ref->{description}).qq|">|;
+    <input name="$ref->{accno}_description" type=hidden value="|.$form->quote($ref->{description}).qq|">| if $form->{reportsub} ne 'generate_tax_report_all';
 
     $checked = "";
 
@@ -2503,16 +2505,18 @@ sub statement_details {
 sub generate_tax_report_all {
 
   my $dbh = $form->dbconnect(\%myconfig);
-  my $query = qq|SELECT accno FROM chart WHERE link LIKE '%_tax%' ORDER BY accno|;
+  my $query = qq|SELECT accno, description FROM chart WHERE link LIKE '%AR_tax%' ORDER BY accno|;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
   $sth->execute;
   my $all_taxaccounts;
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
      $all_taxaccounts .= "$ref->{accno} ";
+     $form->{"$ref->{accno}_description"} = $ref->{description};
   }
   $sth->finish;
   $dbh->disconnect;
 
+  $form->{alltaxes} = 1; # Flag to affect layout for all taxes report.
   $search_form = new Form;
   for (keys %$form){ $search_form->{$_} = $form->{$_} }
   my $header = 0;
@@ -2529,7 +2533,6 @@ sub generate_tax_report_all {
      &generate_tax_report;
      $header = 1;
   }
-
   for (keys %$form) { delete $form->{$_} }
   for (keys %$search_form) { $form->{$_} = $search_form->{$_} }
   $form->{title} = $locale->text('Non-taxable Sales');
@@ -2538,7 +2541,20 @@ sub generate_tax_report_all {
   $form->{report} = 'nontaxable';
   &generate_tax_report;
 
+
   # AP
+  my $dbh = $form->dbconnect(\%myconfig);
+  my $query = qq|SELECT accno, description FROM chart WHERE link LIKE '%AP_tax%' ORDER BY accno|;
+  my $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute;
+  my $all_taxaccounts;
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+     $all_taxaccounts .= "$ref->{accno} ";
+     $search_form->{"$ref->{accno}_description"} = $ref->{description};
+  }
+  $sth->finish;
+  $dbh->disconnect;
+
   for (split(/ /, $all_taxaccounts)){
      for (keys %$form) { delete $form->{$_} }
      for (keys %$search_form) { $form->{$_} = $search_form->{$_} }
@@ -2550,7 +2566,6 @@ sub generate_tax_report_all {
      &generate_tax_report;
      $header = 1;
   }
-
   for (keys %$form) { delete $form->{$_} }
   for (keys %$search_form) { $form->{$_} = $search_form->{$_} }
   $form->{title} = $locale->text('Non-taxable Purchases');
@@ -2671,16 +2686,29 @@ sub generate_tax_report {
   
   $column_header{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</th>|;
 
-  
+  $option = '' if $form->{header}; # Display report search options for first account only
+  if ($form->{accno}){
+    $option .= '<br>' . $locale->text('Account') . qq| $form->{accno}--$form->{"$form->{accno}_description"}|;
+  } else {
+    $option .= '<br>' . $form->{title};
+  }
+  $option .= '<br>' . $locale->text(uc $form->{db});
+
+  my $header = $form->{header};
   $form->header;
+  $form->{title} = $locale->text('Taxes') if $form->{alltaxes};
 
   print qq|
 <body>
 
 <table width=100%>
+|;
+  print qq|
   <tr>
     <th class=listtop colspan=$colspan>$form->{title}</th>
   </tr>
+| if !$header;
+  print qq|
   <tr height="5"></tr>
   <tr>
     <td>$option</td>
@@ -2775,10 +2803,12 @@ sub generate_tax_report {
         </tr>
       </table>
     </td>
-  </tr>
+  </tr>|;
+  print qq|
   <tr>
     <td><hr size=3 noshade></td>
-  </tr>
+  </tr>| if !$form->{alltaxes};
+  print qq|
 </table>
 
 </body>
