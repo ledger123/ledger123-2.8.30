@@ -1056,7 +1056,7 @@ sub post_invoice {
 		  bin = |.$dbh->quote($form->{"bin_$i"});
       if ($form->{"netweight_$i"} * 1) {
 	my $weight = abs($form->{"netweight_$i"} / $form->{"qty_$i"});
-	$query .= qq|, weight = $weight|;
+	#$query .= qq|, weight = $weight|;
       }
       $query .= qq|
 		  WHERE id = $form->{"id_$i"}|;
