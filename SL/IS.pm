@@ -1065,15 +1065,6 @@ sub post_invoice {
     }
   }
 
-  $form->{paid} = 0;
-  for $i (1 .. $form->{paidaccounts}) {
-    if ($form->{"paid_$i"}) {
-      $form->{"paid_$i"} = $form->parse_amount($myconfig, $form->{"paid_$i"}) * $sw;
-      $form->{paid} += $form->{"paid_$i"};
-      $form->{datepaid} = $form->{"datepaid_$i"};
-    }
-  }
-  
   # add lineitems + tax
   $amount = 0;
   $grossamount = 0;
