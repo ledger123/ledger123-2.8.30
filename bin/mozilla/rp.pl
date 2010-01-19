@@ -2505,6 +2505,7 @@ sub statement_details {
 sub generate_tax_report_all {
 
   my $dbh = $form->dbconnect(\%myconfig);
+
   my $query = qq|SELECT accno, description FROM chart WHERE link LIKE '%AR_tax%' ORDER BY accno|;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
   $sth->execute;
@@ -2708,11 +2709,122 @@ sub generate_tax_report {
     <th class=listtop colspan=$colspan>$form->{title}</th>
   </tr>
 | if !$header;
+if ($form->{alltaxes} and !$header){
+  # Print taxes summary for all taxes report.
+  my ($null, $department_id) = split /--/, $form->{department};
+  my $where = "a.approved = '1'";
+  my $cashwhere = "";
+  $where .= qq| AND a.department_id = $department_id| if $department_id;
+
+  my $transdate = "a.transdate";
+  if ($form->{fromdate} || $form->{todate}) {
+    if ($form->{fromdate}) {
+      $where .= " AND $transdate >= '$form->{fromdate}'";
+    }
+    if ($form->{todate}) {
+      $where .= " AND $transdate <= '$form->{todate}'";
+    }
+  }
+
+  if ($form->{method} eq 'cash') {
+    $transdate = "a.datepaid";
+
+    my $todate = $form->{todate};
+    if (! $todate) {
+      $todate = $form->current_date($myconfig);
+    }
+    $cashwhere = qq|
+		 AND ac.trans_id IN
+		   (
+		     SELECT trans_id
+		     FROM acc_trans
+		     JOIN chart ON (chart_id = chart.id)
+		     WHERE link LIKE '%${ARAP}_paid%'
+		     AND a.approved = '1'
+		     AND $transdate <= '$todate'
+		     AND a.paid = a.amount
+		   )
+		  |;
+
+  }
+
+  my $query = qq|
+	SELECT 1 as seq, ch.accno, ch.description, SUM(a.netamount) AS netamount, SUM(ac.amount) * 1 AS tax
+	FROM acc_trans ac
+	JOIN ar a ON (a.id = ac.trans_id)
+	JOIN chart ch ON (ch.id = ac.chart_id)
+	WHERE $where
+	AND ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AR_tax%')
+	GROUP BY seq, ch.accno, ch.description
+
+	UNION ALL
+
+	SELECT 2 as seq, 'N', 'Non-taxable', SUM(a.netamount), SUM(0)
+	FROM ar a 
+	WHERE $where
+	AND a.netamount = a.amount
+	GROUP BY 1, 2, 3
+
+	UNION ALL
+
+	SELECT 3 as seq, ch.accno, ch.description, SUM(a.netamount), SUM(ac.amount) * -1 AS tax
+	FROM acc_trans ac
+	JOIN ap a ON (a.id = ac.trans_id)
+	JOIN chart ch ON (ch.id = ac.chart_id)
+	WHERE $where
+	AND ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AP_tax%')
+	GROUP BY seq, ch.accno, ch.description
+
+	UNION ALL
+
+	SELECT 4 as seq, 'N', 'Non-taxable', SUM(a.netamount), SUM(0)
+	FROM ap a
+	WHERE $where
+	AND a.netamount = a.amount
+	GROUP BY 1, 2, 3
+
+	ORDER BY 1, 2, 3
+   |;
+
+   print qq|
+  <tr>
+    <td>
+     <table width=100%>
+	<tr class=listheading>
+	  <th>&nbsp;</th><th>Account</th><th>Description</th><th>Amount</th><th>Tax</th>
+	</tr>|;
+   my $dbh = $form->dbconnect(\%myconfig);
+   my $sth = $dbh->prepare($query);
+   $sth->execute || $form->error($query);
+
+   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+      $i++; $i %= 2;
+      print qq|<tr class="listrow$i">|;
+      print qq|<td>AR</td>| if $ref->{seq} <= 2;
+      print qq|<td>AP</td>| if $ref->{seq} > 2;
+      print qq|<td>$ref->{accno}</td>|;
+      print qq|<td>$ref->{description}</td>|;
+      print qq|<td align=right>| . $form->format_amount(\%myconfig, $ref->{netamount}, $form->{precision}) . qq|</td>|;
+      print qq|<td align=right>| . $form->format_amount(\%myconfig, $ref->{tax}, $form->{precision}) . qq|</td>|;
+      print qq|</tr>|;
+   }
+   $sth->finish;
+   $dbh->disconnect;
+   print qq|
+     </table>
+    </td>
+  </tr>|;
+} # ($form->{alltaxes} and !$header)
+
   print qq|
   <tr height="5"></tr>
   <tr>
     <td>$option</td>
   </tr>
+|;
+
+
+   print qq|
   <tr>
     <td>
       <table width=100%>
