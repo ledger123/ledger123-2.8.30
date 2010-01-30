@@ -18,7 +18,7 @@ if (-f "$form->{path}/custom_io.pl") {
 if (-f "$form->{path}/$form->{login}_io.pl") {
   eval { require "$form->{path}/$form->{login}_io.pl"; };
 }
-
+require "$form->{path}/mylib.pl";
 
 1;
 # end of main
@@ -251,11 +251,14 @@ function CheckAll(v) {
       }
     }
     
+    my $readonly;
+    $readonly = ' READONLY' if $form->{shipped};
+
     $column_data{runningnumber} = qq|<td><input name="runningnumber_$i" size=3 value=$i></td>|;
-    $column_data{partnumber} = qq|<td><input name="partnumber_$i" size=15 value="|.$form->quote($form->{"partnumber_$i"}).qq|" accesskey="$i" title="[Alt-$i]">$skunumber</td>|;
+    $column_data{partnumber} = qq|<td><input name="partnumber_$i" size=15 value="|.$form->quote($form->{"partnumber_$i"}).qq|" accesskey="$i" title="[Alt-$i]" $readonly>$skunumber</td>|;
     $column_data{itemdetail} = $itemdetail;
-    $column_data{qty} = qq|<td align=right><input name="qty_$i" title="$form->{"onhand_$i"}" size=8 value=|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|></td>|;
-    $column_data{ship} = qq|<td align=right><input name="ship_$i" size=8 value=|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|></td>|;
+    $column_data{qty} = qq|<td align=right><input name="qty_$i" title="$form->{"onhand_$i"}" size=8 value='|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|' $readonly></td>|;
+    $column_data{ship} = qq|<td align=right><input name="ship_$i" size=8 value='|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|' READONLY></td>|;
     $column_data{unit} = qq|<td><input name="unit_$i" size=5 value="|.$form->quote($form->{"unit_$i"}).qq|"></td>|;
     $column_data{sellprice} = qq|<td align=right><input name="sellprice_$i" size=11 value=|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $decimalplaces, $zero).qq|></td>|;
     $column_data{discount} = qq|<td align=right><input name="discount_$i" size=3 value=|.$form->format_amount(\%myconfig, $form->{"discount_$i"}).qq|></td>|;
@@ -551,6 +554,9 @@ sub item_selected {
 
       for (qw(id partnumber sku description sellprice listprice lastcost bin unit weight assembly taxaccounts pricematrix onhand itemnotes inventory_accno_id income_accno_id expense_accno_id)) {
 	$form->{"${_}_$i"} = $form->{"new_${_}_$j"};
+        # The follow two assignments are for trf.pl
+        $form->{"parts_id_$i"} = $form->{"id_$i"};
+        $form->{"cost_$i"} = $form->{"lastcost_$i"};
       }
 
       $form->{"netweight_$i"} = $form->{"weight_$i"};
@@ -1419,6 +1425,9 @@ sub print_form {
   if ($form->{formname} eq 'credit_invoice') {
     $form->{label} = $locale->text('Credit Invoice');
   }
+  if ($form->{formname} eq 'transfer') {
+    $form->{label} = $locale->text('Inventory Transfer');
+  }
 
   if ($form->{formname} eq 'sales_order') {
     $inv = "ord";
@@ -1490,6 +1499,16 @@ sub print_form {
     $numberfld = "rfqnumber";
     $order = 1;
   }
+  if ($form->{formname} eq 'transfer') {
+    $inv = "trf";
+    $due = "req";
+    $form->{label} = $locale->text('Transfer');
+    $numberfld = "trfnumber";
+    # followings are stubs for company_details
+    $form->{vc} = "customer";
+    $form->{customer_id} = 0;
+    $form->{employee} = "Armaghan Saqib--10102";
+  }
 
   &validate_items;
  
@@ -1547,6 +1566,9 @@ sub print_form {
   $duedate = $form->{"${due}date"};
 
   # create the form variables
+  if ($form->{formname} eq 'transfer'){
+     Trf->transfer_details(\%myconfig, \%$form);
+  } else {
   if ($order) {
     OE->order_details(\%myconfig, \%$form);
   } else {
@@ -1556,7 +1578,8 @@ sub print_form {
       IR->invoice_details(\%myconfig, \%$form);
     }
   }
-
+  }
+  #$form->info('Info'); use Data::Dumper; print qq|<pre>|; print Dumper(@{ $form->{descrip} }); print qq|</pre>|; exit;
   if ($form->{formname} eq 'remittance_voucher') {
     $form->isblank("dcn", qq|$form->{"${ARAP}_paid_$form->{paidaccounts}"} : |.$locale->text('DCN missing!'));
     $form->isblank("rvc", qq|$form->{"${ARAP}_paid_$form->{paidaccounts}"} : |.$locale->text('RVC missing!'));
@@ -1665,11 +1688,10 @@ sub print_form {
 
   if ($form->{media} eq 'email') {
     $mergerv = 1;
-    
     $form->{subject} = qq|$form->{label} $form->{"${inv}number"}| unless $form->{subject};
 
     $form->{plainpaper} = 1;
-    $form->{OUT} = "$sendmail";
+    $form->{OUT} = "$sendmail -f $form->{useremail}";
 
     if ($form->{emailed} !~ /$form->{formname}/) {
       $form->{emailed} .= " $form->{formname}";
@@ -1753,7 +1775,6 @@ sub print_form {
 
   $form->format_string(qw(email cc bcc));
   
-
   $form->parse_template(\%myconfig, $userspath) if $form->{copies};
 
 
