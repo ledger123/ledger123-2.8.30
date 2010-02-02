@@ -795,7 +795,8 @@ sub form_footer {
     for ("Update", "Ship to", "Print", "E-mail", "Save") { $a{$_} = 1 }
     $a{'Print and Save'} = 1 if $latex;
 
-    $a{'Ship all'} = 1 if $form->{type} =~ /(sales|purchase)_order/;
+    # armaghan 'Ship all' button removed for oe enhancements
+    #$a{'Ship all'} = 1 if $form->{type} =~ /(sales|purchase)_order/;
     
     if ($form->{id}) {
       
@@ -1981,8 +1982,6 @@ sub save {
   }
   
   $form->isblank("transdate", $msg);
-  $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
-  $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
 
   $msg = ucfirst $form->{vc};
   $form->isblank($form->{vc}, $locale->text($msg . " missing!"));
@@ -2153,6 +2152,7 @@ sub invoice {
   }
   if ($form->round_amount($totalship, 1) == 0) {
     for $i (1 .. $form->{rowcount}) { $form->{"ship_$i"} = $form->{"qty_$i"} }
+    $form->{add_shipping} = 1  if ($form->{type} =~ /_order$/); # Flag to add rows to inventory table
   }
 
   OE->save(\%myconfig, \%$form);
