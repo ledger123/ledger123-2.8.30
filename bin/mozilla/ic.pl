@@ -904,6 +904,7 @@ sub search {
 
       for (@{ $form->{all_warehouse} }) { $selectwarehouse .= qq|<option value="|.$form->quote($_->{description}).qq|--$_->{id}">$_->{description}\n| }
       
+      $selectwarehouse = qq|<option value="$myconfig{warehouse}--$myconfig{warehouse_id}">$myconfig{warehouse}\n| if $myconfig{warehouse_id} and $myconfig{role} eq 'user';
       $warehouse = qq|
           <th align=right nowrap>|.$locale->text('Warehouse').qq|</th>
           <td><select name=warehouse>$selectwarehouse</select></td>
@@ -1293,7 +1294,7 @@ sub generate_report {
   }
 
   if ($form->{bought} || $form->{sold} || $form->{onorder} || $form->{ordered} || $form->{rfq} || $form->{quoted}) {
-    
+    $form->{l_transdate} = "Y"; # armaghan - transdate is always displayed
     # warehouse stuff is meaningless
     $form->{warehouse} = "";
     $form->{l_warehouse} = 0;
@@ -1388,8 +1389,8 @@ sub generate_report {
     $form->{l_lastcostmarkup} = "Y" if $form->{l_lastcost};
     $form->{l_avgcostmarkup} = "Y" if $form->{l_avgcost};
   }
-
-  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup make model bin onhand perassembly rop unit sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber ordnumber quonumber name employee serialnumber warehouse countryorigin tariff_hscode));
+  # armaghan - added transdate
+  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup make model bin onhand perassembly rop unit sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber transdate ordnumber quonumber name employee serialnumber warehouse countryorigin tariff_hscode));
   unshift @columns, "runningnumber";
 
   if ($form->{l_linetotal}) {
@@ -1504,7 +1505,7 @@ sub generate_report {
   $column_data{invnumber} = qq|<th nowrap><a class=listheading href=$href&sort=invnumber>|.$locale->text('Invoice Number').qq|</a></th>|;
   $column_data{ordnumber} = qq|<th nowrap><a class=listheading href=$href&sort=ordnumber>|.$locale->text('Order Number').qq|</a></th>|;
   $column_data{quonumber} = qq|<th nowrap><a class=listheading href=$href&sort=quonumber>|.$locale->text('Quotation').qq|</a></th>|;
-  
+  $column_data{transdate} = qq|<th nowrap><a class=listheading href=$href&sort=transdate>|.$locale->text('Date').qq|</a></th>|;
   $column_data{name} = qq|<th nowrap><a class=listheading href=$href&sort=name>|.$locale->text('Name').qq|</a></th>|;
   
   $column_data{employee} = qq|<th nowrap><a class=listheading href=$href&sort=employee>|.$locale->text('Employee').qq|</a></th>|;
@@ -1601,7 +1602,7 @@ sub generate_report {
   
   if ($form->{summary}) {
     @groupby = ();
-    for (qw(partnumber description notes partsgroup make model bin curr priceupdate image drawing toolnumber barcode microfiche invnumber ordnumber quonumber name employee serialnumber warehouse countryorigin tariff_hscode)) { $a{$_} = 1 };
+    for (qw(partnumber description notes partsgroup make model bin curr priceupdate image drawing toolnumber barcode microfiche invnumber transdate ordnumber quonumber name employee serialnumber warehouse countryorigin tariff_hscode)) { $a{$_} = 1 };
 
     for (@column_index) {
       if ($a{$_}) {
@@ -1757,7 +1758,7 @@ sub generate_report {
     $column_data{quonumber} = ($ref->{module} eq 'oe' && !$ref->{ordnumber}) ? "<td><a href=$ref->{module}.pl?action=edit&type=$ref->{type}&id=$ref->{trans_id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{quonumber}&nbsp;</a></td>" : "<td>$ref->{quonumber}&nbsp;</td>";
 
     $column_data{name} = "<td>$ref->{name}&nbsp;</td>";
-
+    $column_data{transdate} = "<td align=right>$ref->{transdate}&nbsp;</td>";
     if ($ref->{vc_id}) {
       $column_data{name} = qq|<td><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{vc_id}&db=$ref->{vc}&callback=$callback>$ref->{name}</a></td>|;
     }
@@ -3152,7 +3153,7 @@ sub save {
       $form->error($locale->text($msg)) if $form->{onhand};
     }
   }
-
+  $form->isblank("partsgroup", $locale->text('Group missing!')) if $form->{selectpartsgroup};
   $olditem = $form->{id};
 
   # save part
@@ -3275,7 +3276,6 @@ sub save {
 
   # redirect
   $form->redirect;
-
 }
 
 
@@ -3398,10 +3398,48 @@ sub list_assemblies {
   
   $form->{title} = $locale->text('Stock Assembly');
 
-  
+  # departments
+  $form->all_departments(\%myconfig);
+  if (@{ $form->{all_department} }) {
+    $form->{selectdepartment} = "\n";
+    $form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
+
+    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    $form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}| if $myconfig{department_id} and $myconfig{role} eq 'user';
+  }
+
+  # warehouses
+  $form->all_warehouses(\%myconfig);
+  if (@{ $form->{all_warehouse} }) {
+    $form->{selectwarehouse} = "\n";
+    $form->{warehouse} = "$form->{warehouse}--$form->{warehouse_id}" if $form->{warehouse_id};
+
+    for (@{ $form->{all_warehouse} }) { $form->{selectwarehouse} .= qq|$_->{description}--$_->{id}\n| }
+    $form->{selectwarehouse} = qq|$myconfig{warehouse}--$myconfig{warehouse_id}| if $myconfig{warehouse_id} and $myconfig{role} eq 'user';
+  }
+
+  $department = qq|
+              <tr>
+	        <th align="right" nowrap>|.$locale->text('Department').qq|</th>
+		<td colspan=3><select name=department>|
+		.$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+		.qq|</select>
+		</td>
+	      </tr>
+| if $form->{selectdepartment};
+
+  $warehouse = qq|
+              <tr>
+	        <th align="right" nowrap>|.$locale->text('Warehouse').qq|</th>
+		<td colspan=3><select name=warehouse>|
+		.$form->select_option($form->{selectwarehouse}, $form->{warehouse}, 1).qq|
+		</select>
+		</td>
+	      </tr>
+| if $form->{selectwarehouse};
+ 
   $form->header;
   
-
   print qq|
 <body>
 
@@ -3412,6 +3450,18 @@ sub list_assemblies {
     <th class=listtop>$form->{title}</th>
   </tr>
   <tr size=5></tr>
+  <tr>
+	<table><tr>
+		<th align="right" nowrap>| . $locale->text('Reference') . qq|</th>
+		<td><input name=reference type=text size=20>
+	</tr><tr>
+		<th align="right" nowrap>| . $locale->text('Date') . qq|</th>
+		<td><input name=transdate type=text size=11 title='$myconfig{dateformat}'>
+	</tr>
+	$department
+	$warehouse
+	</table>
+  </tr>
   <tr>
     <td>
       <table width=100%>
@@ -3488,6 +3538,9 @@ sub list_assemblies {
 
 sub restock_assemblies {
 
+  # armaghan
+  $form->isblank('reference', $locale->text('Reference missing'));
+  $form->isblank('transdate', $locale->text('Date missing'));
 
   if ($form->{checkinventory}) {
     for (1 .. $form->{rowcount}) { $form->error($locale->text('Quantity exceeds available units to stock!')) if $form->parse_amount($myconfig, $form->{"qty_$_"}) > $form->{"stock_$_"} }

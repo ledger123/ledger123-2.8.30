@@ -199,23 +199,19 @@ sub save {
   for (qw(alternate obsolete onhand assembly)) { $form->{$_} *= 1 }
   
   if ($form->{id} && $form->{changeup}) {
-    
     if ($form->{assembly}) {
       my $stock = new Form;
       $stock->{rowcount} = 1;
       $stock->{qty_1} = $form->{onhand} * -1;
       $stock->{id_1} = $form->{id};
-
       IC->restock_assemblies($myconfig, $stock, $dbh);
       
       $query = qq|UPDATE parts SET obsolete = '1'
 		  WHERE id = $form->{id}|;
       $dbh->do($query) || $form->dberror($query);
-
       $form->{stock} = $form->{onhand};
       $form->{onhand} = 0;
       $form->{id} = 0;
-    
     } else {
       $form->{id} = 0 unless $form->{orphaned};
     }
@@ -667,6 +663,36 @@ sub restock_assemblies {
     $dbh = $form->dbconnect_noauto($myconfig);
   }
    
+  # armaghan Add row to build table 
+  ($form->{employee}, $form->{employee_id}) = $form->get_employee($dbh);
+  for (qw(department warehouse)) {
+     ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
+     $form->{"${_}_id"} *= 1;
+  }
+
+  my $uid = localtime;
+  $uid .= $$;
+  if (! $form->{id}) {
+    $query = qq|INSERT INTO build (reference, employee_id)
+                VALUES ('$uid', $form->{employee_id})|;
+    $dbh->do($query) || $form->dberror($query);
+
+    $query = qq|SELECT id FROM build
+                WHERE reference = '$uid'|;
+    $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
+
+    ($form->{id}) = $sth->fetchrow_array;
+    $sth->finish;
+  }
+  $query = qq|UPDATE build SET
+		reference = |.$dbh->quote($form->{reference}).qq|,
+		transdate = |.$form->dbquote($form->{transdate}, SQL_DATE).qq|,
+		department_id = $form->{department_id},
+		warehouse_id = $form->{warehouse_id}
+	      WHERE id = $form->{id}|;
+  $dbh->do($query) or $form->dberror($query); 
+
   for my $i (1 .. $form->{rowcount}) {
 
     $form->{"qty_$i"} = $form->parse_amount($myconfig, $form->{"qty_$i"});
@@ -706,6 +732,19 @@ sub adjust_inventory {
       next if ! $ref->{assembly};              # assembly
     }
     
+    # armaghan Add rows to inventory table for parts removed from stock for assembly
+    $query = qq|INSERT INTO inventory (
+			warehouse_id, parts_id,
+			trans_id, qty, 
+			shippingdate, 
+			employee_id, department_id, linetype)
+		VALUES ($form->{warehouse_id}, $ref->{id},
+			$form->{id}, $qty * $ref->{qty} * -1, 
+			|.$form->dbquote($form->{transdate}, SQL_DATE).qq|,
+			$form->{employee_id}, $form->{department_id}, '4'
+		)|;
+    $dbh->do($query) || $form->dberror($query);
+
     # adjust parts onhand
     $form->update_balance($dbh,
 			  "parts",
@@ -715,6 +754,19 @@ sub adjust_inventory {
   }
 
   $sth->finish;
+
+  # armaghan Add rows to inventory table for newly built assemblies.
+  $query = qq|INSERT INTO inventory (
+			warehouse_id, parts_id,
+			trans_id, qty, 
+			shippingdate, 
+			employee_id, department_id, linetype)
+		VALUES ($form->{warehouse_id}, $id,
+			$form->{id}, $qty,
+			|.$form->dbquote($form->{transdate}, SQL_DATE).qq|,
+			$form->{employee_id}, $form->{department_id}, '5'
+		)|;
+  $dbh->do($query) || $form->dberror($query);
 
   # update assembly
   $form->update_balance($dbh,
@@ -976,7 +1028,7 @@ sub all_parts {
                 p.bin, p.sellprice, p.listprice, p.lastcost, p.rop,
 		p.avgcost,
 		p.weight, p.priceupdate, p.image, p.drawing, p.microfiche,
-		p.assembly, pg.partsgroup, '$curr' AS curr,
+		p.assembly, NULL AS transdate, pg.partsgroup, '$curr' AS curr,
 		c1.accno AS inventory, c2.accno AS income, c3.accno AS expense,
 		p.notes, p.toolnumber, p.countryorigin, p.tariff_hscode,
 		p.barcode
@@ -1078,13 +1130,13 @@ sub all_parts {
       } else {
 	$invwhere .= " AND a.id = 0";
       }
-
+      # armaghan multiplied by -1 for correct sign
       my $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
-                    i.qty AS onhand, i.unit, p.bin, i.sellprice,
+                    i.qty * -1 AS onhand, i.unit, p.bin, i.sellprice,
 		    p.listprice, p.lastcost, p.rop, p.weight,
 		    p.avgcost,
 		    p.priceupdate, p.image, p.drawing, p.microfiche,
-		    p.assembly,
+		    p.assembly, a.transdate,
 		    pg.partsgroup, a.invnumber, a.ordnumber, a.quonumber,
 		    i.trans_id, ct.name, e.name AS employee,
 		    a.curr, a.till, p.notes, p.toolnumber,
@@ -1094,7 +1146,8 @@ sub all_parts {
 
       if ($form->{bought}) {
 	my $rflds = $flds;
-	$rflds =~ s/i.qty AS onhand/i.qty * -1 AS onhand/;
+        # armaghan disabled sign change
+	# $rflds =~ s/i.qty AS onhand/i.qty * -1 AS onhand/;
 
 	$query = qq|
 	            SELECT $rflds, 'ir' AS module, '' AS type,
@@ -1159,7 +1212,7 @@ sub all_parts {
 	         p.listprice, p.lastcost, p.rop, p.weight,
 		 p.avgcost,
 		 p.priceupdate, p.image, p.drawing, p.microfiche,
-		 p.assembly,
+		 p.assembly, NULL AS transdate,
 		 pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
 		 i.trans_id, ct.name, e.name AS employee,
 		 a.curr, '0' AS till, p.notes, p.toolnumber,
@@ -1192,7 +1245,7 @@ sub all_parts {
 		   p.listprice, p.lastcost, p.rop, p.weight,
 		   p.avgcost,
 		   p.priceupdate, p.image, p.drawing, p.microfiche,
-		   p.assembly,
+		   p.assembly, NULL AS transdate,
 		   pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
 		   i.trans_id, ct.name, e.name AS employee,
 		   a.curr, '0' AS till, p.notes, p.toolnumber,
@@ -1243,7 +1296,7 @@ sub all_parts {
 	         p.listprice, p.lastcost, p.rop, p.weight,
 		 p.avgcost,
 		 p.priceupdate, p.image, p.drawing, p.microfiche,
-		 p.assembly,
+		 p.assembly, NULL AS transdate,
 		 pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
 		 i.trans_id, ct.name, e.name AS employee,
 		 a.curr, '0' AS till, p.notes, p.toolnumber,
@@ -1276,7 +1329,7 @@ sub all_parts {
 		   p.listprice, p.lastcost, p.rop, p.weight,
 		   p.avgcost,
 		   p.priceupdate, p.image, p.drawing, p.microfiche,
-		   p.assembly,
+		   p.assembly, NULL AS transdate,
 		   pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
 		   i.trans_id, ct.name, e.name AS employee,
 		   a.curr, '0' AS till, p.notes, p.toolnumber,
@@ -1398,6 +1451,7 @@ sub all_parts {
 	push @a, $_;
 	
 	while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+	  # Commented lines below to show warehouses with -ve onhand
           #if ($ref->{onhand} > 0) {
 	    push @a, $ref;
 	  #}
@@ -1569,7 +1623,7 @@ sub requirements {
 	      WHERE $where
 	      AND p.assembly = '1'
 	      AND a.closed = '0'
-	      GROUP BY p.id, p.onhand|;
+              GROUP BY p.id, p.onhand|;
   $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
