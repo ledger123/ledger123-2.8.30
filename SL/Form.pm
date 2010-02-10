@@ -3451,6 +3451,28 @@ sub audittrail {
   
 }
 
+sub save_form {
+  my ($self, $type) = @_;
+  if ($type eq 'report'){
+     if (! -f "$self->{login}_menu.ini"){
+	open FH, ">$self->{login}_menu.ini";
+        print FH qq|[Saved Reports]\n|;
+	close FH;
+     }
+     open FH, ">>$self->{login}_menu.ini";
+     print FH qq|\n[Saved Reports--$self->{reportname}]\n|;
+     print FH qq|module=$self->{script}\n|;
+     print FH qq|action=$self->{actionname}\n|;
+     for (sort keys %$self){
+       if ($self->{$_} and ($_ !~ /^(callback|action|actionname|nextsub|link|precision|filetype|oldsort|dbversion|debug|path|session|sessioncookie|stylesheet|title|titlebar|version|timeout|login|reportname|level|script|GL|TB)$/)){
+          print FH qq|$_=$self->{$_}\n|;
+       }
+     }
+     close FH;
+     $self->info('Saved');
+  }
+}
+
 
 
 package Locale;
