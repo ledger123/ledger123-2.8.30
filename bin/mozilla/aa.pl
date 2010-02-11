@@ -2155,14 +2155,19 @@ sub transactions {
 <form method=post action=$form->{script}>
 |;
 
-  $form->hide_form("$form->{vc}", "$form->{vc}_id");
-  $form->hide_form(qw(callback path login));
+  $form->hide_form;
   
   if (! $form->{till}) {
     foreach $item (sort { $a->{order} <=> $b->{order} } %button) {
       print $item->{code};
     }
   }
+
+  print qq|
+<input name=actionname type=hidden value='transactions'>
+<input name=reportname type=text size=20>
+<input class=submit type=submit name=action value="|.$locale->text('Save Report').qq|">
+|;
 
   if ($form->{menubar}) {
     require "$form->{path}/menu.pl";
@@ -2177,7 +2182,6 @@ sub transactions {
 |;
 
 }
-
 
 sub subtotal {
 
