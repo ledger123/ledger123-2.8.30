@@ -287,6 +287,7 @@ sub post_transaction {
 	      terms = $form->{terms},
 	      curr = '$form->{currency}',
 	      notes = |.$dbh->quote($form->{notes}).qq|,
+	      intnotes = |.$dbh->quote($form->{intnotes}).qq|,
 	      department_id = $form->{department_id},
 	      employee_id = $form->{employee_id},
 	      ponumber = |.$dbh->quote($form->{ponumber}).qq|,
@@ -956,6 +957,7 @@ sub transactions {
   my $sameid;
  
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
+    $ref->{exchangerate} ||= 1;
     if ($ref->{linetotal} <= 0) {
       $ref->{debit} = $ref->{linetotal} * -1;
       $ref->{credit} = 0;
@@ -1090,12 +1092,12 @@ sub get_name {
   $ref->{discount_accno} .= ($ref->{discount_accno_translation}) ? $ref->{discount_accno_translation} : $ref->{discount_accno_description};
   $ref->{payment_method} .= qq|--$ref->{paymentmethod_id}|;
   
-  $form->{$ARAP} = $ref->{arap_accno};
+  $form->{$ARAP} = $ref->{arap_accno} if $ref->{arap_accno} ne '--';
 
   for (qw(trans_id arap_accno)) { delete $ref->{$_} }
 
   if ($form->{id}) {
-    for (qw(currency employee employee_id intnotes)) { delete $ref->{$_} }
+    for (qw(currency employee employee_id)) { delete $ref->{$_} }
   }
  
   for (keys %$ref) { $form->{$_} = $ref->{$_} }
@@ -1296,7 +1298,7 @@ sub company_details {
               WHERE id = $id|;
   ($form->{workphone}, $form->{workfax}, $form->{workmobile}) = $dbh->selectrow_array($query);
 
-  my @a = qw(weightunit cdt company address tel fax businessnumber);
+  my @a = qw(weightunit cdt company companyemail companywebsite address tel fax businessnumber);
   my %defaults = $form->get_defaults($dbh, \@a);
   for (@a) { $form->{$_} = $defaults{$_} }
 
