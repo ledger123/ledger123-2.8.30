@@ -872,7 +872,7 @@ sub form_footer {
       
       delete $button{'Purchase Order'} if $myconfig{acs} =~ /(Order Entry--Order Entry|Order Entry--Purchase Order)/;
       
-      if ($form->{locked} || $transdate <= $form->{closedto}) {
+      if ($form->{locked} || $transdate <= $form->{closedto} || $form->{oe_id}) {
 	for ("Post", "Print and Post", "Delete") { delete $button{$_} }
       }
 

@@ -843,7 +843,8 @@ sub post_invoice {
       }
 
       # armaghan - manage warehouse inventory from sale/purchase invoices
-      $query = qq|INSERT INTO inventory (
+      if (!$form->{shipped}){ # if we are not coming from order screen.
+         $query = qq|INSERT INTO inventory (
                         warehouse_id, parts_id, trans_id,
                         orderitems_id, qty,
                         shippingdate,
@@ -858,8 +859,8 @@ sub post_invoice {
       			$dbh->quote($form->{"itemnotes_$i"}) . qq|, | .
 			$dbh->quote($form->{"description_$i"}) . qq|, $id,
 			$form->{"sellprice_$i"})|;
-      $dbh->do($query) || $form->dberror($query);
-    
+         $dbh->do($query) || $form->dberror($query);
+      }
 
       if ($form->{"inventory_accno_id_$i"}) {
 
@@ -1669,7 +1670,10 @@ sub retrieve_invoice {
     $ref = $sth->fetchrow_hashref(NAME_lc);
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
     $sth->finish;
-    
+
+    $query = qq|SELECT id FROM oe WHERE aa_id = $form->{id}|;
+    $form->{oe_id} = $dbh->selectrow_array($query);
+
     if ($form->{bank_accno}) {
       $form->{payment_accno} = ($form->{bank_accno_translation}) ? "$form->{bank_accno}--$form->{bank_accno_translation}" : "$form->{bank_accno}--$form->{bank_accno_description}";
     }
