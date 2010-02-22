@@ -414,6 +414,7 @@ sub gl_list {
    $glwhere .= qq| AND c.accno <= '$form->{toaccount}'| if $form->{toaccount};
    $glwhere .= qq| AND ac.transdate >= '$form->{fromdate}'| if $form->{fromdate};
    $glwhere .= qq| AND ac.transdate <= '$form->{todate}'| if $form->{todate};
+   $glwhere .= qq| AND ac.amount <> 0|;
    my $arwhere = $glwhere;
    my $apwhere = $glwhere;
 
