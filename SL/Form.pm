@@ -1921,8 +1921,28 @@ sub get_currencies {
   $currencies;
 
 }
-
  
+# bp 2010/02/10
+sub get_precision {
+  my ($self, $myconfig, $currency) = @_;
+
+  return "" if $self->{defaultcurrency} eq $currency;
+
+  my $dbh = $self->dbconnect($myconfig);
+
+  my $precision;
+
+  $query = qq|SELECT precision FROM curr
+              WHERE curr = '$currency'|;
+
+  $precision = $dbh->selectrow_array($query);
+
+  $dbh->disconnect;
+
+  $precision;
+
+}
+
 sub get_defaults {
   my ($self, $dbh, $flds) = @_;
 

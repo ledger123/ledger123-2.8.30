@@ -2602,7 +2602,10 @@ sub vendor_row {
 	  </td>
 |;
     }
-  
+
+    # bp 2010/02/12 use decimalplaces for the selected currency
+    $form->{decimalplacescost} = $form->get_precision(\%myconfig, $form->{"vendorcurr_$i"});
+
     print qq|
 	<tr>
 	  $vendor
@@ -2688,8 +2691,10 @@ sub customer_row {
 	  <td>$pricegroup</td>|.$form->hide_form("pricegroup_$i");
       }
     }
-    
-    
+ 
+    # bp 2010/02/12 use decimalplaces for the selected currency
+    $form->{decimalplacessell} = $form->get_precision(\%myconfig, $form->{"customercurr_$i"});
+
     print qq|
 	<tr>
 	  $customer
