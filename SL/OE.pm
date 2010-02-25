@@ -298,16 +298,16 @@ sub save {
     }
   }
  
+  for (qw(department warehouse)) {
+    ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
+    $form->{"${_}_id"} *= 1;
+  }
+
   if (! $form->{id}) {
     
     my $uid = localtime;
     $uid .= $$;
 
-    for (qw(department warehouse)) {
-      ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
-      $form->{"${_}_id"} *= 1;
-    }
-    
     $query = qq|INSERT INTO oe (ordnumber, employee_id)
 		VALUES ('$uid', $form->{employee_id})|;
     $dbh->do($query) || $form->dberror($query);
@@ -543,7 +543,6 @@ sub save {
 	      exchangerate = $form->{exchangerate}
               WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
-
   $form->{ordtotal} = $amount;
 
   # add shipto

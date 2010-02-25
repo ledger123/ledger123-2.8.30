@@ -796,7 +796,7 @@ sub form_footer {
     $a{'Print and Save'} = 1 if $latex;
 
     # armaghan 'Ship all' button removed for oe enhancements
-    #$a{'Ship all'} = 1 if $form->{type} =~ /(sales|purchase)_order/;
+    $a{'Ship all'} = 1 if $form->{type} =~ /(sales|purchase)_order/;
     
     if ($form->{id}) {
       
