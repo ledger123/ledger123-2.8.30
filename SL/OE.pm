@@ -297,17 +297,19 @@ sub save {
       $dbh->do($query) || $form->dberror($query);
     }
   }
+
+  #JHM imported purcahse orders will have id but not this
+  for (qw(department warehouse)){
+     ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
+     $form->{"${_}_id"} *= 1;
+  }
  
   if (! $form->{id}) {
     
     my $uid = localtime;
     $uid .= $$;
 
-    for (qw(department warehouse)) {
-      ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
-      $form->{"${_}_id"} *= 1;
-    }
-    
+   
     $query = qq|INSERT INTO oe (ordnumber, employee_id)
 		VALUES ('$uid', $form->{employee_id})|;
     $dbh->do($query) || $form->dberror($query);
