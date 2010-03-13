@@ -1220,6 +1220,18 @@ sub all_parts {
 		 $makemodelflds|;
 
       if ($form->{ordered}) {
+         $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
+                 0 - i.qty AS onhand, i.unit, p.bin, i.sellprice,
+	         p.listprice, p.lastcost, p.rop, p.weight,
+		 p.avgcost,
+		 p.priceupdate, p.image, p.drawing, p.microfiche,
+		 p.assembly, NULL AS transdate,
+		 pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
+		 i.trans_id, ct.name, e.name AS employee,
+		 a.curr, '0' AS till, p.notes, p.toolnumber,
+		 p.countryorigin, p.tariff_hscode, p.barcode
+		 $makemodelflds|;
+
 	$query .= qq|$union
                      SELECT $flds, 'oe' AS module, 'sales_order' AS type,
 		    (SELECT buy FROM exchangerate ex
