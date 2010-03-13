@@ -110,10 +110,11 @@ sub transactions {
   
   # build query if type eq (ship|receive)_order
   if ($form->{type} =~ /(ship|receive)_order/) {
-    
+
+    #bp 2010-03-11 changed AND oi.qty > oi.ship
     $query .= qq|
 	         AND o.quotation = '0'
-		 AND oi.qty > oi.ship
+		 AND oi.qty <> oi.ship
 		 AND o.id NOT IN (SELECT id FROM semaphore)|;
 		 
   }
@@ -1651,14 +1652,15 @@ sub save_inventory {
     $ship = (abs($form->{"ship_$i"}) > abs($form->{"qty_$i"})) ? $form->{"qty_$i"} : $form->{"ship_$i"};
     
     if ($ship) {
-
+      #bp 2010-03-11 add serialnumber
       $ship *= $ml;
       $query = qq|INSERT INTO inventory (parts_id, warehouse_id,
-                  qty, trans_id, orderitems_id, shippingdate, employee_id)
+                  qty, trans_id, orderitems_id, shippingdate,
+		  employee_id, serialnumber)
                   VALUES ($form->{"id_$i"}, $warehouse_id,
 		  $ship, $form->{"id"},
 		  $form->{"orderitems_id_$i"}, '$form->{shippingdate}',
-		  $employee_id)|;
+		  $employee_id,|.$dbh->quote($form->{"serialnumber_$i"}).qq|)|;
       $dbh->do($query) || $form->dberror($query);
      
       # add serialnumber, ship to orderitems
