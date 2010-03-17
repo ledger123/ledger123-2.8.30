@@ -2570,7 +2570,9 @@ sub display_ship_receive {
   for $i (1 .. $form->{rowcount} - 1) {
     
     # undo formatting
-    $form->{"ship_$i"} = $form->parse_amount(\%myconfig, $form->{"ship_$i"});
+    for (qw(ship grossweight netweight volume)){
+      $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"});
+    }
 
     $description = $form->{"description_$i"};
     $description =~ s/\r?\n/<br>/g;
