@@ -157,12 +157,13 @@ sub form_header {
 	       'Delete' => { ndx => 4, key => 'D', value => $locale->text('Delete') },
    );
 
+   $transdate = $form->datetonum(\%myconfig, $form->{"transdate"});
    if ($form->{id}) {
-      if ($form->{locked} || $form->{transdate} <= $form->{closedto}) {
+      if ($form->{locked} || $transdate <= $form->{closedto}) {
 	for ("Save", "Delete") { delete $button{$_} }
       }
    } else {
-      if ($form->{transdate} > $form->{closedto}) {
+      if ($transdate > $form->{closedto}) {
 	for ("Update", "Print", "Save") { $a{$_} = 1 }
       }
       for (keys %button) { delete $button{$_} if !$a{$_} }
