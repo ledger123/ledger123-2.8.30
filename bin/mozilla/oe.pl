@@ -2687,6 +2687,7 @@ sub display_ship_receive {
 
 sub done {
 
+  $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
   if ($form->{type} eq 'ship_order') {
     $form->isblank("shippingdate", $locale->text('Shipping Date missing!'));
   } else {
