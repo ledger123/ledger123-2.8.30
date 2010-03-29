@@ -5,8 +5,9 @@ sub continue { &{$form->{nextsub} } };
 sub ask_dbcheck {
   $form->{title} = $locale->text('Ledger Doctor');
   $form->header;
-  $firstdate = $form->current_date(\%myconfig);
-  $lastdate = $form->current_date(\%myconfig);
+  my $dbh = $form->dbconnect(\%myconfig);
+  my ($firstdate) = $dbh->selectrow_array("SELECT MIN(transdate) FROM acc_trans");
+  my ($lastdate) = $dbh->selectrow_array("SELECT MAX(transdate) FROM acc_trans");
   print qq|
 <body>
   <table width=100%>
@@ -16,11 +17,17 @@ sub ask_dbcheck {
 <h1>Check for database inconsistancies</h1>
 <form method=post action='$form->{script}'>
   <table>
-    <th>|. $locale->text('First transaction date') . qq|</th><td><input name=firstdate size=11 value='$firstdate' title='$myconfig{dateformat}'></td></tr>
-<th>|. $locale->text('Last transaction date') . qq|</th><td><input name=lastdate size=11 value='$lastdate' title='$myconfig{dateformat}'></td></tr>
+    <tr>
+	<th>|.$locale->text('First transaction date').qq|</th>
+	<td><input name=firstdate size=11 value='$firstdate' title='$myconfig{dateformat}'></td>
+    </tr>
+    <tr>
+	<th>|.$locale->text('Last transaction date').qq|</th>
+	<td><input name=lastdate size=11 value='$lastdate' title='$myconfig{dateformat}'></td>
+     </tr>
   </table>|.
 $locale->text('All transactions outside this date range will be reported as having invalid dates.').qq|
-<br><br><hr />
+<br><br><hr/>
 <input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">
 |;
 
@@ -251,7 +258,6 @@ sub do_dbcheck {
 </table>
 </body>
 </html>|;
-
   $dbh->disconnect;
 }
 
