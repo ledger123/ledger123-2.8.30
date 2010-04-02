@@ -180,7 +180,7 @@ sub payment_transactions {
   for (1 .. 2) {
     $query .= qq|$union
 		SELECT ac.transdate, ac.source, ac.fx_transaction,
-		ac.amount, ac.cleared, g.id, g.description, ac.id AS payment_id
+		ac.amount, ac.cleared, g.id, g.description, ac.entry_id AS payment_id
 		FROM acc_trans ac
 		JOIN chart ch ON (ac.chart_id = ch.id)
 		JOIN gl g ON (g.id = ac.trans_id)
@@ -191,7 +191,7 @@ sub payment_transactions {
 		$cleared
 		UNION ALL
 		SELECT ac.transdate, ac.source, ac.fx_transaction,
-		ac.amount, ac.cleared, a.id, n.name, ac.id AS payment_id
+		ac.amount, ac.cleared, a.id, n.name, ac.entry_id AS payment_id
 		FROM acc_trans ac
 		JOIN chart ch ON (ac.chart_id = ch.id)
 		JOIN ar a ON (a.id = ac.trans_id)
@@ -203,7 +203,7 @@ sub payment_transactions {
 		$cleared
 		UNION ALL
 		SELECT ac.transdate, ac.source, ac.fx_transaction,
-		ac.amount, ac.cleared, a.id, n.name, ac.id AS payment_id
+		ac.amount, ac.cleared, a.id, n.name, ac.entry_id AS payment_id
 		FROM acc_trans ac
 		JOIN chart ch ON (ac.chart_id = ch.id)
 		JOIN ap a ON (a.id = ac.trans_id)
@@ -315,7 +315,7 @@ sub reconcile {
 	      $query = qq|UPDATE acc_trans SET
 	            cleared = |.$form->dbquote($cleared, SQL_DATE).qq|
                     WHERE trans_id = $trans_id 
-		    AND id = $payment_id
+		    AND entry_id = $payment_id
 	            AND transdate = '$form->{"transdate_$i"}'
 	            AND chart_id = $chart_id|;
               $dbh->do($query) || $form->dberror($query);

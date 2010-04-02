@@ -80,3 +80,8 @@ CREATE INDEX inventory_invoice_id ON inventory (invoice_id);
 ALTER TABLE invoice ADD COLUMN cogs float;
 ALTER TABLE inventory ADD COLUMN cogs float;
 
+-- armaghan 01/apr/2010 acc_trans primary key
+CREATE SEQUENCE entry_id;
+SELECT nextval ('entry_id');
+ALTER TABLE acc_trans ADD COLUMN entry_id INTEGER DEFAULT nextval('entry_id');
+
