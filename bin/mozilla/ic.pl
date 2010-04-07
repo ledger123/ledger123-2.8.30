@@ -1820,11 +1820,17 @@ sub generate_report {
 <input type=hidden name=item value=$form->{searchitems}>
 |;
 
-  $form->hide_form(qw(callback path login));
+  $form->hide_form;
 
   foreach $item (sort { $a->{order} <=> $b->{order} } %button) {
     print $item->{code};
   }
+
+  print qq|
+<input name=actionname type=hidden value='generate_report'>
+<input name=reportname type=text size=20>
+<input class=submit type=submit name=action value="|.$locale->text('Save Report').qq|">
+|;
 
   if ($form->{menubar}) {
     require "$form->{path}/menu.pl";

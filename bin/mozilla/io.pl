@@ -1998,3 +1998,7 @@ sub shipto_selected {
 
 }
 
+sub save_report {
+  $form->save_form('report');
+}
+

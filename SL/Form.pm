@@ -3573,7 +3573,7 @@ sub save_form {
      print FH qq|module=$self->{script}\n|;
      print FH qq|action=$self->{actionname}\n|;
      for (sort keys %$self){
-       if ($self->{$_} and ($_ !~ /^(callback|action|actionname|nextsub|link|precision|filetype|oldsort|dbversion|debug|path|session|sessioncookie|stylesheet|title|titlebar|version|timeout|login|direction|reportname|level|script|GL|TB|transactions|balance|selectwarehouse|selectdepartment)$/)){
+       if ($self->{$_} and ($_ !~ /^(parts|callback|action|actionname|nextsub|link|precision|filetype|oldsort|dbversion|debug|path|session|sessioncookie|stylesheet|title|titlebar|version|timeout|login|direction|reportname|level|script|GL|TB|transactions|balance|selectwarehouse|selectdepartment)$/)){
           print FH qq|$_=$self->{$_}\n|;
        }
      }
