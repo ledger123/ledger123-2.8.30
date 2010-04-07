@@ -182,33 +182,33 @@ sub split_combos {
 ###############################
 sub print_criteria {
    my ($fldname, $fldprompt) = @_;
-   print qq|$fldprompt : $form->{"$fldname"}<br>\n| if $form->{"$fldname"};
+   print $locale->text($fldprompt).qq| : $form->{"$fldname"}<br>\n| if $form->{"$fldname"};
 }
 
 ###############################
 sub print_date {
     my ($fldname, $fldprompt, $defaultvalue) = @_;
-    print qq|<tr><th align=right>$fldprompt</th><td><input type=text name=$fldname 
+    print qq|<tr><th align=right>|.$locale->text($fldprompt).qq|</th><td><input type=text name=$fldname 
 		size=11 title='$myconfig{dateformat}' value='$defaultvalue'></td></tr>\n|;
 }
 
 ###############################
 sub print_text {
     my ($fldname, $fldprompt, $size, $defaultvalue) = @_;
-    print qq|<tr><th align=right>$fldprompt</th><td><input type=text name=$fldname 
+    print qq|<tr><th align=right>|.$locale->text($fldprompt).qq|</th><td><input type=text name=$fldname 
 	size=$size value="$defaultvalue"></td></tr>\n|;
 }
 
 ###############################
 sub print_plain {
     my ($fldvalue, $fldprompt) = @_;
-    print qq|<tr><th align=right>$fldprompt</th><td>$fldvalue</td></tr>\n|;
+    print qq|<tr><th align=right>|.$locale->text($fldprompt).qq|</th><td>$fldvalue</td></tr>\n|;
 }
 
 ###############################
 sub print_checkbox {
     my ($fldname, $fldprompt, $checked, $extratag) = @_;
-    print qq|<input name=$fldname class=checkbox type=checkbox value=Y $checked> $fldprompt\n|;
+    print qq|<input name=$fldname class=checkbox type=checkbox value=Y $checked>|.$locale->text($fldprompt).qq|\n|;
     print qq|$extratag| if $extratag;
 }
 
@@ -216,14 +216,14 @@ sub print_checkbox {
 sub report_checkbox {
     my ($fldname, $fldprompt, $checked) = @_;
     print qq|<td>|;
-    print qq|<input name=$fldname class=checkbox type=checkbox value=Y $checked> $fldprompt\n|;
+    print qq|<input name=$fldname class=checkbox type=checkbox value=Y $checked>|.$locale->text($fldprompt).qq|\n|;
     print qq|</td>|;
 }
 
 ###############################
 sub print_readonly {
     my ($fldname, $fldprompt, $size, $defaultvalue) = @_;
-    print qq|<tr><th align=right>$fldprompt</th><td><input type=text name=$fldname 
+    print qq|<tr><th align=right>|.$locale->text($fldprompt).qq|</th><td><input type=text name=$fldname 
 	size=$size value="$defaultvalue" READONLY></td></tr>\n|;
 }
 
@@ -236,7 +236,7 @@ sub print_hidden {
 ###############################
 sub print_title {
     $form->header;
-    print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table>\n|;
+    print qq|<body><table width=100%><tr><th class=listtop>|.$locale->text($form->{title}).qq|</th></tr></table>\n|;
 }
 
 ###############################
@@ -290,9 +290,9 @@ sub rpt_hdr {
   my $href = shift;
   my $str;
   if ($href){
-     $str = qq|<th><a class=listheading href=$href&sort=$column_name>$column_heading</a></th>|;
+     $str = qq|<th><a class=listheading href=$href&sort=$column_name>|.$locale->text($column_heading).qq|</a></th>|;
   } else {
-     $str = qq|<th class=listheading>$column_heading</th>|;
+     $str = qq|<th class=listheading>|.$locale->text($column_heading).qq|</th>|;
   }
   $str;
 }
@@ -302,7 +302,7 @@ sub rpt_hdr {
 sub tbl_hdr {
   my $column_heading = shift;
   my $str;
-  $str = qq|<th>$column_heading</th>|;
+  $str = qq|<th>|.$locale->text($column_heading).qq|</th>|;
   $str;
 }
 
@@ -396,10 +396,10 @@ sub list_parts {
    print qq|<table width=100%>|;
    print qq|<tr class=listheading>\n|;
    print qq|<th>&nbsp;</th>|;
-   print qq|<th>Number</th>|;
-   print qq|<th>Description</th>|;
-   print qq|<th>Onhand</th>|;
-   print qq|<th>Unit</th>|;
+   print qq|<th>|.$locale->text('Number').qq|</th>|;
+   print qq|<th>|.$locale->text('Description').qq|</th>|;
+   print qq|<th>|.$locale->text('Onhand').qq|</th>|;
+   print qq|<th>|.$locale->text('Unit').qq|</th>|;
    print qq|</tr>|;
 
    my $i = 1;
@@ -420,7 +420,7 @@ sub list_parts {
    }
    print qq|</table>\n|;
    print("<hr size=3 noshade>\n");
-   add_button('Continue');
+   add_button($locale->text('Continue'));
    $form->{nextsub} = 'select_part';
    end_form;
 }
