@@ -309,32 +309,18 @@ sub reconcile {
     if ($form->{"datecleared_$i"} ne $form->{"oldcleared_$i"}) {
 
       $cleared = ($form->{"cleared_$i"}) ? $form->{recdate} : '';
-      foreach $trans_id (split / /, $form->{"id_$i"}) {
-	if ($form->{"payment_id_$i"}){
-	   foreach $payment_id (split / /, $form->{"payment_id_$i"}){
-	      $query = qq|UPDATE acc_trans SET
+      foreach $payment_id (split / /, $form->{"payment_id_$i"}){
+	 $query = qq|UPDATE acc_trans SET
 	            cleared = |.$form->dbquote($cleared, SQL_DATE).qq|
                     WHERE trans_id = $trans_id 
 		    AND entry_id = $payment_id
 	            AND transdate = '$form->{"transdate_$i"}'
 	            AND chart_id = $chart_id|;
-              $dbh->do($query) || $form->dberror($query);
-	   }
-	} else {
-	   $query = qq|UPDATE acc_trans SET
-	            cleared = |.$form->dbquote($cleared, SQL_DATE).qq|
-                    WHERE trans_id = $trans_id 
-	            AND transdate = '$form->{"transdate_$i"}'
-	            AND chart_id = $chart_id|;
-           $dbh->do($query) || $form->dberror($query);
-	}
+         $dbh->do($query) || $form->dberror($query);
       }
-      
     }
   }
-
   $dbh->disconnect;
-
 }
 
 1;
