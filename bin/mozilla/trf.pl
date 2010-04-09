@@ -80,6 +80,7 @@ sub form_header {
 
    my $j = 1;
    my $total = 0;
+   $form->{rowcount}++;
    for $i (1 .. $form->{rowcount}){
 	$form->{"partnumber_$i"} = "" if !$form->{"parts_id_$i"};
 	if (($form->{"partnumber_$i"} eq "") and ($i != $form->{rowcount})) {
