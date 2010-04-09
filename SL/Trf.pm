@@ -52,8 +52,12 @@ sub retrieve_item {
   } else {
     $where .= " ORDER BY 2";
   }
+  $onhandfld = 'p.onhand';
+  if ($form->{from_warehouse_id}){
+     $onhandfld = "(SELECT SUM(qty) FROM inventory i WHERE i.parts_id = p.id AND warehouse_id = $form->{from_warehouse_id}) AS onhand";
+  }
   my $query = qq|SELECT p.id, p.partnumber, p.description, p.sellprice,
-		p.listprice, p.lastcost, p.unit, p.assembly, p.onhand, 
+		p.listprice, p.lastcost, p.unit, p.assembly, $onhandfld, 
 		p.notes AS itemnotes
 		FROM parts p
 		$where|;
