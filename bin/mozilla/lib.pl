@@ -101,8 +101,8 @@ sub print_select {
 ###############################
 sub print_radio {
    print qq|
-	<input name=summary type=radio class=radio value=1 checked> Summary
-	<input name=summary type=radio class=radio value=0> Detail<br>
+	<input name=summary type=radio class=radio value=1 checked> |.$locale->text('Summary').qq|
+	<input name=summary type=radio class=radio value=0> |.$locale->text('Detail').qq|<br>
    |;
 }
 
@@ -182,33 +182,33 @@ sub split_combos {
 ###############################
 sub print_criteria {
    my ($fldname, $fldprompt) = @_;
-   print $locale->text($fldprompt).qq| : $form->{"$fldname"}<br>\n| if $form->{"$fldname"};
+   print qq|$fldprompt : $form->{"$fldname"}<br>\n| if $form->{"$fldname"};
 }
 
 ###############################
 sub print_date {
     my ($fldname, $fldprompt, $defaultvalue) = @_;
-    print qq|<tr><th align=right>|.$locale->text($fldprompt).qq|</th><td><input type=text name=$fldname 
+    print qq|<tr><th align=right>$fldprompt</th><td><input type=text name=$fldname 
 		size=11 title='$myconfig{dateformat}' value='$defaultvalue'></td></tr>\n|;
 }
 
 ###############################
 sub print_text {
     my ($fldname, $fldprompt, $size, $defaultvalue) = @_;
-    print qq|<tr><th align=right>|.$locale->text($fldprompt).qq|</th><td><input type=text name=$fldname 
+    print qq|<tr><th align=right>$fldprompt</th><td><input type=text name=$fldname 
 	size=$size value="$defaultvalue"></td></tr>\n|;
 }
 
 ###############################
 sub print_plain {
     my ($fldvalue, $fldprompt) = @_;
-    print qq|<tr><th align=right>|.$locale->text($fldprompt).qq|</th><td>$fldvalue</td></tr>\n|;
+    print qq|<tr><th align=right>$fldprompt</th><td>$fldvalue</td></tr>\n|;
 }
 
 ###############################
 sub print_checkbox {
     my ($fldname, $fldprompt, $checked, $extratag) = @_;
-    print qq|<input name=$fldname class=checkbox type=checkbox value=Y $checked>|.$locale->text($fldprompt).qq|\n|;
+    print qq|<input name=$fldname class=checkbox type=checkbox value=Y $checked> $fldprompt\n|;
     print qq|$extratag| if $extratag;
 }
 
@@ -216,14 +216,14 @@ sub print_checkbox {
 sub report_checkbox {
     my ($fldname, $fldprompt, $checked) = @_;
     print qq|<td>|;
-    print qq|<input name=$fldname class=checkbox type=checkbox value=Y $checked>|.$locale->text($fldprompt).qq|\n|;
+    print qq|<input name=$fldname class=checkbox type=checkbox value=Y $checked> $fldprompt\n|;
     print qq|</td>|;
 }
 
 ###############################
 sub print_readonly {
     my ($fldname, $fldprompt, $size, $defaultvalue) = @_;
-    print qq|<tr><th align=right>|.$locale->text($fldprompt).qq|</th><td><input type=text name=$fldname 
+    print qq|<tr><th align=right>$fldprompt</th><td><input type=text name=$fldname 
 	size=$size value="$defaultvalue" READONLY></td></tr>\n|;
 }
 
@@ -236,7 +236,7 @@ sub print_hidden {
 ###############################
 sub print_title {
     $form->header;
-    print qq|<body><table width=100%><tr><th class=listtop>|.$locale->text($form->{title}).qq|</th></tr></table>\n|;
+    print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table>\n|;
 }
 
 ###############################
@@ -290,9 +290,9 @@ sub rpt_hdr {
   my $href = shift;
   my $str;
   if ($href){
-     $str = qq|<th><a class=listheading href=$href&sort=$column_name>|.$locale->text($column_heading).qq|</a></th>|;
+     $str = qq|<th><a class=listheading href=$href&sort=$column_name>$column_heading</a></th>|;
   } else {
-     $str = qq|<th class=listheading>|.$locale->text($column_heading).qq|</th>|;
+     $str = qq|<th class=listheading>$column_heading</th>|;
   }
   $str;
 }
@@ -302,7 +302,7 @@ sub rpt_hdr {
 sub tbl_hdr {
   my $column_heading = shift;
   my $str;
-  $str = qq|<th>|.$locale->text($column_heading).qq|</th>|;
+  $str = qq|<th>$column_heading</th>|;
   $str;
 }
 
@@ -420,80 +420,11 @@ sub list_parts {
    }
    print qq|</table>\n|;
    print("<hr size=3 noshade>\n");
-   add_button($locale->text('Continue'));
+   add_button('Continue');
    $form->{nextsub} = 'select_part';
    end_form;
 }
 
-###############################
-#sub list_cv {
-
-#   my $table = shift;
-#   my $id = $table . "_id";
-
-#   $name = $form->like(lc $form->{name});
-#   my $where = qq| LOWER(name) LIKE '$name'|;
-   
-#   $transdate = $form->{transdate};
-#   if ($transdate){
-#   	$where .= qq| AND (startdate IS NULL OR startdate <= '$transdate')
-#                AND (enddate IS NULL OR enddate >= '$transdate')|;
-#   }
-#   my $dbh = $form->dbconnect(\%myconfig);
-
-#   $query = qq|SELECT COUNT(*) FROM $table WHERE $where|;
-#   my ($rows) = $dbh->selectrow_array($query);
-#   $form->error("No such $table") if ($rows == 0);
-
-#   $query = qq|SELECT id, name, contact FROM $table WHERE $where ORDER BY name|;
-#   if ($rows == 1){
-#	($form->{"$id"}, $form->{name}, $form->{address1}, $form->{city}, $form->{country}) = $dbh->selectrow_array($query);
-#	&display_form;
-#	exit;
-#   }
-
-#   $sth = $dbh->prepare($query) || $form->dberror($query);
-#   $sth->execute || $form->dberror($query);
- 
-#   print_title("Select $table");
-#   start_form;
-#   $form->hide_form;
-#   print qq|<table width=100%>|;
-#   print qq|<tr class=listheading>\n|;
-#   print qq|<th>&nbsp;</th>|;
-#   print qq|<th>Name</th>|;
-#   print qq|<th>Address</th>|;
-#   print qq|<th>City</th>|;
-#   print qq|<th>Country</th>|;
-#   print qq|</tr>|;
-
-#   my $i = 1;
-#   my $j = 1;
-#   $checked = 'checked';
-#   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-#      print qq|<tr class=listrow$i>|;
-#      print qq|<td><input name=ndx class=radio type=radio value=$j $checked></td>\n|;
-#      print qq|<td><input name="new_name_$j" type=hidden value="$ref->{name}">$ref->{name}</td>\n|;
-#      print qq|<td>$ref->{address1}</td>|;
-#      print qq|<td>$ref->{city}</td>|;
-#      print qq|<td>$ref->{country}</td>|;
-#      print qq|</tr>\n|;
-#      print qq|<input name="new_id_$j" type=hidden value="$ref->{id}">\n|;
-#      $i++; $i %= 2;
-#      $j++;
-#      $checked = ''; # only first line is checked.
-#   }
-#   print qq|</table>\n|;
-#   print("<hr size=3 noshade>\n");
-#   add_button('Continue');
-#   $form->{nextsub} = 'select_cv';
-#   end_form;
-#}
-
-#////////////////////////////////////////////////////
-#
-# TABLE APIs
-#
 #////////////////////////////////////////////////////
 ##
 ## post_acc_trans

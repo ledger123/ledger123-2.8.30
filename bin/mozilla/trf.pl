@@ -468,21 +468,21 @@ sub search {
    &bld_warehouse('selectfrom_warehouse');
    &bld_warehouse('selectto_warehouse');
 
-   &print_text('trfnumber', 'Transfer Number', 15);
-   &print_text('description', 'Description', 30);
-   &print_text('notes', 'Notes', 30);
-   &print_text('partnumber', 'Number', 20);
-   &print_text('partdescription', 'Description', 30);
-   &print_text('itemnotes', 'Item Notes', 40);
-   &print_text('serialnumber', 'Serial No.', 25);
+   &print_text('trfnumber', $locale->text('Transfer Number'), 15);
+   &print_text('description', $locale->text('Description'), 30);
+   &print_text('notes', $locale->text('Notes'), 30);
+   &print_text('partnumber', $locale->text('Number'), 20);
+   &print_text('partdescription', $locale->text('Description'), 30);
+   &print_text('itemnotes', $locale->text('Item Notes'), 40);
+   &print_text('serialnumber', $locale->text('Serial No.'), 25);
    
-   &print_date('fromdate', 'From', $form->{fromdate});
-   &print_date('todate', 'To', $form->{todate});
+   &print_date('fromdate', $locale->text('From'), $form->{fromdate});
+   &print_date('todate', $locale->text('To'), $form->{todate});
  
-   &print_select('partsgroup', 'Group');
-   &print_select('department', 'Department');
-   &print_select('from_warehouse', 'From Warehouse');
-   &print_select('to_warehouse', 'To Warehouse');
+   &print_select('partsgroup', $locale->text('Group'));
+   &print_select('department', $locale->text('Department'));
+   &print_select('from_warehouse', $locale->text('From Warehouse'));
+   &print_select('to_warehouse', $locale->text('To Warehouse'));
 
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 
@@ -786,16 +786,16 @@ sub delivered_search {
    &bld_department;
    &bld_warehouse('selectfrom_warehouse');
 
-   &print_text('trfnumber', 'Transfer Number', 15);
-   &print_text('description', 'Description', 30);
-   &print_text('notes', 'Notes', 30);
+   &print_text('trfnumber', $locale->text('Transfer Number'), 15);
+   &print_text('description', $locale->text('Description'), 30);
+   &print_text('notes', $locale->text('Notes'), 30);
    
-   &print_date('fromdate', 'From Date', $form->{fromdate});
-   &print_date('fromdate', 'To Date', $form->{todate});
+   &print_date('fromdate', $locale->text('From'), $form->{fromdate});
+   &print_date('fromdate', $locale->text('To'), $form->{todate});
  
-   &print_select('department', 'Department');
-   &print_select('from_warehouse', 'From Warehouse');
-   print qq|<tr><th align=right>To Warehouse</th><td>$myconfig{warehouse}</td></tr>|;
+   &print_select('department', $locale->text('Department'));
+   &print_select('from_warehouse', $locale->text('From Warehouse'));
+   print qq|<tr><th align=right>|.$locale->text('To Warehouse').qq|</th><td>$myconfig{warehouse}</td></tr>|;
 
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 

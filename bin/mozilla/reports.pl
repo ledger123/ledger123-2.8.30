@@ -161,10 +161,10 @@ sub onhandvalue_list {
 
    $form->{title} = $locale->text('Inventory Onhand Value');
    &print_title;
-   &print_criteria('partnumber','Number');
-   &print_criteria('warehouse_name', 'Warehouse');
-   &print_criteria('department_name', 'Department');
-   &print_criteria('dateto', 'To');
+   &print_criteria('partnumber', $locale->text('Number'));
+   &print_criteria('warehouse_name', $locale->text('Warehouse'));
+   &print_criteria('department_name', $locale->text('Department'));
+   &print_criteria('dateto', $locale->text('To'));
 
    $form->info($query) if $form->{l_sql};
    print qq|<table width=100%><tr class=listheading>|;
@@ -376,10 +376,10 @@ sub gl_search {
    &bld_warehouse;
    &bld_partsgroup;
 
-   &print_date('fromdate', 'From');
-   &print_date('todate', 'To');
-   &print_text('fromaccount', 'Account >=', 15);
-   &print_text('toaccount', 'Account <=', 15);
+   &print_date('fromdate', $locale->text('From'));
+   &print_date('todate', $locale->text('To'));
+   &print_text('fromaccount', $locale->text('Account') . ' >=', 15);
+   &print_text('toaccount', $locale->text('Account') . ' <=', 15);
  
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 
@@ -574,10 +574,10 @@ sub gl_list {
 
    $form->{title} = $locale->text('General Ledger');
    &print_title;
-   &print_criteria('fromdate','From');
-   &print_criteria('todate', 'To');
-   &print_criteria('fromaccount', 'Account >=');
-   &print_criteria('toaccount', 'Account <=');
+   &print_criteria('fromdate',$locale->text('From'));
+   &print_criteria('todate', $locale->text('To'));
+   &print_criteria('fromaccount', $locale->text('Account').' >=');
+   &print_criteria('toaccount', $locale->text('Account').' <=');
 
 
    # Subtotal and total variables
@@ -706,14 +706,14 @@ sub audit_search {
 
    &bld_employee;
 
-   &print_text('trans_id', 'Trans ID', 15);
-   &print_text('tablename', 'Table', 15);
-   &print_text('refernece', 'Refernce', 15);
-   &print_text('formname', 'Form', 15);
-   &print_text('formaction', 'Action', 15);
-   &print_date('fromtransdate', 'From Trans Date');
-   &print_date('totransdate', 'To Trans Date');
-   &print_select('employee', 'Employee');
+   &print_text('trans_id', $locale->text('Trans ID'), 15);
+   &print_text('tablename', $locale->text('Table'), 15);
+   &print_text('refernece', $locale->text('Refernce'), 15);
+   &print_text('formname', $locale->text('Form'), 15);
+   &print_text('formaction', $locale->text('Action'), 15);
+   &print_date('fromtransdate', $locale->text('From Trans Date'));
+   &print_date('totransdate', $locale->text('To Trans Date'));
+   &print_select('employee', $locale->text('Employee'));
  
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 
@@ -1334,7 +1334,7 @@ sub aa_qty_list {
    &print_criteria('partnumber', 'Number');
    &print_criteria('name', 'Name');
    &print_criteria('description', 'Description');
-   &print_criteria('fromdate', 'From Date');
+   &print_criteria('fromdate', 'From');
    &print_criteria('todate', 'To');
    &print_criteria('partsgroup_name', 'Group');
 
@@ -1928,11 +1928,11 @@ sub onhand_search {
    &bld_warehouse;
    &bld_partsgroup;
 
-   &print_date('dateto', 'To');
-   &print_text('partnumber', 'Number', 30);
-   &print_select('partsgroup', 'Group');
-   &print_select('department', 'Department');
-   &print_select('warehouse', 'Warehouse');
+   &print_date('dateto', $locale->text('To'));
+   &print_text('partnumber', $locale->text('Number'), 30);
+   &print_select('partsgroup', $locale->text('Group'));
+   &print_select('department', $locale->text('Department'));
+   &print_select('warehouse', $locale->text('Warehouse'));
  
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 
@@ -2181,12 +2181,12 @@ sub iactivity_search {
    &bld_warehouse;
    &bld_partsgroup;
 
-   &print_text('partnumber', 'Number', 30);
-   &print_date('datefrom', 'From');
-   &print_date('dateto', 'To');
-   &print_select('partsgroup', 'Group');
-   &print_select('department', 'Department');
-   &print_select('warehouse', 'Warehouse');
+   &print_text('partnumber', $locale->text('Number'), 30);
+   &print_date('datefrom', $locale->text('From'));
+   &print_date('dateto', $locale->text('To'));
+   &print_select('partsgroup', $locale->text('Group'));
+   &print_select('department', $locale->text('Department'));
+   &print_select('warehouse', $locale->text('Warehouse'));
   
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 
@@ -2536,22 +2536,26 @@ sub trans_search {
 
    my $table = lc $form->{aa};
    my $db = ($table eq 'ar') ? 'customer' : 'vendor';
+   #$locale->text('Salesperson');
+   #$locale->text('Employee');
    my $employee_caption = ($table eq 'ar') ? 'Salesperson' : 'Employee';
 
-   &print_text("${db}number", (ucfirst $db) . ' Number', 15);
-   &print_text('name', 'Name', 30);
-   &print_text('invnumber', 'Invoice Number', 15);
-   &print_text('description', 'Description', 30);
-   &print_text('notes', 'Notes', 30);
-   &print_date('fromdate', 'From Date');
-   &print_date('todate', 'To Date');
+   #$locale->text('Customer Number');
+   #$locale->text('Vendor Number');
+   &print_text("${db}number", $locale->text((ucfirst $db) . ' Number'), 15);
+   &print_text('name', $locale->text('Name'), 30);
+   &print_text('invnumber', $locale->text('Invoice Number'), 15);
+   &print_text('description', $locale->text('Description'), 30);
+   &print_text('notes', $locale->text('Notes'), 30);
+   &print_date('fromdate', $locale->text('From'));
+   &print_date('todate', $locale->text('To'));
 
-   &print_select('department', 'Department');
-   &print_select('warehouse', 'Warehouse');
-   &print_select('employee', $employee_caption);
+   &print_select('department', $locale->text('Department'));
+   &print_select('warehouse', $locale->text('Warehouse'));
+   &print_select('employee', $locale->text($employee_caption));
 
-   &print_text('partnumber', 'Number', 15);
-   &print_select('partsgroup', 'Group');
+   &print_text('partnumber', $locale->text('Number'), 15);
+   &print_select('partsgroup', $locale->text('Group'));
 
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
    &print_radio;
@@ -2805,8 +2809,8 @@ sub trans_list {
    &print_criteria('invnumber', 'Invoice Number');
    &print_criteria('description', 'Description');
    &print_criteria('notes', 'Notes');
-   &print_criteria('fromdate', 'From Date');
-   &print_criteria('todate', 'To Date');
+   &print_criteria('fromdate', 'From');
+   &print_criteria('todate', 'To');
    &print_criteria('department_name', 'Department');
    &print_criteria('warehouse_name', 'Warehouse');
    &print_criteria('employee_name', $employee_caption);
