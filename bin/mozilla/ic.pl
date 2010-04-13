@@ -3528,8 +3528,8 @@ sub list_assemblies {
   </tr>
 </table>
 |;
-
-  $form->hide_form(qw(checkinventory path login callback));
+  $form->{selectwarehouse} = 1 if $form->{selectwarehouse};
+  $form->hide_form(qw(selectwarehouse checkinventory path login callback));
 
   print qq|
 <input type=hidden name=rowcount value="$i">
@@ -3552,6 +3552,7 @@ sub restock_assemblies {
   # armaghan
   $form->isblank('reference', $locale->text('Reference missing'));
   $form->isblank('transdate', $locale->text('Date missing'));
+  $form->isblank('warehouse', $locale->text('Warehouse missing')) if $form->{selectwarehouse};
 
   if ($form->{checkinventory}) {
     for (1 .. $form->{rowcount}) { $form->error($locale->text('Quantity exceeds available units to stock!')) if $form->parse_amount($myconfig, $form->{"qty_$_"}) > $form->{"stock_$_"} }
