@@ -2903,6 +2903,18 @@ if ($form->{alltaxes} and !$header){
 	AND ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AR_tax%')
 	GROUP BY seq, ch.accno, ch.description
 
+        UNION ALL
+
+	SELECT 1 AS seq, ch.accno, ch.description, 0 AS netamount, 0 AS tax
+	FROM chart ch
+	WHERE ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AR_tax%')
+	AND ch.id NOT IN (
+		SELECT DISTINCT ac.chart_id
+		FROM acc_trans ac
+		JOIN ar a ON (a.id = ac.trans_id)
+		WHERE $where
+	)
+
 	UNION ALL
 
 	SELECT 2 as seq, 'N', 'Non-taxable', SUM(a.netamount), SUM(0)
@@ -2920,6 +2932,18 @@ if ($form->{alltaxes} and !$header){
 	WHERE $where
 	AND ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AP_tax%')
 	GROUP BY seq, ch.accno, ch.description
+
+        UNION ALL
+
+	SELECT 3 AS seq, ch.accno, ch.description, 0 AS netamount, 0 AS tax
+	FROM chart ch
+	WHERE ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AP_tax%')
+	AND ch.id NOT IN (
+		SELECT DISTINCT ac.chart_id
+		FROM acc_trans ac
+		JOIN ap a ON (a.id = ac.trans_id)
+		WHERE $where
+	)
 
 	UNION ALL
 
