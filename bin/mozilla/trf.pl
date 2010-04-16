@@ -247,7 +247,7 @@ sub edit {
 	FROM inventory i
 	JOIN parts p ON (p.id = i.parts_id)
 	WHERE i.trans_id = $form->{id}
-	AND linetype = 1|;
+	AND linetype = '1'|;
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
    my $i = 1;
@@ -603,7 +603,7 @@ sub list {
 		    ORDER BY $form->{sort} $form->{direction}|;
 		    #ORDER BY $sort_order|;
    } else {
-	$where .= qq| AND (i.linetype = 1)|;
+	$where .= qq| AND (i.linetype = '1')|;
    	$query = qq|SELECT trf.id, trf.transdate, trf.trfnumber,
 			trf.description, trf.notes,
 			trf.department_id, d.description AS department,
