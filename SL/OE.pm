@@ -1200,9 +1200,9 @@ sub order_details {
 
       $form->{"qty_$i"} = 0 if $qty == 0;
       
-      if ($form->parse_amount($myconfig, $form->{"ship_$i"}) > $qty) {
-	$form->{"ship_$i"} = $form->format_amount($myconfig, $qty);
-      }
+      #if ($form->parse_amount($myconfig, $form->{"ship_$i"}) > $qty) {
+	#$form->{"ship_$i"} = $form->format_amount($myconfig, $qty);
+      #}
     }
   }
     
