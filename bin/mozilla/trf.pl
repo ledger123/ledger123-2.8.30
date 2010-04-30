@@ -460,15 +460,24 @@ sub save {
 #-------------------------------
 sub search {
    $form->{title} = $locale->text('Transfer List');
-   &print_title;
-   &start_form;
-   &start_table;
 
    &bld_department;
    &bld_partsgroup;
    &bld_warehouse('selectfrom_warehouse');
    &bld_warehouse('selectto_warehouse');
 
+   $form->header;
+   print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr><th class=listtop>$form->{title}</th></tr>
+  <tr height="5"></tr>
+</table>
+<table>
+|;
    &print_text('trfnumber', $locale->text('Transfer Number'), 15);
    &print_text('description', $locale->text('Description'), 30);
    &print_text('notes', $locale->text('Notes'), 30);
@@ -485,32 +494,59 @@ sub search {
    &print_select('from_warehouse', $locale->text('From Warehouse'));
    &print_select('to_warehouse', $locale->text('To Warehouse'));
 
-   print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
+   print qq|
+	      <tr>
+		<th align=right>|.$locale->text('Include in Report').qq|</th>
+		<td><table>
+		<tr>
+		  <td><input name=summary type=radio class=radio value=1 checked> |.$locale->text('Summary').qq|</td>
+		  <td><input name=summary type=radio class=radio value=0> |.$locale->text('Detail').qq|</td>
+	        </tr>
+|;
 
-   &print_radio;
-   &print_checkbox('l_no', $locale->text('No.'), '', '');
-   &print_checkbox('l_id', $locale->text('ID'), '', '');
-   &print_checkbox('l_trfnumber', $locale->text('Number'), 'checked', '');
-   &print_checkbox('l_transdate', $locale->text('Date'), 'checked', '');
-   &print_checkbox('l_description', $locale->text('Description'), 'checked', '<br>');
-   &print_checkbox('l_notes', $locale->text('Notes'), 'checked', '');
-   &print_checkbox('l_department', $locale->text('Department'), '', '');
-   &print_checkbox('l_from_warehouse', $locale->text('From WH'), 'checked', '');
-   &print_checkbox('l_to_warehouse', $locale->text('To WH'), 'checked', '<br>');
-   &print_checkbox('l_partnumber', $locale->text('Number'), 'checked', '');
-   &print_checkbox('l_partdescription', $locale->text('Description'), '', '');
-   &print_checkbox('l_itemnotes', $locale->text('Item Notes'), '', '');
-   &print_checkbox('l_serialnumber', $locale->text('Serial No.'), '', '<br>');
-   &print_checkbox('l_qty', $locale->text('Qty'), 'checked', '');
-   &print_checkbox('l_cost', $locale->text('Cost'), 'checked', '');
-   &print_checkbox('l_extended', $locale->text('Extended'), '', '<br>');
-   &print_checkbox('l_subtotal', $locale->text('Subtotal'), '', '');
-   &print_checkbox('l_csv', $locale->text('CSV'), '', '<br>');
-   print qq|</td></tr>|;
-   &end_table;
-   print('<hr size=3 noshade>');
-   &add_button('List');
-   &end_form;
+   @a = ();
+   push @a, qq|<input name="l_no" class=checkbox type=checkbox value=Y> |.$locale->text('No.');
+   push @a, qq|<input name="l_id" class=checkbox type=checkbox value=Y> |.$locale->text('ID');
+   push @a, qq|<input name="l_trfnumber" class=checkbox type=checkbox value=Y checked> |.$locale->text('Number');
+   push @a, qq|<input name="l_transdate" class=checkbox type=checkbox value=Y checked> |.$locale->text('Date');
+   push @a, qq|<input name="l_description" class=checkbox type=checkbox value=Y checked> |.$locale->text('Description');
+   push @a, qq|<input name="l_notes" class=checkbox type=checkbox value=Y checked> |.$locale->text('Notes');
+   push @a, qq|<input name="l_department" class=checkbox type=checkbox value=Y> |.$locale->text('Department');
+   push @a, qq|<input name="l_from_warehouse" class=checkbox type=checkbox value=Y checked> |.$locale->text('From WH');
+   push @a, qq|<input name="l_to_warehouse" class=checkbox type=checkbox value=Y checked> |.$locale->text('To WH');
+   push @a, qq|<input name="l_partnumber" class=checkbox type=checkbox value=Y checked> |.$locale->text('Number');
+   push @a, qq|<input name="l_partdescription" class=checkbox type=checkbox value=Y> |.$locale->text('Description');
+   push @a, qq|<input name="l_itemnotes" class=checkbox type=checkbox value=Y> |.$locale->text('Item Notes');
+   push @a, qq|<input name="l_serialnumber" class=checkbox type=checkbox value=Y> |.$locale->text('Serial No.');
+   push @a, qq|<input name="l_serialnumber" class=checkbox type=checkbox value=Y> |.$locale->text('Serial No.');
+   push @a, qq|<input name="l_qty" class=checkbox type=checkbox value=Y checked> |.$locale->text('Qty');
+   push @a, qq|<input name="l_cost" class=checkbox type=checkbox value=Y checked> |.$locale->text('Cost');
+   push @a, qq|<input name="l_extended" class=checkbox type=checkbox value=Y> |.$locale->text('Extended');
+   push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y> |.$locale->text('Subototal');
+   push @a, qq|<input name="l_csv" class=checkbox type=checkbox value=Y> |.$locale->text('CSV');
+
+   while (@a) {
+     print qq|<tr>\n|;
+     for (1 .. 5) {
+       print qq|<td nowrap>|. shift @a;
+       print qq|</td>\n|;
+     }
+     print qq|</tr>\n|;
+   }
+
+   print qq|
+	</table></td></tr>
+</table>
+<hr size=3 noshade>
+<input type=hidden name=action value=continue>
+<input class=submit type=submit name=action value="|.$locale->text('Continue').qq|">|;
+
+  $form->{nextsub} = 'list';
+  $form->hide_form(qw(nextsub path login));
+  
+  print qq|
+</form>
+|;
 }
 
 #-------------------------------
