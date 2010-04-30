@@ -126,12 +126,22 @@ sub form_header {
 |.$form->hide_form(qw(forex));
   }
 
+  # Add customer link
+  my $callback = "ps.pl?action=add&path=$form->{path}&login=$form->{login}";
+  $addvc = "ct.pl?action=add&db=customer&path=$form->{path}&login=$form->{login}";
+  $addvc .= "&callback=" . $form->escape($callback,2);
+  $addvc = qq|<a href=$addvc>| . $locale->text('Add Customer') . qq|</a>|;
+
+  # Do not display add link if acs does not allow
+  $addvc = '' if $myconfig{acs} =~ /Customers--Add Customer/;
+
   $customer = qq|<input type=hidden name=action value="Update">|;
   if ($form->{selectcustomer}) {
     $customer .= qq|
               <tr>
 	        <th align=right nowrap>|.$locale->text('Customer').qq| <font color=red>*</font></th>
 		<td colspan=3><select name=customer onChange="javascript:document.forms[0].submit()">|.$form->select_option($form->{selectcustomer}, $form->{customer}, 1).qq|</select>
+		$addvc
 		</td>
 	      </tr>
 |;
@@ -140,6 +150,7 @@ sub form_header {
               <tr>
 	        <th align=right nowrap>|.$locale->text('Customer').qq| <font color=red>*</font></th>
 		<td colspan=3><input name=customer value="|.$form->quote($form->{customer}).qq|" size=35>
+		$addvc
 		</td>
 	      </tr>
 	      <tr>
