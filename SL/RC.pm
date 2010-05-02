@@ -312,8 +312,7 @@ sub reconcile {
       foreach $payment_id (split / /, $form->{"payment_id_$i"}){
 	 $query = qq|UPDATE acc_trans SET
 	            cleared = |.$form->dbquote($cleared, SQL_DATE).qq|
-                    WHERE trans_id = $trans_id 
-		    AND entry_id = $payment_id
+                    WHERE entry_id = $payment_id
 	            AND transdate = '$form->{"transdate_$i"}'
 	            AND chart_id = $chart_id|;
          $dbh->do($query) || $form->dberror($query);
