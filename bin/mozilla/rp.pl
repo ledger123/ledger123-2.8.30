@@ -2961,7 +2961,11 @@ if ($form->{alltaxes} and !$header){
     <td>
      <table width=100%>
 	<tr class=listheading>
-	  <th>&nbsp;</th><th>Account</th><th>Description</th><th>Amount</th><th>Tax</th>
+	  <th>&nbsp;</th>
+	  <th>|.$locale->text('Account').qq|</th>
+	  <th>|.$locale->text('Description').qq|</th>
+	  <th>|.$locale->text('Amount').qq|</th>
+	  <th>|.$locale->text('Tax').qq|</th>
 	</tr>|;
    my $dbh = $form->dbconnect(\%myconfig);
    my $sth = $dbh->prepare($query);
