@@ -1854,7 +1854,7 @@ sub vcactivity_list {
    	$column_data{"$form->{vc}number"}	= rpt_txt($ref->{"$form->{vc}number"});
    	$column_data{name} 			= rpt_txt($ref->{name});
    	$column_data{transdate} 		= rpt_txt($ref->{transdate});
-   	$column_data{invnumber} 		= rpt_txt($ref->{invnumber}, $form->{link});
+   	$column_data{invnumber} 		= rpt_txt($ref->{invnumber});
    	$column_data{description} 		= rpt_txt($ref->{description});
    	$column_data{debit}  	  		= rpt_dec($ref->{debit});
    	$column_data{credit}    		= rpt_dec($ref->{credit});
