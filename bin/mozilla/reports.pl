@@ -2035,7 +2035,7 @@ sub onhand_list {
 			SUM(i.qty) AS onhand
 			FROM inventory i
 			JOIN parts p ON (p.id = i.parts_id)
-			JOIN warehouse w ON (w.id = i.warehouse_id)
+			LEFT JOIN warehouse w ON (w.id = i.warehouse_id)
 			LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
 			WHERE $where
 			GROUP BY 1, 2, 3, 4, 5, 6
@@ -2327,7 +2327,7 @@ sub iactivity_list {
 	      FROM inventory i
 		JOIN parts p ON (p.id = i.parts_id)
 		LEFT JOIN department d ON (i.department_id = d.id)
-		JOIN warehouse w ON (i.warehouse_id = w.id)
+		LEFT JOIN warehouse w ON (i.warehouse_id = w.id)
 		LEFT JOIN warehouse w2 ON (i.warehouse_id2 = w2.id)
 		LEFT JOIN trf ON (i.trans_id = trf.id)
 		LEFT JOIN ap ON (i.trans_id = ap.id)
@@ -3002,7 +3002,7 @@ sub build_search {
    &print_date('datefrom', 'From');
    &print_date('dateto', 'To');
 
-   #&print_text('partnumber', 'Number', 30);
+   &print_text('partnumber', 'Number', 30);
    #&print_select('partsgroup', 'Group');
    &print_select('department', 'Department');
    &print_select('warehouse', 'Warehouse');
@@ -3042,6 +3042,7 @@ sub build_list {
    $form->{warehouse_id} *= 1;
    #$form->{partsgroup_id} *= 1;
    $reference = $form->like(lc $form->{reference});
+   $partnumber = $form->like(lc $form->{partnumber});
    
    my $where = qq| (1 = 1)|;
    $where .= qq| AND (LOWER(b.reference) LIKE '$reference')| if $form->{reference};
@@ -3050,6 +3051,7 @@ sub build_list {
    $where .= qq| AND (b.warehouse_id = $form->{warehouse_id})| if $form->{warehouse};
    $where .= qq| AND (b.transdate >= '$form->{datefrom}')| if $form->{datefrom};
    $where .= qq| AND (b.transdate <= '$form->{dateto}')| if $form->{dateto};
+   $where .= qq| AND (LOWER(p.partnumber) LIKE '$partnumber')| if $form->{partnumber} and !$form->{summary};
 
    @columns = qw(id reference transdate department warehouse partnumber description qty unit);
    # if this is first time we are running this report.
@@ -3096,8 +3098,8 @@ sub build_list {
 			w.description AS warehouse,	
 			d.description AS department
 			FROM build b
-			JOIN department d ON (d.id = b.department_id)
-			JOIN warehouse w ON (w.id = b.warehouse_id)
+			LEFT JOIN department d ON (d.id = b.department_id)
+			LEFT JOIN warehouse w ON (w.id = b.warehouse_id)
 			WHERE $where
 			ORDER BY $form->{sort} $form->{direction}|;
    } else {
@@ -3112,8 +3114,8 @@ sub build_list {
 			i.qty,
 			p.unit
 			FROM build b
-			JOIN department d ON (d.id = b.department_id)
-			JOIN warehouse w ON (w.id = b.warehouse_id)
+			LEFT JOIN department d ON (d.id = b.department_id)
+			LEFT JOIN warehouse w ON (w.id = b.warehouse_id)
 			JOIN inventory i ON (i.trans_id = b.id)
 			JOIN parts p ON (p.id = i.parts_id)
 			WHERE $where
