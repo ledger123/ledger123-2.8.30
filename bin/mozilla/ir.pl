@@ -909,7 +909,7 @@ sub form_footer {
     &menubar;
   }
   
-  $form->hide_form(qw(rowcount callback path login));
+  $form->hide_form(qw(rowcount callback path login oe_id));
   
 print qq|
 </form>
