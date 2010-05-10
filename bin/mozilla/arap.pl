@@ -102,9 +102,47 @@ sub check_name {
 	$form->{cashdiscount} = 0 if $form->{type} =~ /(debit|credit)_/;
 
       } else {
-	# name is not on file
-	$msg = ucfirst $name . " not on file!";
-	$form->error($locale->text($msg));
+	 # name is not on file
+	 $msg = ucfirst $name . " not on file!";
+	 $form->info($locale->text($msg));
+
+         # change callback
+         $form->{old_callback} = $form->escape($form->{callback},1);
+         $form->{callback} = $form->escape("$form->{script}?action=display_form",1);
+
+         # delete action
+         delete $form->{action};
+
+         # save all other form variables in a previousform variable
+         if (!$form->{previousform}) {
+	   foreach $key (keys %$form) {
+
+	   # escape ampersands
+           $form->{$key} =~ s/&/%26/g;
+           $form->{previousform} .= qq|$key=$form->{$key}&|;
+           }
+	   chop $form->{previousform};
+	   $form->{previousform} = $form->escape($form->{previousform}, 1);
+	 }
+
+	 $i = $form->{rowcount};
+	 for (qw(partnumber description)) { $form->{"${_}_$i"} = $form->quote($form->{"${_}_$i"}) }
+ 
+         print qq|
+<form method=post action=ct.pl>
+<input type=hidden name=name value="$form->{$name}"><br/>
+<input type=submit name=action class=submit value='Add'>
+<input type=hidden name=db value="$name">
+
+<input type=hidden name=partnumber value="$form->{"partnumber_$i"}">
+<input type=hidden name=description value="$form->{"description_$i"}">
+|;
+         $form->hide_form(qw(previousform rowcount path login));
+
+         print qq|
+</form>
+|;
+         exit;
       }
     }
   }

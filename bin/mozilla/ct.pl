@@ -24,6 +24,10 @@ sub add {
 
   $form->{callback} = "$form->{script}?action=add&db=$form->{db}&typeofcontact=$form->{typeofcontact}&path=$form->{path}&login=$form->{login}" unless $form->{callback};
 
+  if ($form->{previousform}) {
+    $form->{callback} = "";
+  }
+
   &create_links;
  
   &display_form;
@@ -34,6 +38,8 @@ sub add {
 sub edit {
 
   $form->{title} = "Edit";
+
+  $form->{previousform} = $form->escape($form->{previousform}, 1) if $form->{previousform};
 
   &create_links;
   
@@ -2059,7 +2065,7 @@ sub form_footer {
   }
 
   $form->{update_contact} = 1;
-  $form->hide_form(qw(id ARAP update_contact addressid contactid taxaccounts path login callback db status));
+  $form->hide_form(qw(id ARAP update_contact addressid contactid taxaccounts path login callback db status previousform));
   
   for (keys %button) { delete $button{$_} if ! $a{$_} }
   for (sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button) { $form->print_button(\%button, $_) }
@@ -2992,9 +2998,43 @@ sub save {
   }
 
   CT->save(\%myconfig, \%$form);
-  
+
+  # load previous variables
+  if ($form->{previousform} && !$form->{callback}) {
+    # save the new form variables before splitting previousform
+    for (keys %$form) { $newform{$_} = $form->{$_} }
+
+    $previousform = $form->unescape($form->{previousform});
+
+    # don't trample on previous variables
+    for (keys %newform) { delete $form->{$_} }
+
+    # now take it apart and restore original values
+    foreach $item (split /&/, $previousform) {
+      ($key, $value) = split /=/, $item, 2;
+      $value =~ s/%26/&/g;
+      $form->{$key} = $value;
+    }
+
+    delete $form->{action};
+
+    # restore original callback
+    $callback = $form->unescape($form->{callback});
+    $form->{callback} = $form->unescape($form->{old_callback});
+    delete $form->{old_callback};
+    $form->{rowcount}--;
+
+    # put callback together
+    foreach $key (keys %$form) {
+      # do single escape for Apache 2.0
+      $value = $form->escape($form->{$key}, 1);
+      $callback .= qq|&$key=$value|;
+    }
+    $form->{callback} = $callback;
+    delete $form->{header};
+    $form->header(0, 1);
+  }
   $form->redirect($locale->text($msg));
-  
 }
 
 
