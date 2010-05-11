@@ -286,7 +286,7 @@ sub save {
     if ($form->{id}) {
       &adj_onhand($dbh, $form, $sw) if $form->{type} =~ /_order$/ && ! $form->{aa_id};
 
-      for (qw(dpt_trans orderitems shipto cargo)) {
+      for (qw(dpt_trans orderitems shipto cargo inventory)) {
 	$query = qq|DELETE FROM $_
 		    WHERE trans_id = $form->{id}|;
 	$dbh->do($query) || $form->dberror($query);
