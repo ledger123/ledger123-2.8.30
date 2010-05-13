@@ -335,7 +335,7 @@ sub form_header {
 |;
 
   # Add customer link
-  $addvc = "ct.pl?action=add&db=customer&path=$form->{path}&login=$form->{login}";
+  $addvc = "ct.pl?action=add&db=customer&path=$form->{path}&login=$form->{login}&addvc=1";
   $addvc .= "&callback=" . $form->escape($form->{callback},2);
   $addvc = qq|<a href=$addvc>| . $locale->text('Add Customer') . qq|</a>|;
 

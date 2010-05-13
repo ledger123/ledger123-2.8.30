@@ -484,7 +484,7 @@ sub form_header {
   }
 
   # Add customer/vendor link
-  $addvc = "ct.pl?action=add&db=$form->{vc}&path=$form->{path}&login=$form->{login}";
+  $addvc = "ct.pl?action=add&db=$form->{vc}&path=$form->{path}&login=$form->{login}&addvc=1";
   $addvc .= "&callback=" . $form->escape($form->{callback},2);
   $addvc = qq|<a href=$addvc>$addlabel</a>|;
 

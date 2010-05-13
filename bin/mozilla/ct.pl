@@ -2065,7 +2065,7 @@ sub form_footer {
   }
 
   $form->{update_contact} = 1;
-  $form->hide_form(qw(id ARAP update_contact addressid contactid taxaccounts path login callback db status previousform));
+  $form->hide_form(qw(id ARAP update_contact addressid contactid taxaccounts path login callback db status previousform addvc));
   
   for (keys %button) { delete $button{$_} if ! $a{$_} }
   for (sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button) { $form->print_button(\%button, $_) }
@@ -3033,6 +3033,9 @@ sub save {
     $form->{callback} = $callback;
     delete $form->{header};
     $form->header(0, 1);
+  } elsif ($form->{addvc}) {
+     # add customer/vendor from invoices,orders,quotes use.
+     $form->{callback} .= qq|&$form->{db}_id=$form->{id}&old$form->{db}="$form->{name}--$form->{id}"|;
   }
   $form->redirect($locale->text($msg));
 }

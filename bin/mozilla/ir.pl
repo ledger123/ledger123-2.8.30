@@ -321,7 +321,7 @@ sub form_header {
   $vcnumber = $locale->text('Vendor Number');
 
   # Add vendor link
-  $addvc = "ct.pl?action=add&db=$form->{vc}&path=$form->{path}&login=$form->{login}";
+  $addvc = "ct.pl?action=add&db=$form->{vc}&path=$form->{path}&login=$form->{login}&addvc=1";
   $addvc .= "&callback=" . $form->escape($form->{callback},2);
   $addvc = qq|<a href=$addvc>| . $locale->text('Add Vendor') . qq|</a>|;
 
