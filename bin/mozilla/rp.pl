@@ -2721,6 +2721,13 @@ sub generate_tax_report_all {
   $form->{report} = 'nontaxable';
   $form->{db} = "ap";
   &generate_tax_report;
+  print qq|
+</table>
+
+</body>
+</html>
+|;
+
 }
 
 sub generate_tax_report {
@@ -2848,12 +2855,13 @@ sub generate_tax_report {
   print qq|
 <body>
 
-<table width=100%>
 |;
   print qq|
+<table width=100%>
   <tr>
     <th class=listtop colspan=$colspan>$form->{title}</th>
   </tr>
+</table>
 | if !$header;
 if ($form->{alltaxes} and !$header){
   # Print taxes summary for all taxes report.
@@ -2957,8 +2965,6 @@ if ($form->{alltaxes} and !$header){
    |;
 
    print qq|
-  <tr>
-    <td>
      <table width=100%>
 	<tr class=listheading>
 	  <th>&nbsp;</th>
@@ -2986,22 +2992,19 @@ if ($form->{alltaxes} and !$header){
    $dbh->disconnect;
    print qq|
      </table>
-    </td>
-  </tr>|;
+     <table width=100%>|;
 } # ($form->{alltaxes} and !$header)
 
+  print qq|<table width=100%>| if !$form->{alltaxes};
   print qq|
   <tr height="5"></tr>
   <tr>
-    <td>$option</td>
+    <td colspan="6">$option</td>
   </tr>
 |;
 
 
    print qq|
-  <tr>
-    <td>
-      <table width=100%>
 	<tr class=listheading>
 |;
 
@@ -3086,20 +3089,17 @@ if ($form->{alltaxes} and !$header){
  
     
   print qq|
-        </tr>
-      </table>
-    </td>
   </tr>|;
   print qq|
   <tr>
-    <td><hr size=3 noshade></td>
+    <td colspan=6><hr size=3 noshade></td>
   </tr>| if !$form->{alltaxes};
   print qq|
 </table>
 
 </body>
 </html>
-|;
+| if !$form->{alltaxes};
 
 }
 
