@@ -320,20 +320,20 @@ sub form_header {
   $vcname = $locale->text('Vendor');
   $vcnumber = $locale->text('Vendor Number');
 
-  # Add vendor link
-  $addvc = "ct.pl?action=add&db=$form->{vc}&path=$form->{path}&login=$form->{login}&addvc=1";
-  $addvc .= "&callback=" . $form->escape($form->{callback},2);
-  $addvc = qq|<a href=$addvc>| . $locale->text('Add Vendor') . qq|</a>|;
-
-  # Do not display add link if acs does not allow
-  $addvc = '' if $myconfig{acs} =~ /Vendors--Add Vendor/;
-
   $vc = qq|<input type=hidden name=action value="Update">
               <tr>
 	        <th align=right nowrap>$vcname <font color=red>*</font></th>
 |;
 
   if ($form->{"select$form->{vc}"}) {
+    # Add vendor link
+    $addvc = "ct.pl?action=add&db=$form->{vc}&path=$form->{path}&login=$form->{login}&addvc=1";
+    $addvc .= "&callback=" . $form->escape($form->{callback},2);
+    $addvc = qq|<a href=$addvc>| . $locale->text('Add Vendor') . qq|</a>|;
+
+    # Do not display add link if acs does not allow
+    $addvc = '' if $myconfig{acs} =~ /Vendors--Add Vendor/;
+
     $vc .= qq|
                <td colspan=3><select name="$form->{vc}" onChange="javascript:document.forms[0].submit()">|.$form->select_option($form->{"select$form->{vc}"}, $form->{$form->{vc}}, 1).qq|</select>
 		$addvc
