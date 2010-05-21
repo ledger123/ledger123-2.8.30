@@ -340,7 +340,7 @@ sub save {
   my $uid = localtime;
   $uid .= $$;
  
-  for my $i (1 .. $form->{rowcount}) {
+  for $i (1 .. $form->{rowcount}) {
 
     for (qw(qty ship)) { $form->{"${_}_$i"} = $form->parse_amount($myconfig, $form->{"${_}_$i"}) }
      
@@ -1647,7 +1647,7 @@ sub save_inventory {
 	      WHERE id = ?|;
   $pth = $dbh->prepare($query) || $form->dberror($query);
 
-  for my $i (1 .. $form->{rowcount} -1) {
+  for $i (1 .. $form->{rowcount} -1) {
 
     $ship = (abs($form->{"ship_$i"}) > abs($form->{"qty_$i"})) ? $form->{"qty_$i"} : $form->{"ship_$i"};
     
@@ -2004,6 +2004,7 @@ sub get_soparts {
   my $ref;
   my $id;
   my $orderitemsid;
+  my $i;
   
   my %defaults = $form->get_defaults($dbh, \@{['precision']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
@@ -2025,7 +2026,7 @@ sub get_soparts {
   }
   $sth = $dbh->prepare($query) || $form->dberror($query);
   
-  for (my $i = 1; $i <= $form->{rowcount}; $i++) {
+  for ($i = 1; $i <= $form->{rowcount}; $i++) {
 
     if ($form->{"ndx_$i"}) {
 
@@ -2129,10 +2130,10 @@ sub add_items_required {
 sub generate_orders {
   my ($self, $myconfig, $form) = @_;
 
-  my $i;
   my %a;
   my $query;
   my $sth;
+  my $i;
   
   for ($i = 1; $i <= $form->{rowcount}; $i++) {
     for (qw(qty lastcost)) { $form->{"${_}_$i"} = $form->parse_amount($myconfig, $form->{"${_}_$i"}) }
@@ -2349,10 +2350,10 @@ sub consolidate_orders {
   # connect to database
   my $dbh = $form->dbconnect_noauto($myconfig);
   
-  my $i;
   my $id;
   my $ref;
   my %oe = ();
+  my $i;
   
   my $query = qq|SELECT * FROM oe
                  WHERE id = ?|;

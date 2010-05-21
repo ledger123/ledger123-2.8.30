@@ -715,7 +715,7 @@ sub post_invoice {
 
   $form->{taxincluded} *= 1;
   
-  for my $i (1 .. $form->{rowcount}) {
+  for $i (1 .. $form->{rowcount}) {
 
     $allocated = 0;
     

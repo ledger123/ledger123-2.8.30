@@ -2468,7 +2468,7 @@ sub print_reminder {
   RP->reminder(\%myconfig, \%$form);
   
   if ($form->{media} !~ /(screen|email)/) {
-    $form->{OUT} = qq~| $form->{"$form->{media}_printer"}~;
+    $form->{OUT} = qq~| $printer{$form->{media}}~;
   }
 
   &do_print_reminder;
