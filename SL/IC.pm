@@ -732,6 +732,9 @@ sub adjust_inventory {
       next if ! $ref->{assembly};              # assembly
     }
     
+    $form->{warehouse_id} *= 1;
+    $form->{department_id} *= 1;
+    $form->{employee_id} *= 1;
     # armaghan Add rows to inventory table for parts removed from stock for assembly
     $query = qq|INSERT INTO inventory (
 			warehouse_id, parts_id,
