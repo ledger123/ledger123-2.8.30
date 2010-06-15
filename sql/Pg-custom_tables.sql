@@ -97,3 +97,7 @@ UPDATE invoice SET
 	warehouse_id = (SELECT warehouse_id FROM ap WHERE ap.id = invoice.trans_id)
 WHERE trans_id IN (SELECT id FROM ap);
 
+-- Few indexes to speed up cogs reposting
+CREATE INDEX fifo_trans_id ON fifo (trans_id);
+CREATE INDEX invoice_qty ON invoice (qty);
+
