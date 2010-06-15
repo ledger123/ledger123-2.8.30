@@ -18,7 +18,14 @@ sub ask_repost {
    print qq|<h2 class=confirm> Continue with COGS reposting?</h1>|;
    print qq|
 <table>
-<tr><th></th><td nowrap="nowrap"><input name="build_invoicetax" class="checkbox" value="Y" type="checkbox"> Build invoicetax table (not normally needed, see wiki.ledger123.com)</td></tr>
+<tr>
+  <th>|.$locale->text('To').qq|</th>
+  <td><input type=text name=todate size=11 title='$myconfig{dateformat}'></td>
+</tr>
+<tr>
+  <th></th>
+  <td nowrap="nowrap"><input name="build_invoicetax" class="checkbox" value="Y" type="checkbox"> Build invoicetax table.</td>
+</tr>
 </table>
 <br>
 |;
@@ -87,23 +94,6 @@ sub repost_cogs {
    }
 
    $form->info("Reposting COGS<br>\n");
-   # First update transdate and warehouse_id in invoice table
-   $form->info("Updating dates and warehouse information in invoice table<br>\n");
-   $query = qq|UPDATE invoice SET 
-		transdate = (SELECT transdate FROM ar 
-				WHERE ar.id = invoice.trans_id),
-		warehouse_id = (SELECT warehouse_id FROM ar
-				WHERE ar.id = invoice.trans_id)
-		WHERE trans_id IN (SELECT id FROM ar)|;
-   $dbh->do($query) || $form->dberror($query);
-
-   $query = qq|UPDATE invoice SET 
-		transdate = (SELECT transdate FROM ap 
-				WHERE ap.id = invoice.trans_id),
-		warehouse_id = (SELECT warehouse_id FROM ap
-				WHERE ap.id = invoice.trans_id)
-		WHERE trans_id IN (SELECT id FROM ap)|;
-   $dbh->do($query) || $form->dberror($query);
 
    # Now Empty fifo table
    if ($form->{warehouse}){
@@ -186,7 +176,8 @@ sub repost_cogs {
    $fifoadd = $dbh->prepare($query) || $form->dberror($query);
 
    my $whwhere = '';
-   $whwhere = qq| AND warehouse_id = $warehouse_id| if $form->{warehouse};
+   $whwhere .= qq| AND warehouse_id = $warehouse_id| if $form->{warehouse};
+   $whwhere .= qq| AND transdate <= '$form->{todate}'| if $form->{todate};
 
    $apquery = qq|SELECT id, qty, lastcost AS sellprice
 		FROM invoice 

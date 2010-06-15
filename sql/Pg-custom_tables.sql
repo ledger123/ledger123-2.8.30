@@ -85,3 +85,15 @@ CREATE SEQUENCE entry_id;
 SELECT nextval ('entry_id');
 ALTER TABLE acc_trans ADD COLUMN entry_id INTEGER DEFAULT nextval('entry_id');
 
+
+-- Update new denormalized columns (moved from cogs reposting)
+UPDATE invoice SET 
+	transdate = (SELECT transdate FROM ar WHERE ar.id = invoice.trans_id),
+	warehouse_id = (SELECT warehouse_id FROM ar WHERE ar.id = invoice.trans_id)
+WHERE trans_id IN (SELECT id FROM ar);
+
+UPDATE invoice SET 
+	transdate = (SELECT transdate FROM ap WHERE ap.id = invoice.trans_id),
+	warehouse_id = (SELECT warehouse_id FROM ap WHERE ap.id = invoice.trans_id)
+WHERE trans_id IN (SELECT id FROM ap);
+
