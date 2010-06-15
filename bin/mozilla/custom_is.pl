@@ -93,7 +93,7 @@ sub repost_cogs {
 
    }
 
-   $form->info("Reposting COGS<br>\n");
+   $form->info("Reposting COGS<br>");
 
    # Now Empty fifo table
    if ($form->{warehouse}){
@@ -104,12 +104,12 @@ sub repost_cogs {
    $dbh->do($query) || $form->dberror($query);
 
    # Now update lastcost column in invoice table for AP
-   $form->info("Updating AP lastcost<br>\n");
+   $form->info("Updating AP lastcost<br>");
    $query = qq|UPDATE invoice SET lastcost = sellprice WHERE trans_id IN (SELECT id FROM ap)|;
    $dbh->do($query) || $form->dberror($query);
 
    # Now update lastcost column in invoice table for AR
-   $form->info("Updating AR lastcost<br>\n");
+   $form->info("Updating AR lastcost<br>");
    $query = qq|SELECT i.parts_id, ar.transdate, i.id, i.sellprice, 'AR' AS aa
 	       FROM invoice i
 	       JOIN ar ON (ar.id = i.trans_id)
@@ -132,6 +132,7 @@ sub repost_cogs {
    my $lastcost = 0;
    while ($ref = $sth->fetchrow_hashref(NAME_lc)){
      if ($parts_id != $ref->{parts_id}){
+        $form->info("-- Processing part $ref->{parts_id} ...<br>");
 	$parts_id = $ref->{parts_id};
 	$lastcost = 0;
      }
@@ -143,7 +144,7 @@ sub repost_cogs {
    }
 
    # COGS Reposting. First re-post invoices based on FIFO
-   $form->info("Reallocating inventory<br>\n");
+   $form->info("Reallocating inventory<br>");
 
    # Remove all current allocations
    $query = qq|UPDATE invoice SET allocated = 0, cogs = 0|;
@@ -225,7 +226,7 @@ sub repost_cogs {
 	}
    }
 
-   $form->info("Reposting COGS<br>\n");
+   $form->info("Reposting COGS<br>");
 
    # Delete old COGS 
    $query = qq|DELETE FROM acc_trans
@@ -255,16 +256,18 @@ sub repost_cogs {
 		      f.qty * f.costprice AS amount,
 		      p.inventory_accno_id, p.expense_accno_id,
 		      f.invoice_id
-		FROM fifo f JOIN parts p ON (p.id = f.parts_id)
+		FROM fifo f
+		JOIN parts p ON (p.id = f.parts_id)
    		WHERE f.trans_id IN (SELECT id FROM ar)
 		$where|;
    $sth = $dbh->prepare($query) || $form->dberror($query);
    $sth->execute;
    while ($ref = $sth->fetchrow_hashref(NAME_lc)){
-           $cogssth->execute(
+	$form->info("-- Processing transaction $ref->{trans_id}<br>");
+	$cogssth->execute(
 		$ref->{trans_id}, $ref->{inventory_accno_id}, 
 		$ref->{amount}, $ref->{transdate}, 'cogs', $ref->{invoice_id});
-           $cogssth->execute(
+	$cogssth->execute(
 		$ref->{trans_id}, $ref->{expense_accno_id},
 		0-($ref->{amount}), $ref->{transdate}, 'cogs', $ref->{invoice_id});
    }
@@ -282,7 +285,8 @@ sub repost_cogs {
 			p.income_accno_id,
 			i.parts_id, i.sellprice, i.warehouse_id,
 			i.qty, i.lastcost
-		FROM invoice i JOIN parts p ON (p.id = i.parts_id)
+		FROM invoice i
+		JOIN parts p ON (p.id = i.parts_id)
 		WHERE trans_id IN (SELECT id FROM ar WHERE netamount < 0)
 		$whwhere 
 		ORDER BY i.trans_id
