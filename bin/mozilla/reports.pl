@@ -2312,7 +2312,9 @@ sub iactivity_list {
        $callback .= "&l_$item=Y";
      }
    }
-   $callback .= "&l_subtotal=$form->{l_subtotal}";
+   for (qw(l_subotal partnumber datefrom dateto partsgroup department warehouse)){
+      $callback .= "&$_=".$form->escape($form->{$_});
+   }
    my $href = $callback;
    $form->{callback} = $form->escape($callback,1);
 
