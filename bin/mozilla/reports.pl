@@ -109,7 +109,9 @@ sub onhandvalue_list {
        $callback .= "&l_$item=Y";
      }
    }
-   $callback .= "&l_subtotal=$form->{l_subtotal}&l_components=$form->{l_components}";
+   for (qw(l_subtotal l_components department warehouse partsgroup partnumber description dateto)){
+      $callback .= "&$_=".$form->escape($form->{$_});
+   }
    my $href = $callback;
    $form->{callback} = $form->escape($callback,1);
 
@@ -1978,6 +1980,9 @@ sub onhand_list {
    $where .= qq| AND (i.shippingdate <= '$form->{dateto}')| if $form->{dateto};
 
    @columns = qw(id warehouse partnumber description partsgroup unit onhand);
+   if ($form->{summary}){
+      @columns = qw(id partnumber description partsgroup unit onhand);
+   }
    # if this is first time we are running this report.
    $form->{sort} = 'partnumber' if !$form->{sort};
    $form->{oldsort} = 'none' if !$form->{oldsort};
@@ -2006,7 +2011,9 @@ sub onhand_list {
        $callback .= "&l_$item=Y";
      }
    }
-   $callback .= "&l_subtotal=$form->{l_subtotal}";
+   for (qw(summary l_subtotal department warehouse partsgroup partnumber description dateto)){
+      $callback .= "&$_=".$form->escape($form->{$_});
+   }
    my $href = $callback;
    $form->{callback} = $form->escape($callback,1);
 
