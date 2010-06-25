@@ -2871,6 +2871,8 @@ if ($form->{alltaxes} and !$header){
   $where .= qq| AND a.department_id = $department_id| if $department_id;
 
   my $transdate = "a.transdate";
+  $transdate = "a.datepaid" if $form->{method} eq 'cash';
+
   if ($form->{fromdate} || $form->{todate}) {
     if ($form->{fromdate}) {
       $where .= " AND $transdate >= '$form->{fromdate}'";
@@ -2878,28 +2880,6 @@ if ($form->{alltaxes} and !$header){
     if ($form->{todate}) {
       $where .= " AND $transdate <= '$form->{todate}'";
     }
-  }
-
-  if ($form->{method} eq 'cash') {
-    $transdate = "a.datepaid";
-
-    my $todate = $form->{todate};
-    if (! $todate) {
-      $todate = $form->current_date($myconfig);
-    }
-    $cashwhere = qq|
-		 AND ac.trans_id IN
-		   (
-		     SELECT trans_id
-		     FROM acc_trans
-		     JOIN chart ON (chart_id = chart.id)
-		     WHERE link LIKE '%${ARAP}_paid%'
-		     AND a.approved = '1'
-		     AND $transdate <= '$todate'
-		     AND a.paid = a.amount
-		   )
-		  |;
-
   }
 
   my $query = qq|
