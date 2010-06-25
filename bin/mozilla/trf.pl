@@ -566,23 +566,23 @@ sub list {
    $itemnotes = $form->like(lc $form->{itemnotes});
    $serialnumber = $form->like(lc $form->{serialnumber});
    
+   @columns = qw(id transdate trfnumber description notes department from_warehouse to_warehouse);
    my $where = qq| (1 = 1)|;
    $where .= qq| AND (LOWER(trfnumber) LIKE '$trfnumber')| if $form->{trfnumber};
-   $where .= qq| AND (LOWER(partnumber) LIKE '$partnumber')| if $form->{partnumber};
-   $where .= qq| AND (LOWER(partdescription) LIKE '$partdescription')| if $form->{partdescription};
-   $where .= qq| AND (LOWER(itemnotes) LIKE '$itemnotes')| if $form->{itemnotes};
-   $where .= qq| AND (LOWER(serialnumber) LIKE '$serialnumber')| if $form->{serialnumber};
    $where .= qq| AND (trf.department_id = $form->{department_id})| if $form->{department};
    $where .= qq| AND (trf.from_warehouse_id = $form->{from_warehouse_id})| if $form->{from_warehouse};
    $where .= qq| AND (trf.to_warehouse_id = $form->{to_warehouse_id})| if $form->{to_warehouse};
    $where .= qq| AND (trf.transdate >= '$form->{fromdate}')| if $form->{fromdate};
    $where .= qq| AND (trf.transdate <= '$form->{todate}')| if $form->{todate};
-   $where .= qq| AND (p.partsgroup_id = $form->{partsgroup_id})| if $form->{partsgroup};
-
-   @columns = qw(id transdate trfnumber description notes department from_warehouse to_warehouse);
    if (!$form->{summary}){
-   	@columns = qw(id transdate trfnumber description notes department from_warehouse to_warehouse partnumber partdescription itemnotes serialnumber qty cost extended);
+      @columns = qw(id transdate trfnumber description notes department from_warehouse to_warehouse partnumber partdescription itemnotes serialnumber qty cost extended);
+      $where .= qq| AND (LOWER(partnumber) LIKE '$partnumber')| if $form->{partnumber};
+      $where .= qq| AND (LOWER(partdescription) LIKE '$partdescription')| if $form->{partdescription};
+      $where .= qq| AND (LOWER(itemnotes) LIKE '$itemnotes')| if $form->{itemnotes};
+      $where .= qq| AND (LOWER(serialnumber) LIKE '$serialnumber')| if $form->{serialnumber};
+      $where .= qq| AND (p.partsgroup_id = $form->{partsgroup_id})| if $form->{partsgroup};
    }
+
    # if this is first time we are running this report.
    $form->{sort} = 'transdate' if !$form->{sort};
    $form->{oldsort} = 'none' if !$form->{oldsort};
@@ -620,8 +620,9 @@ sub list {
      }
    }
 
-   $callback .= "&l_subtotal=$form->{l_subtotal}";
-   $callback .= "&summary=$form->{summary}";
+   for (qw(l_subtotal summary transdate trfnumber description notes department from_warehouse to_warehouse partnumber partdescription itemnotes serialnumber)){
+      $callback .= "&$_=".$form->escape($form->{$_});
+   }
    my $href = $callback;
    $form->{callback} = $form->escape($callback,1);
 
