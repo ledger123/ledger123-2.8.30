@@ -109,18 +109,33 @@ sub all_transactions {
   my $todate_where;
 
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
-  
+
+  my $subwhere;
+
   if ($form->{fromdate}) {
     $fromdate_where = qq|
                  AND ac.transdate >= '$form->{fromdate}'
-		|;
+		| if $form->{method} ne 'cash';
+    $subwhere = qq| AND ac.transdate >= '$form->{fromdate}'|;
   }
   if ($form->{todate}) {
     $todate_where = qq|
                  AND ac.transdate <= '$form->{todate}'
 		|;
+    $subwhere .= qq| AND ac.transdate <= '$form->{todate}'|;
   }
-  
+
+  my $subquery = qq|
+	AND ac.trans_id IN (
+		SELECT ac.trans_id
+		FROM acc_trans ac
+		JOIN chart c ON (ac.chart_id = c.id)
+		WHERE (c.link LIKE '%AP_paid%' OR c.link LIKE '%AR_paid')
+		AND ac.approved = '1'
+		$subwhere
+  )| if $form->{method} eq 'cash';
+
+
 
   my $false = ($myconfig->{dbdriver} =~ /Pg/) ? FALSE : q|'0'|;
   
@@ -197,6 +212,7 @@ sub all_transactions {
 			AND ac.transdate < '$form->{fromdate}'
 			AND a.department_id = $department_id
 			$project
+			$subquery
 			|;
 		      
 	  } else {
@@ -212,6 +228,7 @@ sub all_transactions {
 			AND ac.transdate < '$form->{fromdate}'
 			AND a.department_id = $department_id
 			$project
+			$subquery
 			|;
 	  }
 
@@ -227,6 +244,7 @@ sub all_transactions {
 		    AND ac.approved = '1'
 		    AND ac.transdate < '$form->{fromdate}'
 		    $project
+		    $subquery
 		    |;
 	} else {
 	  $query = qq|SELECT SUM(ac.amount)
@@ -236,6 +254,7 @@ sub all_transactions {
 		      AND ac.approved = '1'
 		      AND ac.transdate < '$form->{fromdate}'
 		      $project
+		      $subquery
 		      |;
 	}
       }
@@ -244,12 +263,13 @@ sub all_transactions {
       
     }
   }
+  $form->{balance} = 0 if $form->{method} eq 'cash'; # We don't need it when drilling down from income statement
 
   $query = "";
   my $union = "";
 
   foreach my $id (@id) {
-    
+
     # get all transactions
     $query .= qq|$union
                  SELECT a.id, a.reference, a.description, ac.transdate,
@@ -265,6 +285,7 @@ sub all_transactions {
 		 $todate_where
 		 $dpt_where
 		 $project
+		 $subquery
       
              UNION ALL
       
@@ -282,6 +303,7 @@ sub all_transactions {
 		 $todate_where
 		 $dpt_where
 		 $project
+		 $subquery
       
              UNION ALL
       
@@ -299,6 +321,7 @@ sub all_transactions {
 		 $todate_where
 		 $dpt_where
 		 $project
+		 $subquery
 		 |;
 
     $union = qq|
@@ -319,7 +342,7 @@ sub all_transactions {
 	      AND ac.approved = '1'
 	      AND ac.trans_id = ?|;
   my $dr = $dbh->prepare($query) || $form->dberror($query);
-  
+
   $query = qq|SELECT c.id, c.accno FROM chart c
               JOIN acc_trans ac ON (ac.chart_id = c.id)
               WHERE ac.amount < 0
