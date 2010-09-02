@@ -390,6 +390,7 @@ sub gl_search {
    &print_checkbox('l_transdate', $locale->text('Date'), 'checked', '');
    &print_checkbox('l_reference', $locale->text('Reference'), 'checked', '');
    &print_checkbox('l_description', $locale->text('Description'), 'checked', '');
+   &print_checkbox('l_name', $locale->text('Company Name'), 'checked', '');
    &print_checkbox('l_source', $locale->text('Source'), 'checked', '<br>');
    &print_checkbox('l_debit', $locale->text('Debit'), 'checked', '');
    &print_checkbox('l_credit', $locale->text('Credit'), 'checked', '');
@@ -422,7 +423,7 @@ sub gl_list {
 
    for (qw(fromaccount toaccount fromdate todate)){ $callback .= "&$_=".$form->escape($form->{$_},1) }
 
-   @columns = qw(id transdate reference description source debit credit balance);
+   @columns = qw(id transdate reference description name source debit credit balance);
    # if this is first time we are running this report.
    $form->{sort} = '1' if !$form->{sort};
    $form->{oldsort} = 'none' if !$form->{oldsort};
@@ -434,10 +435,11 @@ sub gl_list {
 			transdate => 3,
 			reference => 4,
 			description => 5,
-			source => 6,
-			debit => 7,
-			credit => 8,
-			balance => 9
+			name => 6,
+			source => 7,
+			debit => 8,
+			credit => 9,
+			balance => 10
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -459,7 +461,7 @@ sub gl_list {
 
    my $query;
    if ($form->{l_group}){
-     $query = qq|SELECT c.accno, c.description AS accdescription,
+     $query = qq|SELECT c.accno, c.description AS accdescription, '' AS name,
 		 ac.transdate, g.reference, g.id AS id, 'gl' AS module,
 		 0 AS invoice,
 		 SUM(ac.amount) AS amount
@@ -468,11 +470,11 @@ sub gl_list {
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 LEFT JOIN department d ON (d.id = g.department_id)
                  WHERE $glwhere
-		 GROUP BY 1,2,3,4,5,6
+		 GROUP BY 1,2,3,4,5,6,7
 
 		 UNION ALL
 
-	         SELECT c.accno, c.description AS accdescription,
+	         SELECT c.accno, c.description AS accdescription, ct.name,
 		 ac.transdate, a.invnumber, a.id AS id, 'ar' AS module,
 		 SUM(CAST(a.invoice AS INTEGER)) AS invoice,
 		 SUM(ac.amount) AS amount
@@ -482,11 +484,11 @@ sub gl_list {
 		 JOIN customer ct ON (a.customer_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 WHERE $arwhere
-		 GROUP BY 1,2,3,4,5
+		 GROUP BY 1,2,3,4,5,6
 
 		 UNION ALL
 
-	         SELECT c.accno, c.description AS accdescription,
+	         SELECT c.accno, c.description AS accdescription, ct.name,
 		 ac.transdate, a.invnumber, a.id AS id, 'ap' AS module, 
 		 SUM(CAST(a.invoice AS INTEGER)) AS invoice, 
 		 SUM(ac.amount) as amount
@@ -496,13 +498,13 @@ sub gl_list {
 		 JOIN vendor ct ON (a.vendor_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 WHERE $apwhere
-		 GROUP BY 1,2,3,4,5
+		 GROUP BY 1,2,3,4,5,6
 
-         	 ORDER BY 1,2,3,4,5|;
+         	 ORDER BY 1,2,3,4,5,6|;
    } else {
      $query = qq|SELECT g.id, 'gl' AS type, g.reference,
                  g.description, ac.transdate, ac.source,
-		 ac.amount, c.accno, g.notes, 
+		 ac.amount, c.accno, g.notes, '' AS name,
 		 ac.cleared, d.description AS department,
 		 ac.memo, '0' AS name_id, '' AS db,
 		 c.description AS accdescription,
@@ -517,7 +519,7 @@ sub gl_list {
 
 	         SELECT a.id, 'ar' AS type, a.invnumber,
 		 a.description, ac.transdate, ac.source,
-		 ac.amount, c.accno, a.notes,
+		 ac.amount, c.accno, a.notes, a.name,
 		 ac.cleared, d.description AS department,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 c.description AS accdescription,
@@ -534,7 +536,7 @@ sub gl_list {
 
 	         SELECT a.id, 'ap' AS type, a.invnumber,
 		 a.description, ac.transdate, ac.source,
-		 ac.amount, c.accno, a.notes,
+		 ac.amount, c.accno, a.notes, a.name,
 		 ac.cleared, d.description AS department,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 c.description AS accdescription,
@@ -557,6 +559,7 @@ sub gl_list {
    $column_header{transdate} 	= rpt_hdr('transdate', $locale->text('Date'), $href);
    $column_header{reference} 	= rpt_hdr('reference', $locale->text('Reference'), $href);
    $column_header{description} 	= rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{name} 	= rpt_hdr('name', $locale->text('Company Name'), $href);
    $column_header{source}  	= rpt_hdr('source', $locale->text('Source'), $href);
    $column_header{debit}  	= rpt_hdr('debit', $locale->text('Debit'));
    $column_header{credit}  	= rpt_hdr('credit', $locale->text('Credit'));
@@ -646,6 +649,7 @@ sub gl_list {
    	$column_data{transdate}		= rpt_txt($ref->{transdate});
    	$column_data{reference} 	= rpt_txt($ref->{reference}, $link);
    	$column_data{description} 	= rpt_txt($ref->{description});
+   	$column_data{name} 		= rpt_txt($ref->{name});
    	$column_data{source}    	= rpt_txt($ref->{source});
 	if ($ref->{amount} > 0){
   	  $column_data{debit}    	= rpt_dec(0, $form->{precision}, '0');
