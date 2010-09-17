@@ -519,7 +519,7 @@ sub gl_list {
 
 	         SELECT a.id, 'ar' AS type, a.invnumber,
 		 a.description, ac.transdate, ac.source,
-		 ac.amount, c.accno, a.notes, a.name,
+		 ac.amount, c.accno, a.notes, ct.name,
 		 ac.cleared, d.description AS department,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 c.description AS accdescription,
@@ -536,7 +536,7 @@ sub gl_list {
 
 	         SELECT a.id, 'ap' AS type, a.invnumber,
 		 a.description, ac.transdate, ac.source,
-		 ac.amount, c.accno, a.notes, a.name,
+		 ac.amount, c.accno, a.notes, ct.name,
 		 ac.cleared, d.description AS department,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 c.description AS accdescription,
