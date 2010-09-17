@@ -286,7 +286,7 @@ sub save {
     if ($form->{id}) {
       &adj_onhand($dbh, $form, $sw) if $form->{type} =~ /_order$/ && ! $form->{aa_id};
 
-      for (qw(dpt_trans orderitems shipto cargo inventory)) {
+      for (qw(dpt_trans orderitems shipto cargo)) {
 	$query = qq|DELETE FROM $_
 		    WHERE trans_id = $form->{id}|;
 	$dbh->do($query) || $form->dberror($query);
@@ -605,8 +605,13 @@ sub delete {
   # connect to database
   my $dbh = $form->dbconnect_noauto($myconfig);
 
+  # Check if there is any inventory received against this order.
+  my $query = qq|SELECT COUNT(*) FROM inventory WHERE trans_id = $form->{id}|;
+  my ($cnt) = $dbh->selectrow_array($query); 
+  $form->error('Order processed. Cannot delete ...') if $cnt; 
+
   # delete spool files
-  my $query = qq|SELECT spoolfile FROM status
+  $query = qq|SELECT spoolfile FROM status
                  WHERE trans_id = $form->{id}
 		 AND spoolfile IS NOT NULL|;
   $sth = $dbh->prepare($query);
