@@ -2035,10 +2035,18 @@ sub retrieve_item {
   } else {
     $where .= " ORDER BY 2";
   }
-  
+
+  my $onhandvar = 'p.onhand';
+  if ($form->{warehouse}){
+     my ($null, $warehouse_id) = split /--/, $form->{warehouse};
+     $warehouse_id *= 1;
+     $onhandvar = "(SELECT SUM(qty) FROM inventory i
+	WHERE i.parts_id = p.id AND i.warehouse_id = $warehouse_id) AS onhand"
+  }
+
   my $query = qq|SELECT p.id, p.partnumber, p.description, p.sellprice,
                  p.listprice, p.lastcost,
-		 p.unit, p.assembly, p.bin, p.onhand, p.notes AS itemnotes,
+		 p.unit, p.assembly, p.bin, $onhandvar, p.notes AS itemnotes,
 		 p.inventory_accno_id, p.income_accno_id, p.expense_accno_id,
 		 pg.partsgroup, p.partsgroup_id, p.partnumber AS sku,
 		 p.weight,

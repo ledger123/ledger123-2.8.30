@@ -1825,9 +1825,17 @@ sub retrieve_item {
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
+  my $onhandvar = 'p.onhand';
+  if ($form->{warehouse}){
+     my ($null, $warehouse_id) = split /--/, $form->{warehouse};
+     $warehouse_id *= 1;
+     $onhandvar = "(SELECT SUM(qty) FROM inventory i
+	WHERE i.parts_id = p.id AND i.warehouse_id = $warehouse_id) AS onhand"
+  }
+
   my $query = qq|SELECT p.id, p.partnumber, p.description,
 		 pg.partsgroup, p.partsgroup_id,
-                 p.lastcost AS sellprice, p.unit, p.bin, p.onhand,
+                 p.lastcost AS sellprice, p.unit, p.bin, $onhandvar,
 		 p.notes AS itemnotes,
 		 p.inventory_accno_id, p.income_accno_id, p.expense_accno_id,
 		 p.partnumber AS sku, p.weight,
@@ -1843,7 +1851,7 @@ sub retrieve_item {
 		 
 		 SELECT p.id, p.partnumber, p.description,
 		 pg.partsgroup, p.partsgroup_id,
-                 p.lastcost AS sellprice, p.unit, p.bin, p.onhand,
+                 p.lastcost AS sellprice, p.unit, p.bin, $onhandvar,
 		 p.notes AS itemnotes,
 		 p.inventory_accno_id, p.income_accno_id, p.expense_accno_id,
 		 p.partnumber AS sku, p.weight,
