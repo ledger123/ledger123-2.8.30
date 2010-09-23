@@ -893,6 +893,10 @@ sub form_footer {
 }
 
 
+sub receive_all {
+   &ship_all;
+}
+
 sub ship_all {
   
   for (1 .. $form->{rowcount}) {
@@ -2671,6 +2675,7 @@ sub display_ship_receive {
   %button = ('Update' => { ndx => 1, key => 'U', value => $locale->text('Update') },
              'Print' => { ndx => 2, key => 'P', value => $locale->text('Print') },
 	     'Ship all' => { ndx => 5, key => 'A', value => $locale->text('Ship all') },
+	     'Receive all' => { ndx => 5, key => 'A', value => $locale->text('Receive all') },
 	     'Ship to' => { ndx => 4, key => 'T', value => $locale->text('Ship to') },
 	     'E-mail' => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
 	     'Done' => { ndx => 11, key => 'D', value => $locale->text('Done') },
@@ -2680,8 +2685,10 @@ sub display_ship_receive {
   
   if ($form->{type} eq 'ship_order') {
     for ('Ship all', 'Ship to', 'E-mail') { $form->print_button(\%button, $_) }
+  } elsif ($form->{type} eq 'receive_order') {
+    for ('Receive all') { $form->print_button(\%button, $_) }
   }
-  
+ 
   $form->print_button(\%button, 'Done');
   
   if ($form->{menubar}) {
