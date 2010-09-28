@@ -488,6 +488,10 @@ sub form_header {
 		<th align=right nowrap>$vclabel <font color=red>*</font></th>
 |;
 
+  my $vcdetail;
+  if ($form->{"$form->{vc}"}){
+    $vcdetail = qq|<a href="ct.pl?login=$form->{login}&path=$form->{path}&action=edit&db=$form->{vc}&id=$form->{"$form->{vc}_id"}" target=_blank>?</a>|;
+  }
   if ($form->{"select$form->{vc}"}) {
     # Add customer/vendor link
     $addvc = "ct.pl?action=add&db=$form->{vc}&path=$form->{path}&login=$form->{login}&addvc=1";
@@ -504,14 +508,14 @@ sub form_header {
  
     $vc .= qq|
                 <td colspan=3><select name="$form->{vc}" onChange="javascript:document.forms[0].submit()">|.$form->select_option($form->{"select$form->{vc}"}, $form->{$form->{vc}}, 1).qq|</select>
-		$addvc
+		$vcdetail $addvc
                 </td>
               </tr>
 | . $form->hide_form("$form->{vc}number");
   } else {
     $vc .= qq|
                <td colspan=3><input name="$form->{vc}" value="$form->{$form->{vc}}" size=35>
-		$addvc
+		$vcdetail $addvc
                 </td>
 	      </tr>
 	      <tr>
