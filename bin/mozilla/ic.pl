@@ -1169,8 +1169,6 @@ sub search {
 
 }
 
-
-
 sub generate_report {
 
   # setup $form->{sort}
@@ -1875,6 +1873,100 @@ sub parts_subtotal {
 
 }
 
+sub history {
+  $form->{title} = $locale->text('History');
+  $title = "$form->{title} / $form->{company}";
+  $form->header;
+
+  $form->{id} *= 1;
+  my $arap;
+
+  $form->error('Invalid input') if $form->{vc} !~ /(customer|vendor)/;
+
+  if ($form->{vc} eq 'customer'){
+     $arap = 'ar';
+  } else {
+     $arap = 'ap';
+  }
+
+  my $query = qq|
+	SELECT 1 AS seq, 'invoice' AS transtype, a.transdate, a.invnumber AS reference, i.parts_id, p.partnumber, i.description, i.qty, i.sellprice
+	FROM invoice i
+	JOIN parts p ON (p.id = i.parts_id)
+	JOIN $arap a ON (a.id = i.trans_id)
+	WHERE i.parts_id = $form->{id}
+
+	UNION ALL
+
+	SELECT 2 AS seq, 'order' AS transtype, oe.transdate, oe.ordnumber AS reference, i.parts_id, p.partnumber, i.description, i.qty, i.sellprice
+	FROM orderitems i
+	JOIN parts p ON (p.id = i.parts_id)
+	JOIN oe ON (oe.id = i.trans_id)
+	WHERE i.parts_id = $form->{id}
+	AND "$form->{vc}_id" <> 0
+	AND NOT oe.quotation
+
+        UNION ALL
+
+	SELECT 3 AS seq, 'quote' AS transtype, oe.transdate, oe.quonumber AS reference, i.parts_id, p.partnumber, i.description, i.qty, i.sellprice
+	FROM orderitems i
+	JOIN parts p ON (p.id = i.parts_id)
+	JOIN oe ON (oe.id = i.trans_id)
+	WHERE i.parts_id = $form->{id}
+	AND "$form->{vc}_id" <> 0
+	AND oe.quotation
+
+	ORDER BY 1;
+  |;
+  my $dbh = $form->dbconnect(\%myconfig);
+  my $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute || $form->dberror($query);
+
+  @columns = qw(transtype transdate reference partnumber description qty sellprice);
+  $column_data{transtype} = qq|<th class=listheading>&nbsp;</th>|;
+  $column_data{transdate} = qq|<th class=listheading>|.$locale->text('Date').qq|</th>|;
+  $column_data{reference} = qq|<th class=listheading>|.$locale->text('Reference').qq|</th>|;
+  $column_data{partnumber} = qq|<th class=listheading>|.$locale->text('Number').qq|</th>|;
+  $column_data{description} = qq|<th class=listheading>|.$locale->text('Description').qq|</th>|;
+  $column_data{qty} = qq|<th class=listheading>|.$locale->text('Qty').qq|</th>|;
+  $column_data{sellprice} = qq|<th class=listheading>|.$locale->text('Price').qq|</th>|;
+
+  print qq|
+<body>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$title</th>
+  </tr>
+  <tr height="5"></tr>
+    <td>
+      <table width=100%>
+	<tr>
+|;
+  for (@columns) { print $column_data{$_} }
+  print qq|</tr>|;
+  $i++; $i %= 2;
+  my $thistype;
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+      $thistype = $ref->{transtype} if !$thistype;
+      if ($thistype ne $ref->{transtype}){
+	 print qq|<tr><td class=listsubtotal colspan=7>&nbsp;</td></tr>|;
+	 $thistype = $ref->{transtype};
+      }
+      for (@columns){ $column_data{$_} = qq|<td>$ref->{$_}</td>| }
+      $column_data{qty} = qq|<td align="right">$ref->{qty}</td>|;
+      $column_data{sellprice} = qq|<td align="right">$ref->{sellprice}</td>|;
+      print qq|<tr class="listrow$i">\n|;
+      for (@columns) { print $column_data{$_} }
+      print qq|</tr>|;
+ }
+  print qq|
+      </table>
+    </td>
+  </tr>
+</table>
+|;
+}
 
 sub requirements {
 

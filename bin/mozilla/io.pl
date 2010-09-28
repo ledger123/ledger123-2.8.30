@@ -244,8 +244,10 @@ function CheckAll(v) {
     $itemdetail = "<td></td>";
     $zero = "";
     
+    my $pricehistory = '&nbsp;';
     if ($numrows != $i) {
       $zero = "0";
+      $pricehistory = qq|<a href="ic.pl?login=$form->{login}&path=$form->{path}&action=history&id=$form->{"id_$i"}&vc=$form->{vc}" target=_blank>?</a>|;
       if ($itemdetailok) {
 	$itemdetail = qq|<td><a href="ic.pl?login=$form->{login}&path=$form->{path}&action=edit&id=$form->{"id_$i"}" target=_blank>?</a></td>|;
       }
@@ -260,7 +262,7 @@ function CheckAll(v) {
     $column_data{qty} = qq|<td align=right><input name="qty_$i" title="$form->{"onhand_$i"}" size=8 value='|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|' $readonly></td>|;
     $column_data{ship} = qq|<td align=right><input name="ship_$i" size=8 value='|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|' READONLY></td>|;
     $column_data{unit} = qq|<td><input name="unit_$i" size=5 value="|.$form->quote($form->{"unit_$i"}).qq|"></td>|;
-    $column_data{sellprice} = qq|<td align=right><input name="sellprice_$i" size=11 value=|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $decimalplaces, $zero).qq|></td>|;
+    $column_data{sellprice} = qq|<td align=right nowrap><input name="sellprice_$i" size=11 value=|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $decimalplaces, $zero).qq|> $pricehistory</td>|;
     $column_data{discount} = qq|<td align=right><input name="discount_$i" size=3 value=|.$form->format_amount(\%myconfig, $form->{"discount_$i"}).qq|></td>|;
     $column_data{linetotal} = qq|<td align=right>|.$form->format_amount(\%myconfig, $linetotal, $form->{precision}, $zero).qq|</td>|;
     $column_data{bin} = qq|<td>$form->{"bin_$i"}</td>|;
