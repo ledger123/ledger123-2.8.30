@@ -303,7 +303,7 @@ sub update {
    $form->{to_warehouse_id} *= 1;
 
    $i = $form->{rowcount};
-   if (($form->{"partnumber_$i"} ne "") or ($form->{"partsgroup_$i"})){
+   if (($form->{"partnumber_$i"} ne "") or ($form->{"description_$i"} ne "") or ($form->{"partsgroup_$i"})){
       $cost = $form->parse_amount(\%myconfig, $form->{"cost_$i"});
       Trf->retrieve_item(\%myconfig, \%$form);
       $rows = scalar @{ $form->{item_list} };
