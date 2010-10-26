@@ -189,7 +189,7 @@ sub print_criteria {
 sub print_date {
     my ($fldname, $fldprompt, $defaultvalue) = @_;
     print qq|<tr><th align=right>$fldprompt</th><td><input type=text name=$fldname 
-		size=11 title='$myconfig{dateformat}' value='$defaultvalue'></td></tr>\n|;
+		size=11 title='$myconfig{dateformat}' value='$defaultvalue' class="date"></td></tr>\n|;
 }
 
 ###############################
@@ -351,7 +351,7 @@ sub rpt_dec {
 # format decimal column
 sub rpt_print_date {
   my ($fldname, $defaultvalue) = @_;
-  my $str = qq|<td><input type=text name=$fldname size=11 title='$myconfig{dateformat}' value='$defaultvalue'></td>\n|;
+  my $str = qq|<td><input type=text name=$fldname size=11 title='$myconfig{dateformat}' value='$defaultvalue' class="date"></td>\n|;
   $str;  
 }
 

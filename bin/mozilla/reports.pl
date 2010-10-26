@@ -24,11 +24,11 @@ sub onhandvalue_search {
    &bld_warehouse;
    &bld_partsgroup;
 
-   #&print_date('dateto', 'To');
-   &print_text('partnumber', 'Number', 20);
-   &print_select('partsgroup', 'Group');
-   #&print_select('department', 'Department');
-   #&print_select('warehouse', 'Warehouse');
+   #&print_date('dateto', $locale->text('To'));
+   &print_text('partnumber', $locale->text('Number'), 20);
+   &print_select('partsgroup', $locale->text('Group'));
+   #&print_select('department', $locale->text('Department'));
+   #&print_select('warehouse', $locale->text('Warehouse'));
  
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 
@@ -50,7 +50,7 @@ sub onhandvalue_search {
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'onhandvalue_list';
    &print_hidden('nextsub');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -402,7 +402,7 @@ sub gl_search {
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'gl_list';
    &print_hidden('nextsub');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -579,7 +579,7 @@ sub gl_list {
 
    $form->{title} = $locale->text('General Ledger');
    &print_title;
-   &print_criteria('fromdate',$locale->text('From'));
+   &print_criteria('fromdate', $locale->text('From'));
    &print_criteria('todate', $locale->text('To'));
    &print_criteria('fromaccount', $locale->text('Account').' >=');
    &print_criteria('toaccount', $locale->text('Account').' <=');
@@ -739,7 +739,7 @@ sub audit_search {
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'audit_list';
    &print_hidden('nextsub');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -839,13 +839,13 @@ sub audit_list {
 
    $form->{title} = $locale->text('Audit Trail');
    &print_title;
-   &print_criteria('tablename','Table');
-   &print_criteria('reference', 'Reference');
-   &print_criteria('formname', 'Form');
-   &print_criteria('formaction', 'Action');
-   &print_criteria('fromtransdate', 'From');
-   &print_criteria('totransdate', 'To');
-   &print_criteria('employee_name', 'Employee');
+   &print_criteria('tablename', $locale->text('Table'));
+   &print_criteria('reference', $locale->text('Reference'));
+   &print_criteria('formname', $locale->text('Form'));
+   &print_criteria('formaction', $locale->text('Action'));
+   &print_criteria('fromtransdate', $locale->text('From'));
+   &print_criteria('totransdate', $locale->text('To'));
+   &print_criteria('employee_name', $locale->text('Employee'));
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -895,12 +895,12 @@ sub income_statement {
 
 <table>
 <tr>
-  <th align=right>From</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'></td>
+  <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'></td>
 </tr><tr>
-  <th align=right>To</th><td><input name=dateto size=11 title='$myconfig{dateformat}'></td>
+  <th align=right>|.$locale->text('To').qq|</th><td><input name=dateto size=11 title='$myconfig{dateformat}'></td>
 </tr>
 <tr>
-<th>Include:</th>
+<th>|.$locale->text('Include').qq|:</th>
 <td>|;
 
    my $dbh = $form->dbconnect(\%myconfig);
@@ -1123,10 +1123,10 @@ sub aa_qty_search {
    &start_form;
    &start_table;
 
-   &print_text('partnumber', 'Number', 20);
-   &print_text('name', 'Name', 30);
-   &print_date('fromdate', 'From');
-   &print_date('todate', 'To');
+   &print_text('partnumber', $locale->text('Number'), 20);
+   &print_text('name', $locale->text('Name'), 30);
+   &print_date('fromdate', $locale->text('From'));
+   &print_date('todate', $locale->text('To'));
 
    print qq|<tr>$partsgroup</tr>|;
    print $selectfrom;
@@ -1151,7 +1151,7 @@ sub aa_qty_search {
    $form->{nextsub} = 'aa_qty_list';
    &print_hidden('nextsub');
    &print_hidden('vc');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -1337,12 +1337,12 @@ sub aa_qty_list {
    &print_title;
 
    # Print report criteria
-   &print_criteria('partnumber', 'Number');
-   &print_criteria('name', 'Name');
-   &print_criteria('description', 'Description');
-   &print_criteria('fromdate', 'From');
-   &print_criteria('todate', 'To');
-   &print_criteria('partsgroup_name', 'Group');
+   &print_criteria('partnumber', $locale->text('Number'));
+   &print_criteria('name', $locale->text('Name'));
+   &print_criteria('description', $locale->text('Description'));
+   &print_criteria('fromdate', $locale->text('From'));
+   &print_criteria('todate', $locale->text('To'));
+   &print_criteria('partsgroup_name', $locale->text('Group'));
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -1454,8 +1454,8 @@ sub vc_search {
    &start_form;
    &start_table;
 
-   &print_text('name', 'Name', 30);
-   &print_date('todate', 'Upto Date');
+   &print_text('name', $locale->text('Name'), 30);
+   &print_date('todate', $locale->text('Upto Date'));
    
 
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
@@ -1474,7 +1474,7 @@ sub vc_search {
    $form->{nextsub} = 'vc_list';
    &print_hidden('nextsub');
    &print_hidden('vc');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -1575,7 +1575,7 @@ sub vc_list {
    &print_title;
 
    # Print report criteria
-   &print_criteria('name', 'Name');
+   &print_criteria('name', $locale->text('Name'));
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -1590,7 +1590,7 @@ sub vc_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+   	$form->{link} = qq|ct.pl?action=edit&db=$form->{vc}&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
 	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
 	if ($form->{l_subtotal}){
 	   if ($groupbreak ne $ref->{$form->{sort}}){
@@ -1669,9 +1669,9 @@ sub vcactivity_search {
    &start_form;
    &start_table;
 
-   &print_text("$form->{vc}number", 'Number', 10);
-   &print_text('name', 'Name', 30);
-   &print_date('todate', 'Upto Date');
+   &print_text("$form->{vc}number", $locale->text('Number'), 10);
+   &print_text('name', $locale->text('Name'), 30);
+   &print_date('todate', $locale->text('Upto Date'));
    
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 
@@ -1694,7 +1694,7 @@ sub vcactivity_search {
    $form->{nextsub} = 'vcactivity_list';
    &print_hidden('nextsub');
    &print_hidden('vc');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -1807,7 +1807,7 @@ sub vcactivity_list {
    &print_title;
 
    # Print report criteria
-   &print_criteria('name', 'Name');
+   &print_criteria('name', $locale->text('Name'));
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -1958,7 +1958,7 @@ sub onhand_search {
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'onhand_list';
    &print_hidden('nextsub');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -2078,10 +2078,10 @@ sub onhand_list {
 
    $form->{title} = $locale->text('Inventory Onhand');
    &print_title;
-   &print_criteria('partnumber','Number');
-   &print_criteria('warehouse_name', 'Warehouse');
-   &print_criteria('department_name', 'Department');
-   &print_criteria('dateto', 'To');
+   &print_criteria('partnumber',$locale->text('Number'));
+   &print_criteria('warehouse_name', $locale->text('Warehouse'));
+   &print_criteria('department_name', $locale->text('Department'));
+   &print_criteria('dateto', $locale->text('To'));
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -2225,7 +2225,7 @@ sub iactivity_search {
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'iactivity_list';
    &print_hidden('nextsub');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -2381,9 +2381,9 @@ sub iactivity_list {
 
    $form->{title} = $locale->text('Inventory Activity');
    &print_title;
-   &print_criteria('partnumber','Number');
-   &print_criteria('warehouse_name', 'Warehouse');
-   &print_criteria('department_name', 'Department');
+   &print_criteria('partnumber',$locale->text('Number'));
+   &print_criteria('warehouse_name', $locale->text('Warehouse'));
+   &print_criteria('department_name', $locale->text('Department'));
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -2535,6 +2535,8 @@ sub iactivity_list {
 #
 #===================================
 #-----------------------------------
+# $locale->text('AP Transactions');
+# $locale->text('AR Transactions');
 sub trans_search {
    $form->{title} = $locale->text("$form->{aa} Transactions");
    &print_title;
@@ -2604,7 +2606,7 @@ sub trans_search {
    &print_hidden('nextsub');
    &print_hidden('aa');
    &print_hidden('db');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -2817,18 +2819,18 @@ sub trans_list {
    &print_title;
 
    # Print report criteria
-   &print_criteria("${db}number", 'Number');
-   &print_criteria('name', 'Name');
-   &print_criteria('invnumber', 'Invoice Number');
-   &print_criteria('description', 'Description');
-   &print_criteria('notes', 'Notes');
-   &print_criteria('fromdate', 'From');
-   &print_criteria('todate', 'To');
-   &print_criteria('department_name', 'Department');
-   &print_criteria('warehouse_name', 'Warehouse');
+   &print_criteria("${db}number", $locale->text('Number'));
+   &print_criteria('name', $locale->text('Name'));
+   &print_criteria('invnumber', $locale->text('Invoice Number'));
+   &print_criteria('description', $locale->text('Description'));
+   &print_criteria('notes', $locale->text('Notes'));
+   &print_criteria('fromdate', $locale->text('From'));
+   &print_criteria('todate', $locale->text('To'));
+   &print_criteria('department_name', $locale->text('Department'));
+   &print_criteria('warehouse_name', $locale->text('Warehouse'));
    &print_criteria('employee_name', $employee_caption);
-   &print_criteria('partnumber', 'Number');
-   &print_criteria('partsgroup_name', 'Group');
+   &print_criteria('partnumber',$locale->text( 'Number'));
+   &print_criteria('partsgroup_name', $locale->text('Group'));
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -3011,14 +3013,14 @@ sub build_search {
    &bld_warehouse;
    &bld_partsgroup;
 
-   &print_text('reference', 'Reference', 15);
-   &print_date('datefrom', 'From');
-   &print_date('dateto', 'To');
+   &print_text('reference', $locale->text('Reference'), 15);
+   &print_date('datefrom', $locale->text('From'));
+   &print_date('dateto', $locale->text('To'));
 
-   &print_text('partnumber', 'Number', 30);
-   #&print_select('partsgroup', 'Group');
-   &print_select('department', 'Department');
-   &print_select('warehouse', 'Warehouse');
+   &print_text('partnumber', $locale->text('Number'), 30);
+   #&print_select('partsgroup', $locale->text('Group'));
+   &print_select('department', $locale->text('Department'));
+   &print_select('warehouse', $locale->text('Warehouse'));
  
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
 
@@ -3040,7 +3042,7 @@ sub build_search {
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'build_list';
    &print_hidden('nextsub');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -3161,11 +3163,11 @@ sub build_list {
 
    $form->{title} = $locale->text('Stock Assembly');
    &print_title;
-   &print_criteria('datefrom', 'From');
-   &print_criteria('dateto', 'To');
-   &print_criteria('reference','Reference');
-   &print_criteria('department_name', 'Department');
-   &print_criteria('warehouse_name', 'Warehouse');
+   &print_criteria('datefrom', $locale->text('From'));
+   &print_criteria('dateto', $locale->text('To'));
+   &print_criteria('reference',$locale->text('Reference'));
+   &print_criteria('department_name', $locale->text('Department'));
+   &print_criteria('warehouse_name', $locale->text('Warehouse'));
    print qq|<table width=100%><tr class=listheading>|;
    # print header
    for (@column_index) { print "\n$column_header{$_}" }
@@ -3266,11 +3268,11 @@ sub projects_search {
 
    &bld_department;
 
-   &print_text('projectnumber', 'Project Number', 30);
-   &print_text('description', 'Description');
-   &print_select('department', 'Department');
-   &print_date('datefrom', 'From');
-   &print_date('dateto', 'To');
+   &print_text('projectnumber', $locale->text('Project Number'), 30);
+   &print_text('description', $locale->text('Description'));
+   &print_select('department', $locale->text('Department'));
+   &print_date('datefrom', $locale->text('From'));
+   &print_date('dateto', $locale->text('To'));
    &print_period;
  
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
@@ -3291,7 +3293,7 @@ sub projects_search {
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'projects_list';
    &print_hidden('nextsub');
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -3405,9 +3407,9 @@ sub projects_list {
 
    $form->{title} = $locale->text('Projects Summary');
    &print_title;
-   &print_criteria('projectnumber','Project Number');
-   &print_criteria('description', 'Description');
-   &print_criteria('department_name', 'Department');
+   &print_criteria('projectnumber', $locale->text('Project Number'));
+   &print_criteria('description', $locale->text('Description'));
+   &print_criteria('department_name', $locale->text('Department'));
 
    print $locale->text('From') . ' ' . $datefrom . "<br />";
    print $locale->text('To') . ' ' . $dateto;
