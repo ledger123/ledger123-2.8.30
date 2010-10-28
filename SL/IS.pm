@@ -1028,24 +1028,6 @@ sub post_invoice {
 	}
       }
 
-      # armaghan - manage warehouse inventory from sale/purchase invoices
-      if (!$form->{shipped}){ # if we are not coming from order screen.
-         $query = qq|INSERT INTO inventory (
-                        warehouse_id, parts_id, trans_id,
-                        orderitems_id, qty,
-                        shippingdate,
-                        employee_id, department_id, serialnumber, 
-			itemnotes, description, invoice_id)
-                VALUES ($form->{warehouse_id}, $form->{"id_$i"}, $form->{id},
-                        1, 0 - ($form->{"qty_$i"}), | .
-                        $form->dbquote($form->{"transdate"}, SQL_DATE) .
-                        qq|, $form->{employee_id}, $form->{department_id}, | .
-                        $dbh->quote($form->{"serialnumber_$i"}) . qq|, | .
-                        $dbh->quote($form->{"itemnotes_$i"}) . qq|, | .
-			$dbh->quote($form->{"description_$i"}) . qq|, $id)|;
-         $dbh->do($query) || $form->dberror($query);
-      }
-
       # add id
       $form->{acc_trans}{lineitems}[$ndx]->{id} = $id;
 
