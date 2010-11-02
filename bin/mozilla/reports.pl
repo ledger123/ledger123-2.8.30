@@ -14,7 +14,7 @@ sub continue { &{$form->{nextsub}} };
 #=================================================
 #-------------------------------
 sub onhandvalue_search {
-   $form->{title} = $locale->text('Inventroy Onhand Value');
+   $form->{title} = $locale->text('Inventory Onhand Value');
    &print_title;
 
    &start_form;
@@ -714,7 +714,7 @@ sub audit_search {
 
    &print_text('trans_id', $locale->text('Trans ID'), 15);
    &print_text('tablename', $locale->text('Table'), 15);
-   &print_text('refernece', $locale->text('Refernce'), 15);
+   &print_text('reference', $locale->text('Reference'), 15);
    &print_text('formname', $locale->text('Form'), 15);
    &print_text('formaction', $locale->text('Action'), 15);
    &print_date('fromtransdate', $locale->text('From Trans Date'));
@@ -1924,7 +1924,7 @@ sub vcactivity_list {
 #==================================
 #-------------------------------
 sub onhand_search {
-   $form->{title} = $locale->text('Inventroy Onhand');
+   $form->{title} = $locale->text('Inventory Onhand');
    &print_title;
 
    &start_form;
@@ -2098,7 +2098,7 @@ sub onhand_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+   	$form->{link} = qq|ic.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
 	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
 	if ($form->{l_subtotal}){
 	   if ($groupbreak ne $ref->{$form->{sort}}){
@@ -2316,7 +2316,7 @@ sub iactivity_list {
        $callback .= "&l_$item=Y";
      }
    }
-   for (qw(l_subotal partnumber datefrom dateto partsgroup department warehouse)){
+   for (qw(l_subtotal partnumber datefrom dateto partsgroup department warehouse)){
       $callback .= "&$_=".$form->escape($form->{$_});
    }
    my $href = $callback;
