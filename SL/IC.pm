@@ -935,6 +935,8 @@ sub all_parts {
 
   if (($form->{warehouse} ne "") || $form->{l_warehouse}) {
     $form->{l_warehouse} = 1;
+    ($null, $form->{warehouse_id}) = split /--/, $form->{warehouse};
+    $form->{warehouse_id} *= 1;
   }
   
   if ($form->{searchitems} eq 'part') {
@@ -1195,6 +1197,7 @@ sub all_parts {
 		     AND a.quotation = '0'";
       $ordwhere .= " AND a.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
       $ordwhere .= " AND a.transdate <= '$form->{transdateto}'" if $form->{transdateto};
+      $ordwhere .= " AND a.warehouse_id = $form->{warehouse_id}" if $form->{warehouse};
 
       if ($form->{description} ne "") {
 	$var = $form->like(lc $form->{description});
