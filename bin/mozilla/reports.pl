@@ -2126,7 +2126,7 @@ sub onhand_list {
 	$column_data{no}   		= rpt_txt($no);
    	$column_data{warehouse}		= rpt_txt($ref->{warehouse});
    	$column_data{partnumber}	= rpt_txt($ref->{partnumber});
-   	$column_data{description} 	= rpt_txt($ref->{description}, $form->{link});
+   	$column_data{description} 	= rpt_txt($ref->{description});
    	$column_data{partsgroup}    	= rpt_txt($ref->{partsgroup});
    	$column_data{unit}    		= rpt_txt($ref->{unit});
    	$column_data{onhand}    	= rpt_dec($ref->{onhand});
