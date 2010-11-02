@@ -3089,9 +3089,6 @@ sub build_list {
    # No. columns should always come first
    splice @columns, 0, 0, 'no';
 
-   if ($form->{summary}){
-	for (qw(l_partnumber l_description l_qty l_unit)){ delete $form->{$_} }
-   }
    # Select columns selected for report display
    foreach $item (@columns) {
      if ($form->{"l_$item"} eq "Y") {
@@ -3111,12 +3108,18 @@ sub build_list {
 			b.reference,
 			b.transdate,
 			w.description AS warehouse,	
-			d.description AS department
+			d.description AS department,
+			p.partnumber,
+			p.description,
+			i.qty,
+			p.unit
 			FROM build b
 			LEFT JOIN department d ON (d.id = b.department_id)
 			LEFT JOIN warehouse w ON (w.id = b.warehouse_id)
-			WHERE $where
-			ORDER BY $form->{sort} $form->{direction}|;
+			JOIN inventory i ON (i.trans_id = b.id)
+			JOIN parts p ON (p.id = i.parts_id)
+			WHERE $where AND assembly
+			ORDER BY $form->{sort} $form->{direction}, i.linetype DESC|;
    } else {
    	$query = qq|SELECT 
 			b.id, 
