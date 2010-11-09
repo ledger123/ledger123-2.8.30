@@ -270,7 +270,7 @@ sub edit {
    &bld_department;
    &bld_warehouse('selectfrom_warehouse');
    &bld_warehouse('selectto_warehouse');
-   $form->{title} = 'Edit Transfer';
+   $form->{title} = $locale->text('Edit Transfer');
    &create_links;
    &form_header;
 }
@@ -522,7 +522,7 @@ sub search {
    push @a, qq|<input name="l_qty" class=checkbox type=checkbox value=Y checked> |.$locale->text('Qty');
    push @a, qq|<input name="l_cost" class=checkbox type=checkbox value=Y checked> |.$locale->text('Cost');
    push @a, qq|<input name="l_extended" class=checkbox type=checkbox value=Y> |.$locale->text('Extended');
-   push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y> |.$locale->text('Subototal');
+   push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y> |.$locale->text('Subtotal');
    push @a, qq|<input name="l_csv" class=checkbox type=checkbox value=Y> |.$locale->text('CSV');
 
    while (@a) {
@@ -854,7 +854,7 @@ sub delivered_search {
    &end_table;
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'delivered_form';
-   &add_button('Continue');
+   &add_button($locale->text('Continue'));
    &end_form;
 }
 
@@ -962,7 +962,7 @@ sub delivered_form {
    $form->{title} = $locale->text('Transfers to be Delivered');
    &print_title;
    print qq|<table border=0 cellpadding=5 cellspacing=1>|;
-   print qq|<tr><th align=left>My Warehouse</th><td>| . $myconfig{warehouse} . qq|</td></tr>| if $myconfig{warehouse};
+   print qq|<tr><th align=left>|.$locale->text('My Warehouse').qq|</th><td>| . $myconfig{warehouse} . qq|</td></tr>| if $myconfig{warehouse};
    print qq|</table>|;
 
 
@@ -1069,7 +1069,7 @@ sub delivered_form {
    print qq|</table>|;
 
    print('<hr size=3 noshade>');
-   &add_button('Save Delivered');
+   &add_button($locale->text('Save Delivered'));
 
    $form->{rowcount} = --$no;
    &print_hidden(rowcount);
