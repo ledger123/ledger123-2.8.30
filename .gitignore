@@ -1,2 +1,8 @@
 users
-templates/armaghan
+sql-ledger.conf
+templates/*/
+locale/*.zip
+locales2.pl
+*.missing
+*~
+
