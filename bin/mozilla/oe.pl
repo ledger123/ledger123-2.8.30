@@ -1045,7 +1045,8 @@ sub update {
 	
 	$form->{"oldqty_$i"} = $form->{"qty_$i"};
 
-	for (qw(netweight grossweight)) { $form->{"${_}_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"} }
+	$form->{"grossweight_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"};
+	$form->{"netweight_$i"} = $form->{"weight_$i"} * $form->{"ship_$i"};
 
 	for (qw(qty discount netweight grossweight)) { $form->{"${_}_$i"} =  $form->format_amount(\%myconfig, $form->{"${_}_$i"}) }
 
