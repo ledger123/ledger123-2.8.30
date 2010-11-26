@@ -190,6 +190,7 @@ function CheckAll(v) {
 	$form->{"netweight_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"};
       }
     }
+    $form->{"grossweight_$i"} = $form->format_amount(\%myconfig, $form->{"grossweight_$i"});
     $form->{"netweight_$i"} = $form->format_amount(\%myconfig, $form->{"netweight_$i"});
  
     if ($form->{"qty_$i"} != $form->{"oldqty_$i"}) {
