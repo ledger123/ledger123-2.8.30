@@ -669,6 +669,7 @@ sub list {
    $column_header{trfnumber}  		= rpt_hdr('trfnumber', $locale->text('Transfer Number'), $href);
    $column_header{reference}    	= rpt_hdr('reference', $locale->text('Reference'), $href);
    $column_header{description}  	= rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{department}  		= rpt_hdr('department', $locale->text('Department'), $href);
    $column_header{from_warehouse}	= rpt_hdr('from_warehouse', $locale->text('From WH'), $href);
    $column_header{to_warehouse}      	= rpt_hdr('to_warehouse', $locale->text('To WH'), $href);
    $column_header{partnumber}   	= rpt_hdr('partnumber', $locale->text('Number'), $href);
@@ -724,6 +725,7 @@ sub list {
    		$column_data{trfnumber} 	= rpt_txt('&nbsp;');
    		$column_data{reference}    	= rpt_txt('&nbsp;');
    		$column_data{description}  	= rpt_txt('&nbsp;');
+   		$column_data{department}  	= rpt_txt('&nbsp;');
     		$column_data{from_warehouse}	= rpt_txt('&nbsp;');
    		$column_data{to_warehouse}    	= rpt_txt('&nbsp;');
    		$column_data{partnumber}    	= rpt_txt('&nbsp;');
@@ -750,6 +752,7 @@ sub list {
    	$column_data{transdate}    	= rpt_txt($ref->{transdate});
    	$column_data{reference}    	= rpt_txt($ref->{reference});
    	$column_data{description}  	= rpt_txt($ref->{description});
+   	$column_data{department}  	= rpt_txt($ref->{department});
   	$column_data{from_warehouse}	= rpt_txt($ref->{from_warehouse});
    	$column_data{to_warehouse}    	= rpt_txt($ref->{to_warehouse});
    	$column_data{partnumber}    	= rpt_txt($ref->{partnumber});
@@ -778,6 +781,7 @@ sub list {
   $column_data{trfnumber} 	= rpt_txt('&nbsp;');
   $column_data{reference}    	= rpt_txt('&nbsp;');
   $column_data{description}  	= rpt_txt('&nbsp;');
+  $column_data{department}  	= rpt_txt('&nbsp;');
   $column_data{from_warehouse}	= rpt_txt('&nbsp;');
   $column_data{to_warehouse}   	= rpt_txt('&nbsp;');
   $column_data{partnumber}   	= rpt_txt('&nbsp;');
