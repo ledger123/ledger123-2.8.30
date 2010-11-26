@@ -182,6 +182,7 @@ function CheckAll(v) {
     
     if ($form->{type} =~ /_order/) {
       if ($form->{"ship_$i"} != $form->{"oldship_$i"} || $form->{"qty_$i"} != $form->{"oldqty_$i"}) {
+	$form->{"grossweight_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"};
 	$form->{"netweight_$i"} = $form->{"weight_$i"} * $form->{"ship_$i"};
       }
     } else {
