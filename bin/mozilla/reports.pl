@@ -122,8 +122,8 @@ sub onhandvalue_list {
 		pg.partsgroup,
 		p.unit,
 		SUM(0-(i.qty+i.allocated)) AS onhand_qty,
-		SUM((0-(i.qty+i.allocated))*i.lastcost) AS onhand_amt
-
+		  (SELECT SUM((0-(i2.qty+i2.allocated))*i2.sellprice) 
+		  FROM invoice i2 WHERE i2.parts_id = p.id AND i2.qty < 0) AS onhand_amt
 		FROM parts p
 		JOIN invoice i ON (i.parts_id = p.id)
 		LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
