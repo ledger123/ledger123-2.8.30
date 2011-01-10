@@ -2046,7 +2046,7 @@ sub im_vc {
 
   @column_index = qw(ndx);
   push @column_index, "$form->{db}number";
-  push @column_index, qw(name firstname lastname contacttitle phone fax email notes address1 address2 city state zipcode country);
+  push @column_index, qw(id name firstname lastname contacttitle phone fax email notes address1 address2 city state zipcode country);
   @flds = @column_index;
   unshift @column_index, "runningnumber";
 
@@ -2058,6 +2058,7 @@ sub im_vc {
   IM->vc(\%myconfig, \%$form);
 
   $column_data{runningnumber} = "&nbsp;";
+  $column_data{id} = $locale->text('ID');
   $column_data{"$form->{db}number"} = $locale->text('Number');
   $column_data{name} = $locale->text('Name');
   $column_data{firstname} = $locale->text('First Name');
@@ -2180,6 +2181,7 @@ sub import_vc {
       $newform->{arap_accno} = $form->{arap_accno};
       $newform->{payment_accno} = $form->{payment_accno};
 
+      $newform->{id} = $form->{"id_$i"};
       $newform->{"$form->{db}number"} = $form->{"$form->{db}number_$i"};
       $newform->{name} = $form->{"name_$i"};
       $newform->{firstname} = $form->{"firstname_$i"};
@@ -2196,7 +2198,11 @@ sub import_vc {
       $newform->{zipcode} = $form->{"zipcode_$i"};
       $newform->{country} = $form->{"country_$i"};
       
-      $form->info("${m}. ".$locale->text("Add $form->{db} ..."));
+      if ($newform->{id}){
+         $form->info("${m}. ".$locale->text("Update $form->{db} ..."));
+      } else {
+         $form->info("${m}. ".$locale->text("Add $form->{db} ..."));
+      }
 
       if (CT->save(\%myconfig, \%$newform)) {
 	$form->info(qq| $form->{"$form->{db}number_$i"}, $form->{"name_$i"}|);

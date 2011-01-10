@@ -1217,7 +1217,10 @@ sub vc {
   
   my %defaults = $form->get_defaults($dbh, \@{['precision']});
   $form->{precision} = $defaults{precision};
-  
+
+  my $query = qq|SELECT id FROM $form->{db} WHERE $form->{db}number = ?|;
+  $sth = $dbh->prepare($query);
+
   my @d = split /\n/, $form->{data};
   shift @d if ! $form->{mapfile};
 
@@ -1228,6 +1231,14 @@ sub vc {
       for (keys %{$form->{$form->{type}}}) {
 	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
 	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
+      }
+      if (!$form->{"id_$i"}){
+	   if ($form->{"$form->{db}number_$i"}){
+	      $sth->execute($form->{"$form->{db}number_$i"});
+	      $ref = $sth->fetchrow_hashref(NAME_lc);
+	      $form->{"id_$i"} = $ref->{id};
+	      $sth->finish;
+ 	   }
       }
     }
     $form->{rowcount} = $i;

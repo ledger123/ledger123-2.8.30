@@ -258,7 +258,7 @@ sub save {
     $dbh->do($query) || $form->dberror($query);
    
     $query = qq|DELETE FROM contact
-                WHERE id = $form->{contactid}|;
+                WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
  
     $query = qq|SELECT address_id
@@ -271,7 +271,7 @@ sub save {
     $dbh->do($query) || $form->dberror($query);
    
     $query = qq|DELETE FROM address
-                WHERE id = $form->{addressid}|;
+                WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
     
     $bank_address_id *= 1;
