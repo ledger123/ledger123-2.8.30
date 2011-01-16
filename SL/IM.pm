@@ -1222,6 +1222,13 @@ sub vc {
   $sth = $dbh->prepare($query);
 
   $query = qq|
+	SELECT name, contact, phone, fax, email, notes, terms, taxincluded, cc, bcc, business_id, taxnumber, sic_code, discount, creditlimit, iban, bic, employee_id, language_code, pricegroup_id, curr, startdate, enddate, arap_accno_id, payment_accno_id, discount_accno_id, cashdiscount, threshold, paymentmethod_id, remittancevoucher
+        FROM $form->{db}
+	WHERE id = ?
+  |;
+  my $vc = $dbh->prepare($query);
+
+  $query = qq|
 	SELECT id AS contactid, salutation, firstname, lastname, contacttitle, occupation, phone, fax, mobile, email, gender, typeofcontact
 	FROM contact WHERE trans_id = ?
   |;
@@ -1271,6 +1278,14 @@ sub vc {
  	   }
       }
       if ($form->{"id_$i"}){
+	 # vc
+	 $vc->execute($form->{"id_$i"});
+         $ref = $vc->fetchrow_hashref(NAME_lc);
+         foreach (keys %$ref){
+	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+	 }
+	 $vc->finish;
+
 	 # contact
 	 $contact->execute($form->{"id_$i"});
          $ref = $contact->fetchrow_hashref(NAME_lc);

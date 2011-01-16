@@ -2046,9 +2046,9 @@ sub im_vc {
 
   @column_index = qw(ndx);
   push @column_index, "$form->{db}number";
-  push @column_index, qw(id name firstname lastname contacttitle phone fax email notes address1 address2 city state zipcode country);
+  push @column_index, qw(id name salutation firstname lastname contacttitle phone fax email notes address1 address2 city state zipcode country);
   @flds = @column_index;
-  push @flds, qw(contactid saluation occupation mobile gender addressid shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddress1 bankaddress2 bankcity bankstate bankzipcode bankcountry dcn rvc membernumber);
+  push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddress1 bankaddress2 bankcity bankstate bankzipcode bankcountry dcn rvc membernumber);
   unshift @column_index, "runningnumber";
 
   $form->{callback} = "$form->{script}?action=import";
@@ -2170,62 +2170,24 @@ sub import_vc {
 
       $m++;
       
+      push @flds, "$form->{db}number";
+      push @flds, qw(id name salutation firstname lastname contacttitle phone fax email notes address1 address2 city state zipcode country);
+      push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddress1 bankaddress2 bankcity bankstate bankzipcode bankcountry dcn rvc membernumber);
+
       for (keys %$newform) { delete $newform->{$_} };
 
+      for (@flds){ $newform->{$_} = $form->{"${_}_$i"}; }
+
+      for (split / /, $form->{taxaccounts}){ $newform->{"tax_$_"} = $form->{"tax_$_"}; }
+
       $newform->{db} = $form->{db};
-      $newform->{typeofcontact} = 'company';
-      for (split / /, $form->{taxaccounts}){
-	 $newform->{"tax_$_"} = $form->{"tax_$_"};
-      }
+      $newform->{typeofcontact} = 'company' if $newform->{typeofcontact} ne 'person';
       $newform->{taxaccounts} = $form->{taxaccounts};
       $newform->{taxincluded} = $form->{taxincluded};
       $newform->{arap_accno} = $form->{arap_accno};
       $newform->{payment_accno} = $form->{payment_accno};
 
       $newform->{id} = $form->{"id_$i"};
-      $newform->{"$form->{db}number"} = $form->{"$form->{db}number_$i"};
-      $newform->{name} = $form->{"name_$i"};
-
-      $newform->{contactid} = $form->{"contactid_$i"};
-      $newform->{firstname} = $form->{"firstname_$i"};
-      $newform->{lastname} = $form->{"lastname_$i"};
-      $newform->{contacttitle} = $form->{"contacttitle_$i"};
-      $newform->{phone} = $form->{"phone_$i"};
-      $newform->{fax} = $form->{"fax_$i"};
-      $newform->{email} = $form->{"email_$i"};
-      $newform->{notes} = $form->{"notes_$i"};
-
-      $newform->{addressid} = $form->{"addressid_$i"};
-      $newform->{address1} = $form->{"address1_$i"};
-      $newform->{address2} = $form->{"address2_$i"};
-      $newform->{city} = $form->{"city_$i"};
-      $newform->{state} = $form->{"state_$i"};
-      $newform->{zipcode} = $form->{"zipcode_$i"};
-      $newform->{country} = $form->{"country_$i"};
-
-      $newform->{shiptoname} = $form->{"shiptoname_$i"};
-      $newform->{shiptoaddress1} = $form->{"shiptoaddress1_$i"};
-      $newform->{shiptoaddress2} = $form->{"shiptoaddress2_$i"};
-      $newform->{shiptocity} = $form->{"shiptocity_$i"};
-      $newform->{shiptostate} = $form->{"shiptostate_$i"};
-      $newform->{shiptozipcode} = $form->{"shiptozipcode_$i"};
-      $newform->{shiptocountry} = $form->{"shiptocountry_$i"};
-      $newform->{shiptophone} = $form->{"shiptophone_$i"};
-      $newform->{shiptofax} = $form->{"shiptofax_$i"};
-      $newform->{shiptoemail} = $form->{"shiptoemail_$i"};
-
-      $newform->{bankname} = $form->{"bankname_$i"};
-      $newform->{iban} = $form->{"iban_$i"};
-      $newform->{bic} = $form->{"bic_$i"};
-      $newform->{bankaddress1} = $form->{"bankaddress1_$i"};
-      $newform->{bankaddress2} = $form->{"bankaddress2_$i"};
-      $newform->{bankcity} = $form->{"bankcity_$i"};
-      $newform->{bankstate} = $form->{"bankstate_$i"};
-      $newform->{bankzipcode} = $form->{"bankzipcode_$i"};
-      $newform->{bankcountry} = $form->{"bankcountry_$i"};
-      $newform->{dcn} = $form->{"dcn_$i"};
-      $newform->{rvc} = $form->{"rvc_$i"};
-      $newform->{membernumber} = $form->{"membernumber_$i"};
 
       if ($newform->{id}){
          $form->info("${m}. ".$locale->text("Update $form->{db} ..."));
