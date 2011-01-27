@@ -277,7 +277,7 @@ sub save {
   my $pth = $dbh->prepare($query) || $form->dberror($query);
 
  
-  if ($form->{id}) {
+  if ($form->{id} *= 1) {
     $query = qq|SELECT id, aa_id FROM oe
                 WHERE id = $form->{id}|;
 
@@ -605,6 +605,8 @@ sub delete {
   # connect to database
   my $dbh = $form->dbconnect_noauto($myconfig);
 
+  $form->{id} *= 1;
+
   # Check if there is any inventory received against this order.
   my $query = qq|SELECT COUNT(*) FROM inventory WHERE trans_id = $form->{id}|;
   my ($cnt) = $dbh->selectrow_array($query); 
@@ -708,7 +710,7 @@ sub retrieve {
   
   $form->remove_locks($myconfig, $dbh, 'oe') unless $form->{readonly};
 
-  if ($form->{id}) {
+  if ($form->{id} *= 1) {
     
     # retrieve order
     $query = qq|SELECT o.ordnumber, o.transdate, o.reqdate, o.terms,

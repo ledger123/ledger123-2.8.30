@@ -85,7 +85,10 @@ sub print_check {
 
   if ($form->{"paid_$i"}) {
     @a = ();
-    
+ 
+    $datepaid = $form->datetonum(\%myconfig, $form->{"datepaid_$i"});
+    ($form->{yyyy}, $form->{mm}, $form->{dd}) = $datepaid =~ /(....)(..)(..)/;
+  
     if (exists $form->{longformat}) {
       $form->{"datepaid_$i"} = $locale->date(\%myconfig, $form->{"datepaid_$i"}, $form->{longformat});
     }
@@ -145,7 +148,7 @@ sub print_check {
 
   for (qw(employee paymentmethod)) { ($form->{$_}, $form->{"${_}_id"}) = split /--/, $form->{$_} };
   
-  push @a, qw(employee paymentmethod notes intnotes company address tel fax businessnumber);
+  push @a, qw(employee paymentmethod notes intnotes companyemail companywebsite company address tel fax businessnumber);
 
   $form->format_string(@a);
 
@@ -384,7 +387,7 @@ sub print_transaction {
   
   @a = qw(employee paymentmethod invnumber transdate duedate notes intnotes ndcn rvc);
 
-  push @a, qw(company address tel fax businessnumber text_amount text_decimal text_out_decimal text_out_amount);
+  push @a, qw(companyemail companywebsite company address tel fax businessnumber text_amount text_decimal text_out_decimal text_out_amount);
   
   $form->format_string(@a);
 

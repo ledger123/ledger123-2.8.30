@@ -1248,7 +1248,7 @@ sub list_cards {
 
   
   if ($form->{type} eq 'timecard') {
-    push @column_index, (qw(1 2 3 4 5 6 7)) if ($form->{l_qty} || $form->{l_time});
+    push @column_index, (qw(2 3 4 5 6 7 1)) if ($form->{l_qty} || $form->{l_time});
   } else {
     push @column_index, (qw(qty sellprice)) if $form->{l_qty};
   }
@@ -1775,7 +1775,7 @@ sub print_form {
   
   @a = ();
   push @a, qw(partnumber description projectnumber projectdescription);
-  push @a, qw(company address tel fax businessnumber username useremail);
+  push @a, qw(companyemail companywebsite company address tel fax businessnumber username useremail);
   
   $form->format_string(@a);
 
@@ -1846,7 +1846,7 @@ sub print_form {
 
   $form->parse_template(\%myconfig, $userspath);
 
-  if (defined %$old_form) {
+  if ($old_form) {
 
     for (keys %$old_form) { $form->{$_} = $old_form->{$_} }
     for (qw(printed queued audittrail)) { $form->{$_} = $status{$_} }

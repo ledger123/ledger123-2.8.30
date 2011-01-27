@@ -78,7 +78,7 @@ sub new {
 
   $self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
-  $self->{version} = "2.8.30";
+  $self->{version} = "2.8.33";
   $self->{dbversion} = "2.8.10";
 
   bless $self, $type;
@@ -163,17 +163,17 @@ sub select_option {
   
   for (@a) {
     $var = $_ = $self->quote($_);
-    if (defined $rev) {
+    if ($rev ne "") {
       $_ =~ s/--.*//g;
       $var =~ s/.*--//g;
     }
-    if (defined $removeid) {
+    if ($removeid ne "") {
       $var =~ s/--.*//g;
     }
     
     $str .= qq|<option|;
     $str .= qq| value="$_"| if ($removeid || $rev);
-    $str .= qq| selected| if $_ ne "" && $_ eq $self->quote($selected);
+    $str .= qq| selected| if (($_ ne "") && ($_ eq $self->quote($selected)));
     $str .= qq|>$var\n|;
   }
 
@@ -663,7 +663,7 @@ sub parse_template {
 	  # but only if there was a <%pagebreak ...%> block before
 	  
 	  if ($var eq 'number' || $var eq 'part' || $var eq 'service') {
-	    if ($chars_per_line && defined $self->{$var}) {
+	    if ($chars_per_line && ($self->{$var} ne "")) {
 	      my $line;
 	      my $lines = 0;
 	      my $item = $self->{description}[$j];
@@ -2119,6 +2119,12 @@ sub all_taxaccounts {
 sub all_employees {
   my ($self, $myconfig, $dbh, $transdate, $sales) = @_;
   
+  my $disconnect = ($dbh) ? 0 : 1;
+
+  if (! $dbh) {
+    $dbh = $self->dbconnect($myconfig);
+  }
+
   # setup employees/sales contacts
   my $query = qq|SELECT id, name
  	         FROM employee
@@ -2144,6 +2150,8 @@ sub all_employees {
     push @{ $self->{all_employee} }, $ref;
   }
   $sth->finish;
+
+  $dbh->disconnect if $disconnect;
 
 }
 
@@ -2364,7 +2372,7 @@ sub create_links {
  
   $self->remove_locks($myconfig, $dbh);
 
-  if ($self->{id}) {
+  if ($self->{id} *= 1) {
     
     $query = qq|SELECT a.invnumber, a.transdate,
                 a.${vc}_id, a.datepaid, a.duedate, a.ordnumber,
@@ -2786,6 +2794,7 @@ sub update_status {
   my ($self, $myconfig) = @_;
 
   # no id return
+  $self->{id} *= 1;
   return unless $self->{id};
 
   my $dbh = $self->dbconnect_noauto($myconfig);
@@ -2817,6 +2826,8 @@ sub save_status {
 
   my $formnames = $self->{printed};
   my $emailforms = $self->{emailed};
+
+  $self->{id} *= 1;
 
   my $query = qq|DELETE FROM status
 		 WHERE trans_id = $self->{id}|;
@@ -2870,6 +2881,8 @@ sub save_status {
 sub get_recurring {
   my ($self, $dbh) = @_;
   
+  $self->{id} *= 1;
+
   my $query = qq~SELECT s.*, se.formname || ':' || se.format AS emaila,
               se.message,
 	      sp.formname || ':' || sp.format || ':' || sp.printer AS printa
@@ -3049,6 +3062,7 @@ sub save_intnotes {
   my ($self, $myconfig, $vc) = @_;
 
   # no id return
+  $self->{id} *= 1;
   return unless $self->{id};
 
   my $dbh = $self->dbconnect($myconfig);
@@ -3488,7 +3502,7 @@ sub audittrail {
     
   # if we have an id add audittrail, otherwise get a new timestamp
   
-  if ($audittrail->{id}) {
+  if ($audittrail->{id} *= 1) {
     
     my %defaults = $self->get_defaults($dbh, \@{['audittrail']});
     
@@ -3673,7 +3687,7 @@ sub date {
       $mm = substr("0$mm", -2);
       $longdate = "$dd$spc$mm$spc$yy";
 
-      if (defined $longformat) {
+      if ($longformat ne "") {
 	$longdate = "$dd";
 	$longdate .= ($spc eq '.') ? ". " : " ";
 	$longdate .= &text($self, $self->{$longmonth}[--$mm])." $yy";
@@ -3684,7 +3698,7 @@ sub date {
       $mm = substr("0$mm", -2);
       $longdate = "$yy$spc$mm$spc$dd"; 
 
-      if (defined $longformat) {
+      if ($longformat ne "") {
 	$longdate = &text($self, $self->{$longmonth}[--$mm])." $dd $yy";
       }
     } else {
@@ -3693,7 +3707,7 @@ sub date {
 	$mm = substr("0$mm", -2);
 	$longdate = "$mm$spc$dd$spc$yy"; 
 
-      if (defined $longformat) {
+      if ($longformat ne "") {
 	$longdate = &text($self, $self->{$longmonth}[--$mm])." $dd $yy";
       }
     }
