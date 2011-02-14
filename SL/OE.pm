@@ -71,7 +71,7 @@ sub transactions {
 		 ex.$rate AS exchangerate,
 		 o.closed, o.quonumber, o.shippingpoint, o.shipvia, o.waybill,
 		 e.name AS employee, m.name AS manager, o.curr, o.ponumber,
-		 o.notes, w.description AS warehouse, o.description
+		 o.notes, o.intnotes, w.description AS warehouse, o.description
 		 $orderitems_description
 	         FROM oe o
 	         JOIN $form->{vc} ct ON (o.$form->{vc}_id = ct.id)

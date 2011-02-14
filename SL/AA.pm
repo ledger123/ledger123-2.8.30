@@ -786,7 +786,7 @@ sub transactions {
   my $query = qq|SELECT a.id, a.invnumber, a.ordnumber, a.transdate,
                  a.duedate, ($taxfld) * $ml AS tax,
 		 a.amount, ($paid) AS paid,
-		 a.invoice, a.datepaid, a.terms, a.notes,
+		 a.invoice, a.datepaid, a.terms, a.notes, a.intnotes,
 		 a.shipvia, a.waybill, a.shippingpoint,
 		 e.name AS employee, vc.name, vc.$form->{vc}number,
 		 a.$form->{vc}_id, a.till, m.name AS manager, a.curr,
