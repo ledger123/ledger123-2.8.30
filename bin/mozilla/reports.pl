@@ -2032,7 +2032,8 @@ sub onhand_list {
 			FROM inventory i
 			JOIN parts p ON (p.id = i.parts_id)
 			LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
-			WHERE $where AND p.inventory_accno_id IS NOT NULL
+			WHERE $where
+			AND (p.inventory_accno_id IS NOT NULL OR (p.inventory_accno_id IS NULL AND p.expense_accno_id IS NULL))
 			GROUP BY 1, 2, 3, 4, 5
 			ORDER BY $form->{sort} $form->{direction}|;
    } else {
@@ -2048,7 +2049,8 @@ sub onhand_list {
 			JOIN parts p ON (p.id = i.parts_id)
 			LEFT JOIN warehouse w ON (w.id = i.warehouse_id)
 			LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
-			WHERE $where AND p.inventory_accno_id IS NOT NULL
+			WHERE $where
+			AND (p.inventory_accno_id IS NOT NULL OR (p.inventory_accno_id IS NULL AND p.expense_accno_id IS NULL))
 			GROUP BY 1, 2, 3, 4, 5, 6
 			ORDER BY $form->{sort} $form->{direction}|;
 
