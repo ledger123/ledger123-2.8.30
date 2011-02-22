@@ -2154,6 +2154,7 @@ sub sales_invoice { &invoice };
 
 sub invoice {
   
+  $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
   if ($form->{type} =~ /_order$/) {
     $form->isblank("ordnumber", $locale->text('Order Number missing!'));
     $form->isblank("transdate", $locale->text('Order Date missing!'));
