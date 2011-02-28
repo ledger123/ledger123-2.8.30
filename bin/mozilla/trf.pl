@@ -131,6 +131,17 @@ sub form_header {
 
    print('<hr size=3 noshade>');
 
+   $form->{format} ||= $myconfig{outputformat};
+   if ($myconfig{printer}) {
+     $form->{format} ||= "postscript";
+   } else {
+     $form->{format} ||= "pdf";
+   }
+   $form->{media} ||= $myconfig{printer};
+   for (qw(html postscript pdf)){
+      $selected = ''; $selected = 'selected' if $form->{format} eq $_;
+      $form->{selectformat} .= qq|<option value="$_" $selected>$_</option>\n|
+   }
    print qq|  
 <table width="100%">
 
@@ -138,9 +149,7 @@ sub form_header {
       <td><select name="formname"><option value="transfer" selected="selected">Transfer
 </option></select></td>
       <td></td>
-      <td><select name="format"><option value="html" selected="selected">html
-</option><option value="postscript">Postscript
-</option><option value="pdf">PDF</option></select></td>
+      <td><select name="format">$form->{selectformat}</select></td>
       <td><select name="media">
           <option value="screen">Screen 
           </option><option value="Epson">Epson 
