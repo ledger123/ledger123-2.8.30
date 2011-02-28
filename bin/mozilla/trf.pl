@@ -93,13 +93,14 @@ sub form_header {
 	   $total += $form->{"cost_$i"}*$form->{"qty_$i"};
 	   print qq|<tr>|;
 	   print qq|<td><input name="no_$j" type=text size=3 value=$j></td>\n|;
-	   print qq|<input type=hidden name="parts_id_$j" value='$form->{"parts_id_$i"}'></td>\n|;
-	   print qq|<td><input name="partnumber_$j" type=text size=15 value='$form->{"partnumber_$i"}'></td>\n|;
+	   print qq|<input type=hidden name="parts_id_$j" value="$form->{"parts_id_$i"}"></td>\n|;
+	   print qq|<input type=hidden name="weight_$j" value="$form->{"weight_$i"}"></td>\n|;
+	   print qq|<td><input name="partnumber_$j" type=text size=15 value="$form->{"partnumber_$i"}"></td>\n|;
 	   print $itemdetail;
-	   print qq|<td><input name="description_$j" type=text size=48 value='$form->{"description_$i"}'></td>\n|;
-	   print qq|<td><input name="qty_$j" type=text size=5 value='$form->{"qty_$i"}'></td>\n|;
-	   print qq|<td><input name="unit_$j" type=text size=5 value='$form->{"unit_$i"}'></td>\n|;
-	   print qq|<td><input name="cost_$j" type=text size=5 value='$form->{"cost_$i"}'></td>\n|;
+	   print qq|<td><input name="description_$j" type=text size=48 value="$form->{"description_$i"}"></td>\n|;
+	   print qq|<td><input name="qty_$j" type=text size=5 value="$form->{"qty_$i"}"></td>\n|;
+	   print qq|<td><input name="unit_$j" type=text size=5 value="$form->{"unit_$i"}"></td>\n|;
+	   print qq|<td><input name="cost_$j" type=text size=5 value="$form->{"cost_$i"}"></td>\n|;
 	   print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{"cost_$i"}*$form->{"qty_$i"}, 2) . qq|</td>\n|;
 	   print qq|</tr>\n|;
 
