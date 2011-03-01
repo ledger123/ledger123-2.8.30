@@ -35,7 +35,7 @@ sub retrieve_card {
  
   $form->remove_locks($myconfig, $dbh, 'jcitems');
   
-  if ($form->{id}) {
+  if ($form->{id} *= 1) {
     # retrieve timecard/storescard
     $query = qq|SELECT j.*, to_char(j.checkedin, 'HH24:MI:SS') AS checkedina,
                 to_char(j.checkedout, 'HH24:MI:SS') AS checkedouta,
@@ -277,6 +277,8 @@ sub delete_timecard {
   # connect to database
   my $dbh = $form->dbconnect_noauto($myconfig);
  
+  $form->{id} *= 1;
+
   my %audittrail = ( tablename  => 'jcitems',
                      reference  => $form->{id},
 		     formname   => $form->{type},
@@ -429,7 +431,7 @@ sub jcitems {
 	      p.partnumber,
 	      pr.projectnumber, pr.description AS projectdescription,
 	      e.employeenumber, e.name AS employee,
-	      to_char(j.checkedin, 'WW') AS workweek, pr.parts_id,
+	      to_char(j.checkedin, 'IW') AS workweek, pr.parts_id,
 	      j.sellprice, p.inventory_accno_id, p.income_accno_id,
 	      j.notes
 	      FROM jcitems j
@@ -474,7 +476,7 @@ sub save {
   
   my ($null, $project_id) = split /--/, $form->{projectnumber};
 
-  if ($form->{id}) {
+  if ($form->{id} *= 1) {
     # check if it was a job
     $query = qq|SELECT pr.parts_id, pr.production - pr.completed
 		FROM project pr

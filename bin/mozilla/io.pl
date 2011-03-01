@@ -179,9 +179,10 @@ function CheckAll(v) {
 
     # undo formatting
     for (qw(qty ship discount sellprice netweight grossweight volume)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
-    
+
     if ($form->{type} =~ /_order/) {
       if ($form->{"ship_$i"} != $form->{"oldship_$i"} || $form->{"qty_$i"} != $form->{"oldqty_$i"}) {
+	$form->{"grossweight_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"};
 	$form->{"netweight_$i"} = $form->{"weight_$i"} * $form->{"ship_$i"};
       }
     } else {
@@ -189,7 +190,9 @@ function CheckAll(v) {
 	$form->{"netweight_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"};
       }
     }
-
+    $form->{"grossweight_$i"} = $form->format_amount(\%myconfig, $form->{"grossweight_$i"});
+    $form->{"netweight_$i"} = $form->format_amount(\%myconfig, $form->{"netweight_$i"});
+ 
     if ($form->{"qty_$i"} != $form->{"oldqty_$i"}) {
       # check pricematrix
       @a = split / /, $form->{"pricematrix_$i"};
@@ -259,8 +262,8 @@ function CheckAll(v) {
     $column_data{runningnumber} = qq|<td><input name="runningnumber_$i" size=3 value=$i></td>|;
     $column_data{partnumber} = qq|<td><input name="partnumber_$i" size=15 value="|.$form->quote($form->{"partnumber_$i"}).qq|" accesskey="$i" title="[Alt-$i]" $readonly>$skunumber</td>|;
     $column_data{itemdetail} = $itemdetail;
-    $column_data{qty} = qq|<td align=right><input name="qty_$i" title="$form->{"onhand_$i"}" size=8 value='|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|' $readonly></td>|;
-    $column_data{ship} = qq|<td align=right><input name="ship_$i" size=8 value='|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|' READONLY></td>|;
+    $column_data{qty} = qq|<td align=right><input name="qty_$i" title="$form->{"onhand_$i"}" size=8 value="|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|" $readonly></td>|;
+    $column_data{ship} = qq|<td align=right><input name="ship_$i" size=8 value="|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|" READONLY></td>|;
     $column_data{unit} = qq|<td><input name="unit_$i" size=5 value="|.$form->quote($form->{"unit_$i"}).qq|"></td>|;
     $column_data{sellprice} = qq|<td align=right nowrap><input name="sellprice_$i" size=11 value=|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $decimalplaces, $zero).qq|> $pricehistory</td>|;
     $column_data{discount} = qq|<td align=right><input name="discount_$i" size=3 value=|.$form->format_amount(\%myconfig, $form->{"discount_$i"}).qq|></td>|;
@@ -613,7 +616,7 @@ sub item_selected {
 	$form->{"lastcost_$i"} = $form->format_amount(\%myconfig, $form->{"lastcost_$i"}, $decimalplaces2);
       }
       $form->{"discount_$i"} = $form->format_amount(\%myconfig, $form->{"discount_$i"});
-
+      for (qw(weight netweight grossweight)){ $form->{"${_}_$i"} = $form->format_amount(\%myconfig, $form->{"${_}_$i"}) }
     }
   }
 
@@ -1111,8 +1114,7 @@ sub create_form {
 
 
   for $i (1 .. $form->{rowcount}) {
-    $form->{"discount_$i"} = $form->format_amount(\%myconfig, $form->{"discount_$i"} * 100);
-    for (qw(netweight grossweight volume)) { $form->{"${_}_$i"} = $form->format_amount(\%myconfig, $form->{"${_}_$i"}) }
+    for (qw(netweight grossweight volume discount)) { $form->{"${_}_$i"} = $form->format_amount(\%myconfig, $form->{"${_}_$i"}) }
 
     ($dec) = ($form->{"sellprice_$i"} =~ /\.(\d+)/);
     $dec = length $dec;
@@ -1644,7 +1646,7 @@ sub print_form {
   
   for (qw(name email)) { $form->{"user$_"} = $myconfig{$_} }
 
-  push @a, qw(company address tel fax businessnumber username useremail dcn rvc);
+  push @a, qw(companyemail companywebsite company address tel fax businessnumber username useremail dcn rvc);
 
   for (qw(notes intnotes)) { $form->{$_} =~ s/^\s+//g }
 
@@ -1683,7 +1685,7 @@ sub print_form {
 		    action	=> 'printed',
 		    id		=> $form->{id} );
 
-    if (defined %$old_form) {
+    if ($old_form) {
       $old_form->{printed} = $form->{printed};
       $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
     }
@@ -1715,7 +1717,7 @@ sub print_form {
 		    action	=> 'emailed',
 		    id		=> $form->{id} );
    
-    if (defined %$old_form) {
+    if ($old_form) {
       $old_form->{intnotes} = qq|$old_form->{intnotes}\n\n| if $old_form->{intnotes};
       $old_form->{intnotes} .= qq|[email]\n|
       .$locale->text('Date').qq|: $now\n|
@@ -1767,7 +1769,7 @@ sub print_form {
 		    action      => 'queued',
 		    id          => $form->{id} );
 
-    if (defined %$old_form) {
+    if ($old_form) {
       $old_form->{queued} = $form->{queued};
       $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
     }
@@ -1783,7 +1785,7 @@ sub print_form {
 
 
   # if we got back here restore the previous form
-  if (defined %$old_form) {
+  if ($old_form) {
 
     $old_form->{"${inv}number"} = $form->{"${inv}number"};
     $old_form->{dcn} = $form->{dcn};

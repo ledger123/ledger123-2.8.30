@@ -93,13 +93,14 @@ sub form_header {
 	   $total += $form->{"cost_$i"}*$form->{"qty_$i"};
 	   print qq|<tr>|;
 	   print qq|<td><input name="no_$j" type=text size=3 value=$j></td>\n|;
-	   print qq|<input type=hidden name="parts_id_$j" value='$form->{"parts_id_$i"}'></td>\n|;
-	   print qq|<td><input name="partnumber_$j" type=text size=15 value='$form->{"partnumber_$i"}'></td>\n|;
+	   print qq|<input type=hidden name="parts_id_$j" value="$form->{"parts_id_$i"}"></td>\n|;
+	   print qq|<input type=hidden name="weight_$j" value="$form->{"weight_$i"}"></td>\n|;
+	   print qq|<td><input name="partnumber_$j" type=text size=15 value="$form->{"partnumber_$i"}"></td>\n|;
 	   print $itemdetail;
-	   print qq|<td><input name="description_$j" type=text size=48 value='$form->{"description_$i"}'></td>\n|;
-	   print qq|<td><input name="qty_$j" type=text size=5 value='$form->{"qty_$i"}'></td>\n|;
-	   print qq|<td><input name="unit_$j" type=text size=5 value='$form->{"unit_$i"}'></td>\n|;
-	   print qq|<td><input name="cost_$j" type=text size=5 value='$form->{"cost_$i"}'></td>\n|;
+	   print qq|<td><input name="description_$j" type=text size=48 value="$form->{"description_$i"}"></td>\n|;
+	   print qq|<td><input name="qty_$j" type=text size=5 value="$form->{"qty_$i"}"></td>\n|;
+	   print qq|<td><input name="unit_$j" type=text size=5 value="$form->{"unit_$i"}"></td>\n|;
+	   print qq|<td><input name="cost_$j" type=text size=5 value="$form->{"cost_$i"}"></td>\n|;
 	   print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{"cost_$i"}*$form->{"qty_$i"}, 2) . qq|</td>\n|;
 	   print qq|</tr>\n|;
 
@@ -131,6 +132,17 @@ sub form_header {
 
    print('<hr size=3 noshade>');
 
+   $form->{format} ||= $myconfig{outputformat};
+   if ($myconfig{printer}) {
+     $form->{format} ||= "postscript";
+   } else {
+     $form->{format} ||= "pdf";
+   }
+   $form->{media} ||= $myconfig{printer};
+   for (qw(html postscript pdf)){
+      $selected = ''; $selected = 'selected' if $form->{format} eq $_;
+      $form->{selectformat} .= qq|<option value="$_" $selected>$_</option>\n|
+   }
    print qq|  
 <table width="100%">
 
@@ -138,9 +150,7 @@ sub form_header {
       <td><select name="formname"><option value="transfer" selected="selected">Transfer
 </option></select></td>
       <td></td>
-      <td><select name="format"><option value="html" selected="selected">html
-</option><option value="postscript">Postscript
-</option><option value="pdf">PDF</option></select></td>
+      <td><select name="format">$form->{selectformat}</select></td>
       <td><select name="media">
           <option value="screen">Screen 
           </option><option value="Epson">Epson 
@@ -669,6 +679,7 @@ sub list {
    $column_header{trfnumber}  		= rpt_hdr('trfnumber', $locale->text('Transfer Number'), $href);
    $column_header{reference}    	= rpt_hdr('reference', $locale->text('Reference'), $href);
    $column_header{description}  	= rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{department}  		= rpt_hdr('department', $locale->text('Department'), $href);
    $column_header{from_warehouse}	= rpt_hdr('from_warehouse', $locale->text('From WH'), $href);
    $column_header{to_warehouse}      	= rpt_hdr('to_warehouse', $locale->text('To WH'), $href);
    $column_header{partnumber}   	= rpt_hdr('partnumber', $locale->text('Number'), $href);
@@ -724,6 +735,7 @@ sub list {
    		$column_data{trfnumber} 	= rpt_txt('&nbsp;');
    		$column_data{reference}    	= rpt_txt('&nbsp;');
    		$column_data{description}  	= rpt_txt('&nbsp;');
+   		$column_data{department}  	= rpt_txt('&nbsp;');
     		$column_data{from_warehouse}	= rpt_txt('&nbsp;');
    		$column_data{to_warehouse}    	= rpt_txt('&nbsp;');
    		$column_data{partnumber}    	= rpt_txt('&nbsp;');
@@ -750,6 +762,7 @@ sub list {
    	$column_data{transdate}    	= rpt_txt($ref->{transdate});
    	$column_data{reference}    	= rpt_txt($ref->{reference});
    	$column_data{description}  	= rpt_txt($ref->{description});
+   	$column_data{department}  	= rpt_txt($ref->{department});
   	$column_data{from_warehouse}	= rpt_txt($ref->{from_warehouse});
    	$column_data{to_warehouse}    	= rpt_txt($ref->{to_warehouse});
    	$column_data{partnumber}    	= rpt_txt($ref->{partnumber});
@@ -778,6 +791,7 @@ sub list {
   $column_data{trfnumber} 	= rpt_txt('&nbsp;');
   $column_data{reference}    	= rpt_txt('&nbsp;');
   $column_data{description}  	= rpt_txt('&nbsp;');
+  $column_data{department}  	= rpt_txt('&nbsp;');
   $column_data{from_warehouse}	= rpt_txt('&nbsp;');
   $column_data{to_warehouse}   	= rpt_txt('&nbsp;');
   $column_data{partnumber}   	= rpt_txt('&nbsp;');

@@ -1217,7 +1217,47 @@ sub vc {
   
   my %defaults = $form->get_defaults($dbh, \@{['precision']});
   $form->{precision} = $defaults{precision};
-  
+
+  $query = qq|SELECT id FROM $form->{db} WHERE $form->{db}number = ?|;
+  $sth = $dbh->prepare($query);
+
+  $query = qq|
+	SELECT name, contact, phone, fax, email, notes, terms, taxincluded, cc, bcc, business_id, taxnumber, sic_code, discount, creditlimit, iban, bic, employee_id, language_code, pricegroup_id, curr, startdate, enddate, arap_accno_id, payment_accno_id, discount_accno_id, cashdiscount, threshold, paymentmethod_id, remittancevoucher
+        FROM $form->{db}
+	WHERE id = ?
+  |;
+  my $vc = $dbh->prepare($query);
+
+  $query = qq|
+	SELECT id AS contactid, salutation, firstname, lastname, contacttitle, occupation, phone, fax, mobile, email, gender, typeofcontact
+	FROM contact WHERE trans_id = ?
+  |;
+  my $contact = $dbh->prepare($query);
+ 
+  $query = qq|
+	SELECT id AS addressid, address1, address2, city, state, zipcode, country
+	FROM address WHERE trans_id = ?
+  |;
+  my $address = $dbh->prepare($query);
+
+  $query = qq|
+	SELECT shiptoname, shiptoaddress1, shiptoaddress2, shiptocity, shiptostate, shiptozipcode, shiptocountry, shiptophone, shiptofax, shiptoemail
+	FROM shipto WHERE trans_id = ?
+  |;
+  my $shipto = $dbh->prepare($query);
+
+  $query = qq|
+	SELECT name AS bankname, iban, bic, address_id AS bankaddress_id, dcn, rvc, membernumber
+	FROM bank WHERE id = ?
+  |;
+  my $bank = $dbh->prepare($query);
+
+  $query = qq|
+	SELECT address1 AS bankaddress1, address2 AS bankaddress2, city AS bankcity, state AS bankstate, zipcode AS bankzipcode, country AS bankcountry
+	FROM address WHERE trans_id = ?
+  |;
+  my $bankaddress = $dbh->prepare($query);
+
   my @d = split /\n/, $form->{data};
   shift @d if ! $form->{mapfile};
 
@@ -1228,6 +1268,63 @@ sub vc {
       for (keys %{$form->{$form->{type}}}) {
 	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
 	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
+      }
+      if (!$form->{"id_$i"}){
+	   if ($form->{"$form->{db}number_$i"}){
+	      $sth->execute($form->{"$form->{db}number_$i"});
+	      $ref = $sth->fetchrow_hashref(NAME_lc);
+	      $form->{"id_$i"} = $ref->{id};
+	      $sth->finish;
+ 	   }
+      }
+      if ($form->{"id_$i"}){
+	 # vc
+	 $vc->execute($form->{"id_$i"});
+         $ref = $vc->fetchrow_hashref(NAME_lc);
+         foreach (keys %$ref){
+	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+	 }
+	 $vc->finish;
+
+	 # contact
+	 $contact->execute($form->{"id_$i"});
+         $ref = $contact->fetchrow_hashref(NAME_lc);
+         foreach (keys %$ref){
+	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+	 }
+	 $contact->finish;
+
+	 # address
+	 $address->execute($form->{"id_$i"});
+         $ref = $address->fetchrow_hashref(NAME_lc);
+         foreach (keys %$ref){
+	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+	 }
+         $address->finish;
+
+	 # shipto
+	 $shipto->execute($form->{"id_$i"});
+         $ref = $shipto->fetchrow_hashref(NAME_lc);
+         foreach (keys %$ref){
+	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+	 }
+	 $shipto->finish;
+
+	 # bank
+	 $bank->execute($form->{"id_$i"});
+         $ref = $bank->fetchrow_hashref(NAME_lc);
+         foreach (keys %$ref){
+	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+	 }
+	 $bank->finish;
+
+	 # bankaddress
+	 $bankaddress->execute($form->{"bankaddress_id_$i"});
+         $ref = $bankaddress->fetchrow_hashref(NAME_lc);
+         foreach (keys %$ref){
+	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+	 }
+	 $bankaddress->finish;
       }
     }
     $form->{rowcount} = $i;

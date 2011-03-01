@@ -314,9 +314,9 @@ sub rpt_txt {
   my $link = shift;
   my $str;
   if ($link) {
-     $str = qq|<td><a href="$link">$column_data</a></td>|;
+     $str = qq|<td nowrap><a href="$link">$column_data</a></td>|;
   } else {
-     $str = qq|<td>$column_data</td>|;
+     $str = qq|<td nowrap>$column_data</td>|;
   }
   $str;
 }
