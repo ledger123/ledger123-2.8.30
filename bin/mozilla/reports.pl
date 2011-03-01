@@ -2605,7 +2605,7 @@ sub trans_search {
       push @a, qq|<input name="l_cogs" class=checkbox type=checkbox value=Y checked> |.$locale->text('COGS');
       push @a, qq|<input name="l_markup" class=checkbox type=checkbox value=Y checked> |.$locale->text('Markup %');
    }
-   push @a, qq|<input name="l_employee" class=checkbox type=checkbox value=Y checked> |.$locale->text($salesperson_caption);
+   push @a, qq|<input name="l_employee" class=checkbox type=checkbox value=Y checked> |.$locale->text($employee_caption);
    push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y> |.$locale->text('Subtotal');
    push @a, qq|<input name="l_subtotalonly" class=checkbox type=checkbox value=Y> |.$locale->text('Subtotal Only');
    push @a, qq|<input name="l_csv" class=checkbox type=checkbox value=Y> |.$locale->text('CSV');
