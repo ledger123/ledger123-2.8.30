@@ -396,7 +396,7 @@ sub gl_search {
    &print_checkbox('l_credit', $locale->text('Credit'), 'checked', '');
    &print_checkbox('l_balance', $locale->text('Balance'), 'checked', '<br>');
    &print_checkbox('l_group', $locale->text('Group'), '', '');
-   #&print_checkbox('l_sql', $locale->text('SQL'), '');
+   &print_checkbox('l_csv', $locale->text('CSV'), '');
    print qq|</td></tr>|;
    &end_table;
    print('<hr size=3 noshade>');
@@ -571,7 +571,7 @@ sub gl_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, 'parts_onhand');
+	&export_to_csv($dbh, $query, 'gl');
 	exit;
    }
    $sth = $dbh->prepare($query);

@@ -17,6 +17,7 @@ use SL::PE;
 use SL::VR;
 
 require "$form->{path}/arap.pl";
+require "$form->{path}/mylib.pl";
 
 1;
 # end of main
@@ -360,6 +361,7 @@ sub search {
   print qq|
 		    <tr>
 		      <td><input name="l_subtotal" class=checkbox type=checkbox value=Y></td><td nowrap>|.$locale->text('Subtotal').qq|</td>
+		      <td><input name="l_csv" class=checkbox type=checkbox value=Y></td><td nowrap>|.$locale->text('CSV').qq|</td>
 		    </tr>
 		  </table>
 		</td>
@@ -404,7 +406,13 @@ sub transactions {
   $form->{sort} = "transdate" unless $form->{sort};
 
   GL->transactions(\%myconfig, \%$form);
-  
+
+  if ($form->{l_csv} eq 'Y'){
+     my $dbh = $form->dbconnect(\%myconfig);
+     &export_to_csv($dbh, $form->{query}, 'gl');
+     exit;
+  }
+
   $href = "$form->{script}?action=transactions&direction=$form->{direction}&oldsort=$form->{oldsort}&path=$form->{path}&login=$form->{login}";
   
   $form->sort_order();
