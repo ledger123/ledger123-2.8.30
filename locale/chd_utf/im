@@ -49,6 +49,7 @@ $self{texts} = {
   'First Name'                  => 'Vorname',
   'From'                        => 'Von',
   'Group'                       => 'Warengruppe',
+  'ID'                          => 'ID',
   'Image'                       => 'Bild',
   'Import AP Transactions'      => 'Kreditoren importieren',
   'Import AR Transactions'      => 'Debitoren importieren',
