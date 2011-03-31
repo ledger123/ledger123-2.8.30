@@ -24,6 +24,7 @@ sub invoice_details {
 
   my $query;
   my $sth;
+  my $ref;
 
   $form->{total} = 0;
 
@@ -51,6 +52,15 @@ sub invoice_details {
  
   my %translations;
   
+  $query = qq|SELECT creditcard, creditnumber, creditexpiry, creditname, creditcsv
+		FROM customer
+		WHERE id = $form->{customer_id}|;
+  $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute;
+  $ref = $sth->fetchrow_hashref(NAME_lc);
+  for (keys %$ref) { $form->{$_} = $ref->{$_} }
+  $sth->finish;
+
   $query = qq|SELECT p.description, t.description
               FROM project p
 	      LEFT JOIN translation t ON (t.trans_id = p.id AND t.language_code = '$form->{language_code}')

@@ -1055,6 +1055,7 @@ sub order_details {
   my $dbh = $form->dbconnect($myconfig);
   my $query;
   my $sth;
+  my $ref;
     
   my $item;
   my $i;
@@ -1071,6 +1072,15 @@ sub order_details {
   my $taxamount;
 
   my %translations;
+
+  $query = qq|SELECT creditcard, creditnumber, creditexpiry, creditname, creditcsv
+		FROM customer
+		WHERE id = $form->{customer_id}|;
+  $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute;
+  $ref = $sth->fetchrow_hashref(NAME_lc);
+  for (keys %$ref) { $form->{$_} = $ref->{$_} }
+  $sth->finish;
 
   $query = qq|SELECT p.description, t.description
               FROM project p
