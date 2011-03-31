@@ -128,4 +128,12 @@ CREATE TABLE partsattr (
     hotnew VARCHAR(3)
 );
 
+ALTER TABLE customer
+  ADD COLUMN creditcard VARCHAR(10),
+  ADD COLUMN creditnumber VARCHAR(20),
+  ADD COLUMN creditexpiry VARCHAR(4),
+  ADD COLUMN creditname VARCHAR(50),
+  ADD COLUMN creditcsv VARCHAR(3)
+;
+  
 
