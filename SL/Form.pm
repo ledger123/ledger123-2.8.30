@@ -1387,7 +1387,7 @@ sub format_string {
                                tex  => [ quotemeta('\\'), '&', '\n',
 			                 '\r', '\$', '%', '_', '#',
 					 quotemeta('^'), '{', '}', '<', '>',
-					 '£' ],
+					 'Â£' ],
 			       utf  => [ quotemeta('\\'), '&', '\n',
 			                 '\r', '\$', '%', '_', '#',
 					 quotemeta('^'), '{', '}', '<', '>']
@@ -1401,7 +1401,7 @@ sub format_string {
 			     quotemeta('^') => '\^\\', '{' => '\{',
 			     '}' => '\}', '<' => '$<$', '>' => '$>$',
 		             '\n' => '\newline ', '\r' => '\newline ',
-		             '£' => '\pounds ', quotemeta('\\') => '/'
+		             'Â£' => '\pounds ', quotemeta('\\') => '/'
 			   }
 	        );
 
@@ -1816,6 +1816,38 @@ sub add_shipto {
 }
 
 
+sub add_transport {
+  my ($self, $dbh, $id) = @_;
+
+  my $transport;
+  foreach my $item (qw(name address1 address2 city state zipcode country contact phone fax email cc bcc)) {
+    if ($self->{"transport$item"} ne "") {
+      $transport = 1 if ($self->{$item} ne $self->{"transport$item"});
+    }
+  }
+
+  if ($transport) {
+    my $query = qq|INSERT INTO transport (trans_id, transportname, transportaddress1, transportaddress2, 
+          transportcity, transportstate, transportzipcode, transportcountry, transportcontact,
+                  transportphone, transportfax, transportemail, transportcc, transportbcc) VALUES ($id, |
+                  .$dbh->quote($self->{transportname}).qq|, |
+                  .$dbh->quote($self->{transportaddress1}).qq|, |
+                  .$dbh->quote($self->{transportaddress2}).qq|, |
+                  .$dbh->quote($self->{transportcity}).qq|, |
+                  .$dbh->quote($self->{transportstate}).qq|, |
+                  .$dbh->quote($self->{transportzipcode}).qq|, |
+                  .$dbh->quote($self->{transportcountry}).qq|, |
+                  .$dbh->quote($self->{transportcontact}).qq|,
+                  '$self->{transportphone}', '$self->{transportfax}',
+                  '$self->{transportemail}', '$self->{transportcc}',
+                  '$self->{transportbcc}')|;
+    $dbh->do($query) || $self->dberror($query);
+  }
+
+}
+
+
+
 sub get_employee {
   my ($self, $dbh) = @_;
 
@@ -1889,6 +1921,22 @@ sub get_name {
 }
 
 
+# creditlimit/remaining creditlimit is in domestic currency
+# for tx in foreign currency we need to take exchangerate and precision into account
+# function converts the rounded amount into domestic currency
+# param		float		amount		adjustment amount gets deducted
+#
+sub adjust_creditremaining {
+  my ($self, $myconfig, $amount) = @_;
+  
+  if ($self->{currency} ne $self->{defaultcurrency}) {
+  	$precision = $self->get_precision($myconfig, $self->{defaultcurrency});
+	$amount = $self->round_amount($amount * $self->{exchangerate}, $precision);
+  }
+  $self->{creditremaining} -= $amount;
+}
+
+
 sub get_currencies {
   my ($self, $dbh, $myconfig) = @_;
   
@@ -1925,23 +1973,63 @@ sub get_currencies {
 # bp 2010/02/10
 sub get_precision {
   my ($self, $myconfig, $currency) = @_;
-
-  return "" if $self->{defaultcurrency} eq $currency;
-
   my $dbh = $self->dbconnect($myconfig);
-
   my $precision;
 
   $query = qq|SELECT precision FROM curr
               WHERE curr = '$currency'|;
 
   $precision = $dbh->selectrow_array($query);
-
   $dbh->disconnect;
-
   $precision;
-
 }
+
+
+# bp 2010/08/30
+# retrieve the id of a table $table by looking up $fieldname with value $field
+sub get_lookupkey {
+  my ($self, $myconfig, $field, $table, $fieldname) = @_;
+  
+  # all fields are required
+  # raise error
+  return "" if ($field eq "" || $table eq "" || $fieldname eq "");
+  
+  my $dbh = $self->dbconnect($myconfig);
+  $query = qq|SELECT id FROM $table WHERE $fieldname='$field'|;
+  $result = $dbh->selectrow_array($query);
+
+  if (!$result) {
+    # raise error
+    return "";
+  }
+  return $result;
+}
+
+# bp 2010/08/30
+# retrieve one field $field or the whole record of a lookup table $table by key field $id
+sub get_lookupfield {
+  my ($self, $myconfig, $id, $table, $fieldname) = @_;
+  
+  # id and table required
+  # raise error
+  return "" if ($field eq "" || $table eq "");
+  
+  my $dbh = $self->dbconnect($myconfig);
+  
+  if ($fieldname ne "") {
+    $query = qq|SELECT $field FROM $table WHERE id ='$id'|;
+  } else {
+	$query = qq|SELECT * from $table WHERE id = '$id'|;
+  }
+  $result = $dbh->selectrow_array($query);
+
+  if (!$result) {
+    # raise error
+    return "";
+  }
+  return $result;
+}
+
 
 sub get_defaults {
   my ($self, $dbh, $flds) = @_;

@@ -2574,55 +2574,34 @@ sub trans_search {
    &print_text('partnumber', $locale->text('Number'), 15);
    &print_select('partsgroup', $locale->text('Group'));
 
-
-   print qq|
-	      <tr>
-		<th align=right>|.$locale->text('Include in Report').qq|</th>
-		<td><table>
-		<tr>
-		  <td><input name=summary type=radio class=radio value=1 checked> |.$locale->text('Summary').qq|</td>
-		  <td><input name=summary type=radio class=radio value=0> |.$locale->text('Detail').qq|</td>
-	        </tr>
-|;
-
-   @a = ();
-   push @a, qq|<input name="invoices" class=checkbox type=checkbox value=Y> |.$locale->text('Invoices');
-   push @a, qq|<input name="trans" class=checkbox type=checkbox value=Y> |.$locale->text('Transactions');
-
-   push @a, qq|<input name="l_no" class=checkbox type=checkbox value=Y> |.$locale->text('No.');
-   push @a, qq|<input name="l_${db}number" class=checkbox type=checkbox value=Y checked> |.$locale->text('Number');
-   push @a, qq|<input name="l_name" class=checkbox type=checkbox value=Y checked> |.$locale->text('Name');
-   push @a, qq|<input name="l_invnumber" class=checkbox type=checkbox value=Y checked> |.$locale->text('Invoice Number');
-   push @a, qq|<input name="l_transdate" class=checkbox type=checkbox value=Y checked> |.$locale->text('Invoice Date');
-   push @a, qq|<input name="l_partnumber" class=checkbox type=checkbox value=Y checked> |.$locale->text('Item');
-   push @a, qq|<input name="l_description" class=checkbox type=checkbox value=Y checked> |.$locale->text('Item Description');
-   push @a, qq|<input name="l_qty" class=checkbox type=checkbox value=Y checked> |.$locale->text('Qty');
-   push @a, qq|<input name="l_sellprice" class=checkbox type=checkbox value=Y checked> |.$locale->text('Sell Price');
-   push @a, qq|<input name="l_amount" class=checkbox type=checkbox value=Y checked> |.$locale->text('Amount');
-   push @a, qq|<input name="l_tax" class=checkbox type=checkbox value=Y> |.$locale->text('Tax');
-   push @a, qq|<input name="l_total" class=checkbox type=checkbox value=Y> |.$locale->text('Total');
+   print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
+   &print_radio;
+   &print_checkbox('invoices', $locale->text('Invoices'), 'checked','');
+   &print_checkbox('trans', $locale->text('Transactions'), 'checked', '<br>');
+   &print_checkbox('l_no', $locale->text('No.'), '', '');
+   &print_checkbox("l_${db}number", $locale->text('Number'), 'checked', '');
+   &print_checkbox('l_name', $locale->text('Name'), 'checked', '');
+   &print_checkbox('l_invnumber', $locale->text('Invoice Number'), 'checked', '');
+   &print_checkbox('l_transdate', $locale->text('Invoice Date'), 'checked', '<br>');
+   &print_checkbox('l_partnumber', $locale->text('Number'), 'checked', '');
+   &print_checkbox('l_description', $locale->text('Description'), 'checked', '');
+   &print_checkbox('l_qty', $locale->text('Qty'), 'checked', '');
+   &print_checkbox('l_sellprice', $locale->text('Sell Price'), 'checked', '<br>');
+   &print_checkbox('l_amount', $locale->text('Amount'), 'checked', '');
+   &print_checkbox('l_tax', $locale->text('Tax'), '', '');
+   &print_checkbox('l_total', $locale->text('Total'), '', '');
    if ($form->{aa} eq 'AR'){
-      push @a, qq|<input name="l_cogs" class=checkbox type=checkbox value=Y checked> |.$locale->text('COGS');
-      push @a, qq|<input name="l_markup" class=checkbox type=checkbox value=Y checked> |.$locale->text('Markup %');
-   }
-   push @a, qq|<input name="l_employee" class=checkbox type=checkbox value=Y checked> |.$locale->text($employee_caption);
-   push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y> |.$locale->text('Subtotal');
-   push @a, qq|<input name="l_subtotalonly" class=checkbox type=checkbox value=Y> |.$locale->text('Subtotal Only');
-   push @a, qq|<input name="l_csv" class=checkbox type=checkbox value=Y> |.$locale->text('CSV');
-   push @a, qq|<input name="l_sql" class=checkbox type=checkbox value=Y> |.$locale->text('SQL');
-
-   while (@a) {
-     print qq|<tr>\n|;
-     for (1 .. 5) {
-       print qq|<td nowrap>|. shift @a;
-       print qq|</td>\n|;
-     }
-     print qq|</tr>\n|;
+      &print_checkbox('l_cogs', $locale->text('COGS'), 'checked', '');
+      &print_checkbox('l_markup', $locale->text('Markup %'), 'checked', '');
    }
 
-   print qq|
-	</table></td></tr>
-|;
+   &print_checkbox('l_employee', $locale->text($salesperson_caption), 'checked', '<br>');
+   &print_checkbox('l_subtotal', $locale->text('Subtotal'), '', '');
+   &print_checkbox('l_subtotalonly', $locale->text('Subtotal Only'), '', '');
+   &print_checkbox('l_csv', $locale->text('CSV'), '', '<br>');
+   &print_checkbox('l_sql', $locale->text('SQL'), '');
+
+   print qq|</td></tr>|;
    &end_table;
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'trans_list';

@@ -206,7 +206,7 @@ sub form_header {
 |;
 
   if ($form->{change} != $form->{oldchange}) {
-    $form->{creditremaining} -= $form->{oldchange};
+    $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, $form->{oldchange});
   }
   $n = ($form->{creditremaining} < 0) ? "0" : "1";
 

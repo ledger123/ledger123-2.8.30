@@ -53,8 +53,11 @@ sub search {
 # $locale->text('Packing Lists')
 # $locale->text('Pick Lists')
 # $locale->text('Sales Orders')
+# $locale->text('Delivery Lists')
+# $locale->text('Transport Orders')
 # $locale->text('Work Orders')
 # $locale->text('Purchase Orders')
+# $locale->text('Pickup Orders')
 # $locale->text('Bin Lists')
 # $locale->text('Quotations')
 # $locale->text('RFQs')
@@ -72,8 +75,11 @@ sub search {
              packing_list => { title => 'Packing Lists', name => ['Customer', 'Vendor'] },
              pick_list => { title => 'Pick Lists', name => ['Customer','Vendor'] },
              sales_order => { title => 'Sales Orders', name => ['Customer'] },
+             delivery_list => { title => 'Delivery Lists', name => ['Customer'] },
+             transport_order => { title => 'Transport Orders', name => ['Customer'] },
              work_order => { title => 'Work Orders', name => ['Customer'] },
              purchase_order => { title => 'Purchase Orders', name => ['Vendor'] },
+             pickup_order => { title => 'Pickup Orders', name => ['Vendor'] },
              bin_list => { title => 'Bin Lists', name => ['Customer', 'Vendor'] },
              sales_quotation => { title => 'Quotations', name => ['Customer'] },
              request_quotation => { title => 'RFQs', name => ['Vendor'] },
@@ -105,8 +111,11 @@ sub search {
   $label{pick_list}{invnumber} = $label{invoice}{invnumber};
   $label{pick_list}{ordnumber} = $label{invoice}{ordnumber};
   $label{sales_order}{ordnumber} = $label{invoice}{ordnumber};
+  $label{delivery_list}{ordnumber} = $label{invoice}{ordnumber};
+  $label{transport_order}{ordnumber} = $label{invoice}{ordnumber};
   $label{work_order}{ordnumber} = $label{invoice}{ordnumber};
   $label{purchase_order}{ordnumber} = $label{invoice}{ordnumber};
+  $label{pickup_order}{ordnumber} = $label{invoice}{ordnumber};
   $label{bin_list}{invnumber} = $label{invoice}{invnumber};
   $label{bin_list}{ordnumber} = $label{invoice}{ordnumber};
   $label{request_quotation}{quonumber} = $label{sales_quotation}{quonumber};
@@ -242,6 +251,32 @@ sub search {
     }
   }
  
+  # for transport_order and pickup_order have transportdate selection
+  if ($form->{type} eq 'transport_order')  {
+      $dateselection = qq|<tr>
+	    <th align=right nowrap>|.$locale->text('Transport From').qq|</th>
+	    <td><input name=transportdatefrom size=11 class=date title="$myconfig{dateformat}">
+	    <b>|.$locale->text('To').qq|</b>
+	    <input name=transportdateto size=11 class=date title="$myconfig{dateformat}"></td>
+	  </tr>|;
+  } elsif ($form->{type} eq 'pickup_order')  { 
+     $dateselection = qq|<tr>
+	    <th align=right nowrap>|.$locale->text('Pickup From').qq|</th>
+	    <td><input name=transportdatefrom size=11 class=date title="$myconfig{dateformat}">
+	    <b>|.$locale->text('To').qq|</b>
+	    <input name=transportdateto size=11 class=date title="$myconfig{dateformat}"></td>
+	  </tr>|;
+  } else { 
+     $dateselection = qq|<tr>
+	    <th align=right nowrap>|.$locale->text('Entered From').qq|</th>
+	    <td><input name=transdatefrom size=11 class=date title="$myconfig{dateformat}">
+	    <b>|.$locale->text('To').qq|</b>
+	    <input name=transdateto size=11 class=date title="$myconfig{dateformat}"></td>
+	  </tr>|;
+  }
+ 
+ 
+ 
   # accounting years
   if (@{ $form->{all_years} }) {
     # accounting years
@@ -265,7 +300,11 @@ sub search {
 |;
   }
 
+  if ($form->{type} eq 'transport_order' || $form->{type} eq 'pickup_order') {
+    $form->{sort} = "transportdate";
+  } else {
   $form->{sort} = "transdate";
+  }
   $form->{nextsub} = "list_spool";
   
   $form->header;
@@ -297,12 +336,7 @@ sub search {
 	  <th align=right nowrap>|.$locale->text('Description').qq|</th>
 	  <td><input name=description size=40></td>
 	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('From').qq|</th>
-	  <td><input name=transdatefrom size=11 class=date title="$myconfig{dateformat}">
-	  <b>|.$locale->text('To').qq|</b>
-	  <input name=transdateto size=11 class=date title="$myconfig{dateformat}"></td>
-	</tr>
+	$dateselection
 	$selectfrom
 	$paymentmethod
 	$openclosed
@@ -426,6 +460,7 @@ sub print {
       do "$form->{path}/$form->{script}";
 
       $form->{shipto} = 1;
+      $form->{transport} = 1;
       
       if ($myform->{"module_$i"} eq 'oe') {
 	&order_links;
@@ -580,13 +615,25 @@ sub list_spool {
     $callback .= "&transdatefrom=$form->{transdatefrom}";
     $href .= "&transdatefrom=$form->{transdatefrom}";
     $option .= "\n<br>" if ($option);
-    $option .= $locale->text('From')."&nbsp;".$locale->date(\%myconfig, $form->{transdatefrom}, 1);
+    $option .= $locale->text('Entered From')."&nbsp;".$locale->date(\%myconfig, $form->{transdatefrom}, 1);
   }
   if ($form->{transdateto}) {
     $callback .= "&transdateto=$form->{transdateto}";
     $href .= "&transdateto=$form->{transdateto}";
     $option .= "\n<br>" if ($option);
     $option .= $locale->text('To')."&nbsp;".$locale->date(\%myconfig, $form->{transdateto}, 1);
+  }
+  if ($form->{transportdatefrom}) {
+    $callback .= "&transportdatefrom=$form->{transportdatefrom}";
+    $href .= "&transportdatefrom=$form->{transportdatefrom}";
+    $option .= "\n<br>" if ($option);
+    $option .= $locale->text('Transport From')."&nbsp;".$locale->date(\%myconfig, $form->{transportdatefrom}, 1);
+  }
+  if ($form->{transportdateto}) {
+    $callback .= "&transportdateto=$form->{transportdateto}";
+    $href .= "&transportdateto=$form->{transportdateto}";
+    $option .= "\n<br>" if ($option);
+    $option .= $locale->text('To')."&nbsp;".$locale->date(\%myconfig, $form->{transportdateto}, 1);
   }
   if ($form->{open}) {
     $callback .= "&open=$form->{open}";
@@ -632,7 +679,11 @@ sub list_spool {
   }
 
 
+  if ($form->{type} =~ /(transport|pickup)_order/) {
+    @columns = qw{transportdate transportname}
+  } else {       
   @columns = qw(transdate);
+  }
   if ($form->{type} =~ /(packing|pick|bin)_list|invoice|remittance_voucher/) {
     push @columns, "invnumber";
   }
@@ -646,9 +697,16 @@ sub list_spool {
     push @columns, "id";
   }
   
-  push @columns, qw(description name vcnumber);
-  push @columns, "email" if $form->{batch} eq 'email';
-  push @columns, qw(city amount);
+  push @columns, qw(description name vcnumber city);
+  if ($form->{batch} eq 'email') {
+    push @columns, "email";
+    push @columns, "cc";
+    push @columns, "bcc";
+  }
+  # amount not required for transport/pickup orders
+  if ($form->{type} !~ /(transport|pickup)_order/) {
+    push @columns, qw(amount);      
+  }
   push @columns, "spoolfile" if $form->{batch} eq 'queue';
   
   @column_index = $form->sort_columns(@columns);
@@ -658,15 +716,24 @@ sub list_spool {
   $form->{allbox} = ($form->{allbox}) ? "checked" : "";
   $action = ($form->{deselect}) ? "deselect_all" : "select_all";
   $column_header{ndx} = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll(); javascript:document.forms[0].submit()"><input type=hidden name=action value="$action"></th>|;
-  $column_header{transdate} = "<th><a class=listheading href=$href&sort=transdate>".$locale->text('Date')."</a></th>";
+
+  if ($form->{type} =~ /(transport|pickup)_order/) {
+    $column_header{transportdate} = "<th><a class=listheading href=$href&sort=transportdate>".$locale->text('Transport Date')."</a></th>";
+    $column_header{transportname} = "<th><a class=listheading href=$href&sort=transportname>".$locale->text('Transport Partner')."</a></th>";
+    $column_header{email} = "<th class=listheading>".$locale->text('TP E-mail')."</th>";
+    $column_header{cc} = "<th class=listheading>".$locale->text('TP Cc-mail')."</th>";
+    $column_header{bcc} = "<th class=listheading>".$locale->text('TP Bcc-mail')."</th>";
+  } else { 
+    $column_header{transdate} = "<th><a class=listheading href=$href&sort=transdate>".$locale->text('Entered Date')."</a></th>";
+    $column_header{email} = "<th class=listheading>".$locale->text('E-mail')."</th>";
+    $column_header{cc} = "<th class=listheading>".$locale->text('Cc-mail')."</th>";
+    $column_header{bcc} = "<th class=listheading>".$locale->text('Bcc-mail')."</th>";
+  }
   $column_header{invnumber} = "<th><a class=listheading href=$href&sort=invnumber>".$locale->text('Invoice')."</a></th>";
   $column_header{ordnumber} = "<th><a class=listheading href=$href&sort=ordnumber>".$locale->text('Order')."</a></th>";
   $column_header{quonumber} = "<th><a class=listheading href=$href&sort=quonumber>".$locale->text('Quotation')."</a></th>";
   $column_header{name} = "<th><a class=listheading href=$href&sort=name>".$locale->text('Name')."</a></th>";
-
 $column_header{vcnumber} = "<th><a class=listheading href=$href&sort=vcnumber>".$locale->text('Number')."</a></th>";
-
-  $column_header{email} = "<th class=listheading>".$locale->text('E-mail')."</th>";
   $column_header{city} = "<th class=listheading>".$locale->text('City')."</th>";
   $column_header{id} = "<th><a class=listheading href=$href&sort=id>".$locale->text('ID')."</a></th>";
   $column_header{description} = "<th><a class=listheading href=$href&sort=description>".$locale->text('Description')."</a></th>";
@@ -760,8 +827,17 @@ function CheckAll() {
     
     $column_data{runningnumber} = qq|<td>$i</td>|;
 
-    for (qw(description email city id invnumber ordnumber quonumber vcnumber)) { $column_data{$_} = qq|<td>$ref->{$_}</td>| }
+    for (qw(description email cc bcc city id invnumber ordnumber quonumber vcnumber)) { $column_data{$_} = qq|<td>$ref->{$_}</td>| }
+
+    if ($form->{type} eq 'transport_order' || $form->{type} eq 'pickup_order') {
+      $column_data{transportname} = qq|<td nowrap>$ref->{transportname}</td>|;
+      $column_data{transportdate} = qq|<td nowrap>$ref->{transportdate}</td>|;
+      $column_data{email} = qq|<td nowrap>$ref->{t_email}</td>|;
+      $column_data{cc} = qq|<td nowrap>$ref->{t_cc}</td>|;
+      $column_data{bcc} = qq|<td nowrap>$ref->{t_bcc}</td>|;
+    } else {
     $column_data{transdate} = qq|<td nowrap>$ref->{transdate}</td>|;
+    }
 
     $column_data{name} = qq|<td><a href=ct.pl?action=edit&id=$ref->{vc_id}&db=$ref->{db}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{name}</a></td>|;
     
@@ -807,7 +883,8 @@ function CheckAll() {
 |;
   }
 
-  for (@column_index) { $column_data{$_} = "<td>&nbsp;</td>" }
+  for (@column_index) {  
+      $column_data{$_} = "<td>&nbsp;</td>" }
 
   $column_data{amount} = "<th class=listtotal align=right>".$form->format_amount(\%myconfig, $totalamount, $form->{precision}, "&nbsp;")."</th>";
   
@@ -829,7 +906,7 @@ function CheckAll() {
 <br>
 |;
 
-  $form->hide_form(qw(callback title type sort path login printcustomer printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed notprinted notemailed precision));
+  $form->hide_form(qw(callback title type sort path login printcustomer printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto transportdateto transportdateto open closed onhold printed emailed notprinted notemailed precision));
 
   $form->{copies} ||= 1;
 

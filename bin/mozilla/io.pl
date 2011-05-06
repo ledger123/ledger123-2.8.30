@@ -202,6 +202,7 @@ function CheckAll(v) {
 	  if (($p * 1) && ($form->{"qty_$i"} >= ($q * 1))) {
 	    ($dec) = ($p =~ /\.(\d+)/);
 	    $dec = length $dec;
+	    # bp - a complicated way to determine the precision - why?
 	    $decimalplaces = ($dec > $form->{precision}) ? $dec : $form->{precision};
 	    $form->{"sellprice_$i"} = $form->round_amount($p / $exchangerate, $decimalplaces);
 	  }
@@ -209,9 +210,12 @@ function CheckAll(v) {
       }
     }
 
-    $discount = $form->round_amount($form->{"sellprice_$i"} * $form->{"discount_$i"}/100, $decimalplaces);
-    $linetotal = $form->round_amount($form->{"sellprice_$i"} - $discount, $decimalplaces);
-    $linetotal = $form->round_amount($linetotal * $form->{"qty_$i"}, $form->{precision});
+	# bp 2011/02/28 - precision for values in document currency
+    my $precision = $form->get_precision(\%myconfig, $form->{currency});
+
+    $discount = $form->round_amount($form->{"sellprice_$i"} * $form->{"discount_$i"}/100, $precision);
+    $unitprice = $form->round_amount($form->{"sellprice_$i"} - $discount, $precision);
+    $linetotal = $form->round_amount($unitprice * $form->{"qty_$i"}, $precision);
 
     if (($rows = $form->numtextrows($form->{"description_$i"}, 46, 6)) > 1) {
       $form->{"description_$i"} = $form->quote($form->{"description_$i"});
@@ -257,7 +261,7 @@ function CheckAll(v) {
     }
     
     my $readonly;
-    $readonly = ' READONLY' if $form->{shipped};
+    $readonly = ' READONLY' if ($form->{shipped} && $form->{formname} != 'invoice') ;
 
     $column_data{runningnumber} = qq|<td><input name="runningnumber_$i" size=3 value=$i></td>|;
     $column_data{partnumber} = qq|<td><input name="partnumber_$i" size=15 value="|.$form->quote($form->{"partnumber_$i"}).qq|" accesskey="$i" title="[Alt-$i]" $readonly>$skunumber</td>|;
@@ -265,9 +269,9 @@ function CheckAll(v) {
     $column_data{qty} = qq|<td align=right><input name="qty_$i" title="$form->{"onhand_$i"}" size=8 value="|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|" $readonly></td>|;
     $column_data{ship} = qq|<td align=right><input name="ship_$i" size=8 value="|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|" READONLY></td>|;
     $column_data{unit} = qq|<td><input name="unit_$i" size=5 value="|.$form->quote($form->{"unit_$i"}).qq|"></td>|;
-    $column_data{sellprice} = qq|<td align=right nowrap><input name="sellprice_$i" size=11 value=|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $decimalplaces, $zero).qq|> $pricehistory</td>|;
+    $column_data{sellprice} = qq|<td align=right nowrap><input name="sellprice_$i" size=11 value=|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $precision, $zero).qq|> $pricehistory</td>|;
     $column_data{discount} = qq|<td align=right><input name="discount_$i" size=3 value=|.$form->format_amount(\%myconfig, $form->{"discount_$i"}).qq|></td>|;
-    $column_data{linetotal} = qq|<td align=right>|.$form->format_amount(\%myconfig, $linetotal, $form->{precision}, $zero).qq|</td>|;
+    $column_data{linetotal} = qq|<td align=right>|.$form->format_amount(\%myconfig, $linetotal, $precision, $zero).qq|</td>|;
     $column_data{bin} = qq|<td>$form->{"bin_$i"}</td>|;
     $column_data{onhand} = qq|<td>$form->{"onhand_$i"}</td>|;
 
@@ -606,7 +610,8 @@ sub item_selected {
 	$ml = -1 if $form->{type} =~ /(debit|credit)_invoice/;
       }
 
-      $form->{creditremaining} -= ($amount * $ml);
+      # $form->{creditremaining} -= ($amount * $ml);
+      $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, $amount * $ml);
 
       $form->{"runningnumber_$i"} = $i;
   
@@ -880,19 +885,21 @@ sub check_form {
       
       $form->redo_rows(\@flds, \@a, $count, $form->{rowcount});
       $form->{rowcount} = $count;
-
+      
+      # creditlimit is in domestic currency, need to convert foreign currency invoice values
+      
       if ($form->{type} =~ /invoice/) {
 	if ($form->{type} =~ /(debit|credit)_invoice/) {
-	  $form->{creditremaining} -= ($form->{oldinvtotal} - $form->{oldtotalpaid});
-	  $form->{creditremaining} += &invoicetotal;
+      $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, $form->{oldinvtotal} - $form->{oldtotalpaid});
+	  $amount = &invoicetotal * -1;
+      $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, &invoicetotal);
 	} else {
-	  $form->{creditremaining} += ($form->{oldinvtotal} - $form->{oldtotalpaid});
-	  $amount = &invoicetotal;
-	  $form->{creditremaining} -= $amount;
+      $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, $form->{oldtotalpaid} - $form->{oldinvtotal});
+      $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, &invoicetotal);
 	}
       } else {
-	$form->{creditremaining} += ($form->{oldinvtotal} - $form->{oldtotalpaid});
-	$form->{creditremaining} -= &invoicetotal;
+      $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, $form->{oldtotalpaid} - $form->{oldinvtotal});
+      $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, &invoicetotal);
       }
 
       $count++;
@@ -1142,13 +1149,20 @@ sub create_form {
 
 sub e_mail {
 
-  $bcc = qq|<input type=hidden name=bcc value="$form->{bcc}">|;
-  if ($myconfig{role} =~ /(admin|manager)/) {
+  if ($form->{formname} =~ /(transport|pickup)_order/) {
+    $form->isblank("transportemail", $locale->text('No email address specified for transport partner'));
+    $form->{email} = $form->{transportemail};
+    $form->{cc} = $form->{transportcc};
+    $form->{bcc} = $form->{transportbcc} if $form->{transportbcc};
+  }
+
+#  $bcc = qq|<input type=hidden name=bcc value="$form->{bcc}">|;
+#  if ($myconfig{role} =~ /(admin|manager)/) {
     $bcc = qq|
  	  <th align=right nowrap=true>|.$locale->text('Bcc').qq|</th>
 	  <td><input name=bcc size=30 value="$form->{bcc}"></td>
 |;
-  }
+#  }
 
   if ($form->{formname} =~ /(pick|packing|bin)_list/) {
     $form->{email} = $form->{shiptoemail} if $form->{shiptoemail};
@@ -1515,11 +1529,38 @@ sub print_form {
     $form->{customer_id} = 0;
     $form->{employee} = "Armaghan Saqib--10102";
   }
+  if ($form->{formname} eq 'delivery_list') {
+    $inv = "ord";
+    $due = "req";
+    $form->{label} = $locale->text('Delivery List');
+    $numberfld = "sonumber";
+    $order = 1;
+  }
+  if ($form->{formname} eq 'transport_order') {
+    $form->{label} = $locale->text('Transport Order');
+    $inv = "ord";
+    $due = "req";
+    $numberfld = "sonumber";
+    $order = 1;
+  }
+  if ($form->{formname} eq 'pickup_order') {
+    $inv = "ord";
+    $due = "req";
+    $form->{label} = $locale->text('Pickup Order');
+    $numberfld = "ponumber";
+    $order = 1;
+  }
+
+  # send transport/pickup orders to different mail address if specified
+  if ($form->{type} =~ /(transport|pickup)_order/) {
+      $form->{email} = $form->{transportemail} if $form->{transportemail};
+      $form->{cc} = $form->{transportcc} unless $form->{cc};
+      $form->{bcc} = $form->{transportbcc} unless $form->{bcc}
+  }
 
   &validate_items;
  
   $form->{"${inv}date"} = $form->{transdate};
-
   $form->isblank("email", "$form->{$form->{vc}} : ".$locale->text('E-mail address missing!')) if ($form->{media} eq 'email');
   $form->isblank("${inv}date", $locale->text($form->{label} .' Date missing!'));
 
@@ -1541,6 +1582,12 @@ sub print_form {
 # $locale->text('Order Date missing!')
 # $locale->text('Quotation Number missing!')
 # $locale->text('Quotation Date missing!')
+# $locale->text('Delivery Number missing!')
+# $locale->text('Delivery List Date missing!')
+# $locale->text('Transport Order Number missing!')
+# $locale->text('Transport Order Date missing!')
+# $locale->text('Pickup Order Number missing!')
+# $locale->text('Pickup Order Date missing!')
 
   AA->company_details(\%myconfig, \%$form);
 
@@ -1594,7 +1641,7 @@ sub print_form {
   $form->fdld(\%myconfig, \%$locale);
   
   if (exists $form->{longformat}) {
-    for ("${inv}date", "${due}date", "shippingdate", "transdate") { $form->{$_} = $locale->date(\%myconfig, $form->{$_}, $form->{longformat}) }
+    for ("${inv}date", "${due}date", "shippingdate", "transdate", "transportdate") { $form->{$_} = $locale->date(\%myconfig, $form->{$_}, $form->{longformat}) }
   }
 
   @a = qw(email name address1 address2 city state zipcode country contact phone fax);
@@ -1640,6 +1687,7 @@ sub print_form {
   # some of the stuff could have umlauts so we translate them
   push @a, qw(contact shippingpoint shipvia notes intnotes employee warehouse paymentmethod);
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact email phone fax);
+  push @a, map { "transport$_" } qw(name address1 address2 city state zipcode country contact email cc bcc phone fax);
   push @a, qw(firstname lastname salutation contacttitle occupation mobile);
 
   push @a, ("${inv}number", "${inv}date", "${due}date", "${inv}description");
@@ -1708,8 +1756,8 @@ sub print_form {
     }
 
     $now = scalar localtime;
-    $cc = $locale->text('Cc').qq|: $form->{cc}\n| if $form->{cc};
-    $bcc = $locale->text('Bcc').qq|: $form->{bcc}\n| if $form->{bcc};
+    $cc = $locale->text('Cc').qq|: $form->{cc}\n|;
+    $bcc = $locale->text('Bcc').qq|: $form->{bcc}\n|;
     
     %audittrail = ( tablename	=> ($order) ? 'oe' : lc $ARAP,
                     reference	=> $form->{"${inv}number"},
@@ -1721,9 +1769,8 @@ sub print_form {
       $old_form->{intnotes} = qq|$old_form->{intnotes}\n\n| if $old_form->{intnotes};
       $old_form->{intnotes} .= qq|[email]\n|
       .$locale->text('Date').qq|: $now\n|
-      .$locale->text('To').qq|: $form->{email}\n${cc}${bcc}|
+      .$locale->text('To').qq|: ${email}\n${cc}${bcc}|
       .$locale->text('Subject').qq|: $form->{subject}\n|;
-
       $old_form->{intnotes} .= qq|\n|.$locale->text('Message').qq|: |;
       $old_form->{intnotes} .= ($form->{message}) ? $form->{message} : $locale->text('sent');
 
@@ -2001,6 +2048,199 @@ sub shipto_selected {
   &{ "$display_form" };
 
 }
+
+
+sub transport {
+
+  $title = $form->{title};
+  $form->{title} = $locale->text('Transport Partner Address');
+
+#  for (qw(exchangerate creditlimit creditremaining)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
+#  for (1 .. $form->{paidaccounts}) { $form->{"paid_$_"} = $form->parse_amount(\%myconfig, $form->{"paid_$_"}) }
+#  for (qw(dcn rvc)) { $temp{$_} = $form->{$_} }
+
+  # get details for name
+  AA->transport(\%myconfig, \%$form);
+
+  for (keys %temp) { $form->{$_} = $temp{$_} }
+  
+  $vcname = $locale->text('Name');
+
+  $form->{rowcount}--;
+
+  %transport = (
+      address1 => { i => 2, label => $locale->text('Address') },
+	  address2 => { i => 3, label => '' },
+	  city => { i => 4, label => $locale->text('City') },
+	  state => { i => 5, label => $locale->text('State/Province') },
+	  zipcode => { i => 6, label => $locale->text('Zip/Postal Code') },
+	  country => { i => 7, label => $locale->text('Country') },
+	  contact => { i => 8, label => $locale->text('Contact') },
+	  phone => { i => 9, label => $locale->text('Phone') },
+	  fax => { i => 10, label => $locale->text('Fax') },
+	  email => { i => 11, label => $locale->text('E-mail') } ,
+	  cc => { i => 11, label => $locale->text('cc') } ,
+	  bcc => { i => 11, label => $locale->text('bcc') } 
+	);
+  
+  $form->header;
+
+  @a = qw(name address1 address2 city state zipcode country contact phone fax email cc bcc);
+
+  $filltransport = 1;
+  # check for already entered transport data
+  foreach $item (@a) {
+    if ($form->{"transport$item"}) {
+      $filltransport = 0;
+      last;
+    }
+  }
+      
+  # we fill from transport company record (AA.pm)
+  if ($filltransport) {
+       foreach $item (@{ $form->{transport} }) {
+         foreach $it (@a) {
+          $form->{"transport$it"} = $item->{"transport$it"};
+         }
+       }
+  }
+
+
+
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr>
+	  <th class=listheading colspan=3>$form->{name}</a></th>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$vcname</th>
+	  <td><input name=transportname size=35 maxlength=64 value="|.$form->quote($form->{transportname}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{address1}{label}</th>
+	  <td><input name=transportaddress1 size=35 maxlength=32 value="|.$form->quote($form->{transportaddress1}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <td></td>
+	  <td><input name=transportaddress2 size=35 maxlength=32 value="|.$form->quote($form->{transportaddress2}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{city}{label}</th>
+	  <td><input name=transportcity size=35 maxlength=32 value="|.$form->quote($form->{transportcity}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{state}{label}</th>
+	  <td><input name=transportstate size=35 maxlength=32 value="|.$form->quote($form->{transportstate}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{zipcode}{label}</th>
+	  <td><input name=transportzipcode size=10 maxlength=10 value="|.$form->quote($form->{transportzipcode}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{country}{label}</th>
+	  <td><input name=transportcountry size=35 maxlength=32 value="|.$form->quote($form->{transportcountry}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{contact}{label}</th>
+	  <td><input name=transportcontact size=35 maxlength=64 value="|.$form->quote($form->{transportcontact}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{phone}{label}</th>
+	  <td><input name=transportphone size=20 value="$form->{transportphone}"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{fax}{label}</th>
+	  <td><input name=transportfax size=20 value="$form->{transportfax}"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{email}{label}</th>
+	  <td><input name=transportemail size=35 value="$form->{transportemail}"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{cc}{label}</th>
+	  <td><input name=transportcc size=35 value="$form->{transportcc}"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$transport{bcc}{label}</th>
+	  <td><input name=transportbcc size=35 value="$form->{transportbcc}"></td>
+	</tr>
+|;
+
+  print qq|
+      </table>
+    </td>
+  </tr>
+</table>
+|;
+
+  # delete transport
+  for (qw(action all_transport)) { delete $form->{$_} }
+  for (qw(name address1 address2 city state zipcode country contact phone fax email cc bcc)) {
+    delete $form->{"transport$_"};
+    $form->{flds} .= "$_ ";
+  }
+  chop $form->{flds};
+  
+  $form->{title} = $title;
+
+  $form->{nextsub} = "transport_selected";
+  
+  
+  $form->hide_form;
+
+  print qq|
+
+<hr size=3 noshade>
+
+<br>
+<input class=submit type=submit name=action value="|.$locale->text('Continue').qq|">
+</form>
+
+</body>
+</html>
+|;
+
+}
+
+
+sub transport_selected {
+
+  $display_form = $form->{display_form} || "display_form";
+
+  for $i (1 .. $form->{transport_rows}) {
+    if ($form->{"ndx_$i"}) {
+      for (split / /, $form->{flds}) { $form->{"transport$_"} = $form->{"transport${_}_$i"} }
+      last;
+    }
+  }
+  &{ "$display_form" };
+
+}
+
 
 sub save_report {
   $form->save_form('report');

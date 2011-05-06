@@ -1387,8 +1387,8 @@ sub generate_report {
     $form->{l_lastcostmarkup} = "Y" if $form->{l_lastcost};
     $form->{l_avgcostmarkup} = "Y" if $form->{l_avgcost};
   }
-  # armaghan - added transdate
-  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup make model bin onhand perassembly rop unit sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber transdate ordnumber quonumber name employee serialnumber warehouse countryorigin tariff_hscode));
+  # armaghan - added transdate - bp 2010/03/22 added shipped qty
+  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup make model bin onhand shipped perassembly rop unit sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber transdate ordnumber quonumber name employee serialnumber warehouse countryorigin tariff_hscode));
   unshift @columns, "runningnumber";
 
   if ($form->{l_linetotal}) {
@@ -1411,6 +1411,14 @@ sub generate_report {
   } else {
     $form->{l_onhand} = "Y" if $form->{l_qty};
   }
+ 
+ 
+    #bp 2010/03/22
+    if ($form->{ordered} || $form->{onorder})  {
+        if ($form->{searchitems} eq 'all' || $form->{searchitems} eq 'part') {
+            $form->{l_shipped} = "Y"; 
+        }
+    }
  
   foreach $item (@columns) {
     if ($form->{"l_$item"} eq "Y") {
@@ -1487,6 +1495,7 @@ sub generate_report {
   $column_data{bin} = qq|<th><a class=listheading href=$href&sort=bin>|.$locale->text('Bin').qq|</a></th>|;
   $column_data{priceupdate} = qq|<th nowrap><a class=listheading href=$href&sort=priceupdate>|.$locale->text('Updated').qq|</a></th>|;
   $column_data{onhand} = qq|<th class=listheading nowrap>|.$locale->text('Qty').qq|</th>|;
+  $column_data{shipped} = qq|<th class=listheading nowrap>|.$locale->text('Ship/Rec').qq|</th>|;  
   $column_data{perassembly} = qq|<th>&nbsp;</th>|;
   $column_data{unit} = qq|<th class=listheading nowrap>|.$locale->text('Unit').qq|</th>|;
   $column_data{listprice} = qq|<th class=listheading nowrap>|.$locale->text('List Price').qq|</th>|;
@@ -1627,6 +1636,8 @@ sub generate_report {
       
       $summary{$ref->{id}}{total} += $ref->{sellprice} * $ref->{onhand};
       $summary{$ref->{id}}{onhand} += $ref->{onhand};
+      # bp 2010/03/22
+      $summary{$ref->{id}}{shipped} += $ref->{shipped};
 
       if ($n < $k) {
 	$nextgroup = "";
@@ -1643,10 +1654,15 @@ sub generate_report {
       }
 
       $ref->{onhand} = $summary{$ref->{id}}{onhand};
+      # bp 2010/03/22
+      $ref->{shipped} = $summary{$ref->{id}}{shipped};
+      
       $ref->{sellprice} = ($ref->{onhand}) ? $summary{$ref->{id}}{total} / $ref->{onhand} : 0;
 
       $summary{$ref->{id}}{total} = 0;
       $summary{$ref->{id}}{onhand} = 0;
+      # bp 2010/03/22
+      $summary{$ref->{id}}{shipped} = 0;
 
     }
     
@@ -1713,6 +1729,9 @@ sub generate_report {
     
     for (qw(description notes partsgroup employee curr)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
 
+    #bp added shipped qty
+    $column_data{shipped} = "<td align=right>".$form->format_amount(\%myconfig, $ref->{shipped}, undef, "&nbsp;")."</td>";
+    
     $column_data{onhand} = "<td align=right>".$form->format_amount(\%myconfig, $ref->{onhand}, undef, "&nbsp;")."</td>";
     $column_data{perassembly} = "<td align=right>".$form->format_amount(\%myconfig, $ref->{perassembly}, undef, "&nbsp;")."</td>";
 
@@ -1740,6 +1759,8 @@ sub generate_report {
       $totallistprice += $onhand * $ref->{listprice};
       
       $subtotalonhand += $onhand;
+      # bp 2010/03/22 shipped subtotal
+      $subtotalshipped += $ref->{shipped};     
       $subtotalsellprice += $onhand * $ref->{sellprice};
       $subtotallastcost += $onhand * $ref->{lastcost};
       $subtotalavgcost += $onhand * $ref->{avgcost};
@@ -1851,6 +1872,9 @@ sub parts_subtotal {
   $subtotalonhand = 0 if ($form->{searchitems} eq 'assembly' && $form->{individual});
 
   $column_data{onhand} = "<th class=listsubtotal align=right>".$form->format_amount(\%myconfig, $subtotalonhand, undef, "&nbsp;")."</th>";
+  # bp 2010/03/22 - subtotal shipped
+  $column_data{shipped} = "<th class=listsubtotal align=right>".$form->format_amount(\%myconfig, $subtotalshipped, undef, "&nbsp;")."</th>";
+
 
   $column_data{linetotalsellprice} = "<th class=listsubtotal align=right>".$form->format_amount(\%myconfig, $subtotalsellprice, $form->{precision}, "&nbsp;")."</th>";
   $column_data{linetotallistprice} = "<th class=listsubtotal align=right>".$form->format_amount(\%myconfig, $subtotallistprice, $form->{precision}, "&nbsp;")."</th>";
@@ -1858,6 +1882,9 @@ sub parts_subtotal {
   $column_data{linetotalavgcost} = "<th class=listsubtotal align=right>".$form->format_amount(\%myconfig, $subtotalavgcost, $form->{precision}, "&nbsp;")."</th>";
   
   $subtotalonhand = 0;
+  
+  $subtotalshipped = 0;
+
   $subtotalsellprice = 0;
   $subtotallistprice = 0;
   $subtotallastcost = 0;
@@ -3354,8 +3381,8 @@ sub save {
       if ($form->{type} =~ /invoice/) {
 	$ml = -1 if $form->{type} =~ /(debit|credit)_invoice/;
       }
-      $form->{creditremaining} -= ($amount * $ml);
-      
+	  # bp - use central function
+	  $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, $amount * $ml);
     }
     
     $form->{"id_$i"} = $parts_id;

@@ -48,6 +48,7 @@ sub transactions {
 
   my $rate = ($form->{vc} eq 'customer') ? 'buy' : 'sell';
 
+  ($form->{transportdatefrom}, $form->{transportdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
 
   if ($form->{type} =~ /_quotation$/) {
@@ -72,7 +73,7 @@ sub transactions {
 		 o.closed, o.quonumber, o.shippingpoint, o.shipvia, o.waybill,
 		 e.name AS employee, m.name AS manager, o.curr, o.ponumber,
 		 o.notes, o.intnotes, w.description AS warehouse, o.description
-		 $orderitems_description
+		 $orderitems_description, o.transportdate
 	         FROM oe o
 	         JOIN $form->{vc} ct ON (o.$form->{vc}_id = ct.id)
 		 $orderitems_join
@@ -97,7 +98,8 @@ sub transactions {
 		  curr => 18,
 		  ponumber => 19,
 		  warehouse => 21,
-		  description => 22
+		  description => 22,
+		  transportdate => 23
 		);
 
   my @a = (transdate, $ordnumber, name);
@@ -168,6 +170,14 @@ sub transactions {
                              FROM orderitems
 			     WHERE lower(description) LIKE '$var')";
   }
+  
+  if ($form->{transportdatefrom}) {
+    $query .= " AND o.transportdate >= '$form->{transportdatefrom}'";
+  }
+  if ($form->{transportdateto}) {
+    $query .= " AND o.transportdate <= '$form->{transportdateto}'";
+  }
+
   if ($form->{transdatefrom}) {
     $query .= " AND o.transdate >= '$form->{transdatefrom}'";
   }
@@ -261,7 +271,12 @@ sub save {
   my $ok;
 
   my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
+  # bp 2011/02/28 precision depends on currency!
+  if ($form->{currency} ne $form->{defaultcurreny}) {
+	$form->{precision} = $form->get_precision($myconfig, $form->{currency});
+  } else {
+    $form->{precision} = $defaults{precision};
+  }
   
   ($null, $form->{employee_id}) = split /--/, $form->{employee};
   if (! $form->{employee_id}) {
@@ -299,7 +314,7 @@ sub save {
     }
   }
 
-  #JHM imported purcahse orders will have id but not this
+  #JHM imported purchase orders will have id but not this
   for (qw(department warehouse)){
      ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
      $form->{"${_}_id"} *= 1;
@@ -355,10 +370,11 @@ sub save {
       $pth->finish;
 
       $fxsellprice = $form->{"sellprice_$i"};
-
       my ($dec) = ($form->{"sellprice_$i"} =~ /\.(\d+)/);
       $dec = length $dec;
       my $decimalplaces = ($dec > $form->{precision}) ? $dec : $form->{precision};
+      # bp 2011/02/28 - taxes, costs, sales and AR/AP are always rounded with the precision of the default currency!
+      my $precision2 =$form->get_precision($myconfig, $form->{defaultcurrency});
 
       $discount = $form->round_amount($form->{"sellprice_$i"} * $form->{"discount_$i"}, $decimalplaces);
       $form->{"sellprice_$i"} = $form->round_amount($form->{"sellprice_$i"} - $discount, $decimalplaces);
@@ -398,7 +414,8 @@ sub save {
 	}
 	
 	$ml *= -1;
-      }
+    
+    } #end of for (0 .. 1) tax account loopq
 
       $netamount += $form->{"sellprice_$i"} * $form->{"qty_$i"};
       
@@ -484,14 +501,17 @@ sub save {
   # set values which could be empty
   for (qw(vendor_id customer_id taxincluded closed quotation)) { $form->{$_} *= 1 }
 
+  # bp 2011/02/28 taxes and costs are always in local currency, round with local precision
   # add up the tax
   my $tax = 0;
-  for (keys %taxaccounts) { $tax += $form->round_amount($taxaccounts{$_}, $form->{precision}) }
+#  for (keys %taxaccounts) { $tax += $form->round_amount($taxaccounts{$_}, $form->{precision}) }
+  for (keys %taxaccounts) { $tax += $form->round_amount($taxaccounts{$_}, $precision2) }
   $netamount -= $tax if $form->{taxincluded};
 
   $amount = $form->round_amount($netamount + $tax, $form->{precision});
-  $netamount = $form->round_amount($netamount, $form->{precision});
-
+#  $netamount = $form->round_amount($netamount, $form->{precision});
+  $netamount = $amount - $tax;  # ensure that we don't get rounding differences
+    
   if ($form->{currency} eq $form->{defaultcurrency}) {
     $form->{exchangerate} = 1;
   } else {
@@ -543,7 +563,8 @@ sub save {
 	      ponumber = |.$dbh->quote($form->{ponumber}).qq|,
 	      terms = $form->{terms},
 	      warehouse_id = $form->{warehouse_id},
-	      exchangerate = $form->{exchangerate}
+	      exchangerate = $form->{exchangerate},
+	      transportdate = |.$form->dbquote($form->{transportdate}, SQL_DATE).qq|
               WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 
@@ -553,6 +574,7 @@ sub save {
   $form->{name} = $form->{$form->{vc}};
   $form->{name} =~ s/--$form->{"$form->{vc}_id"}//;
   $form->add_shipto($dbh, $form->{id});
+  $form->add_transport($dbh, $form->{id});  
 
   # save printed, emailed, queued
   $form->save_status($dbh); 
@@ -652,7 +674,7 @@ sub delete {
     
   }
 
-  for (qw(dpt_trans inventory status orderitems shipto cargo)) {
+  for (qw(dpt_trans inventory status orderitems shipto transport cargo)) {
     $query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
   }
@@ -721,7 +743,7 @@ sub retrieve {
 		o.closed, o.quonumber, o.department_id,
 		d.description AS department, o.language_code, o.ponumber,
 		o.warehouse_id, w.description AS warehouse, o.description,
-		o.aa_id
+		o.aa_id, o.transportdate
 		FROM oe o
 	        JOIN $form->{vc} vc ON (o.$form->{vc}_id = vc.id)
 	        LEFT JOIN employee e ON (o.employee_id = e.id)
@@ -736,6 +758,15 @@ sub retrieve {
     $sth->finish;
 
     $query = qq|SELECT * FROM shipto
+                WHERE trans_id = $form->{id}|;
+    $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
+
+    $ref = $sth->fetchrow_hashref(NAME_lc);
+    for (keys %$ref) { $form->{$_} = $ref->{$_} }
+    $sth->finish;
+
+    $query = qq|SELECT * FROM transport
                 WHERE trans_id = $form->{id}|;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
@@ -800,7 +831,12 @@ sub retrieve {
     my $ptref;
     my $sellprice;
     my $listprice;
-    
+
+#    # bp 2011/02/28 precision depend on vendor currency; currency is valid for all order items
+#    if ($form->{currency} ne $form->{defaultcurrency}) {
+#       $form->{precision} = get_precision(\%myconfig, $form->{"currency"};
+#    }
+  
     while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
 
       ($decimalplaces) = ($ref->{sellprice} =~ /\.(\d+)/);

@@ -1,0 +1,158 @@
+\documentclass{scrartcl}
+\usepackage[latin1]{inputenc}
+\usepackage{tabularx}
+\usepackage[letterpaper,top=2cm,bottom=-3cm,left=1.1cm,right=1.5cm]{geometry}
+\usepackage{graphicx}
+
+\begin{document}
+
+\pagestyle{myheadings}
+\thispagestyle{empty}
+
+\fontfamily{cmss}\fontsize{10pt}{12pt}\selectfont
+
+<%include letterhead.tex%>
+
+<%pagebreak 65 27 37%>
+\end{tabularx}
+
+\newpage
+
+\markboth{<%company%>\hfill <%ordnumber%>}{<%company%>\hfill <%ordnumber%>}
+
+\begin{tabularx}{\textwidth}{@{}rlXllrrl@{}}
+  \textbf{Item} & \textbf{Number} & \textbf{Description} & \textbf{Serial Number} & & \textbf{Qty} & \textbf{Ship} & \\
+<%end pagebreak%>
+
+
+\vspace*{0.5cm}
+
+\parbox[t]{.50\textwidth}{
+\textbf{Transport Partner}
+\vspace{0.3cm}
+
+<%transportname%>
+
+<%transportaddress1%>
+
+<%transportaddress2%>
+
+<%transportcity%>
+
+<%if transportstate%>
+ <%transportstate%>
+<%end transportstate%>
+
+<%transportzipcode%>
+
+<%transportcountry%>
+
+\vspace{0.3}
+
+Contact: <%transportcontact%>
+
+<%if transportphone%>
+Tel: <%transportphone%>
+<%end transportphone%>
+  
+<%if transportfax%>
+Fax: <%transportfax%>
+<%end transportfax%>
+
+<%transportemail%>
+}
+\parbox[t]{.48\textwidth}{
+\textbf{Ship To}
+\vspace{0.3cm}
+
+<%shiptoname%>
+
+<%shiptoaddress1%>
+
+<%shiptoaddress2%>
+
+<%shiptocity%>
+<%if shiptostate%>
+\hspace{-0.1cm}, <%shiptostate%>
+<%end shiptostate%>
+<%shiptozipcode%>
+
+<%shiptocountry%>
+
+\vspace{0.3cm}
+
+<%if shiptocontact%>
+Contact: <%shiptocontact%>
+\vspace{0.2cm}
+<%end shiptocontact%>
+
+<%if shiptophone%>
+Tel: <%shiptophone%>
+<%end shiptophone%>
+
+<%if shiptofax%>
+Fax: <%shiptofax%>
+<%end shiptofax%>
+
+<%shiptoemail%>
+}
+
+\hfill
+
+\vspace{1cm}
+
+\textbf{T R A N S P O R T} \parbox{0.3cm}{\hfill} \textbf{O R D E R}
+\hfill
+
+\vspace{1cm}
+
+\begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
+  \textbf{Order \#} & \textbf{Transport Date} & \textbf{Required by} & \textbf{Contact}
+  <%if warehouse%>
+  & \textbf{Warehouse}
+  <%end warehouse%>
+  & \textbf{Shipping Point} & \textbf{Ship via} \\ [0.5em]
+  \hline
+  
+  <%ordnumber%> & <%transportdate%>
+  <%if shippingdate%>
+  & <%shippingdate%>
+  <%end shippingdate%>
+  <%if not shippingdate%>
+  & <%transdate%>
+  <%end shippingdate%>
+  & <%employee%>
+  <%if warehouse%>
+  & <%warehouse%>
+  <%end warehouse%>
+  & <%shippingpoint%> & <%shipvia%> \\
+  \hline
+\end{tabularx}
+  
+\vspace{1cm}
+  
+\begin{tabularx}{\textwidth}{@{}rlXllrrl@{}}
+  \textbf{Item} & \textbf{Number} & \textbf{Description} & \textbf{Serial Number} & & \textbf{Qty} & \textbf{Ship} & \\
+
+<%foreach number%>
+  <%runningnumber%> & <%number%> & <%description%> & <%serialnumber%> &
+  <%deliverydate%> & <%qty%> & <%ship%> & <%unit%> \\
+<%end number%>
+\end{tabularx}
+
+
+\parbox{\textwidth}{
+\rule{\textwidth}{2pt}
+
+\vspace{12pt}
+
+<%notes%>
+
+}
+
+\vfill
+
+\rule{\textwidth}{0.5pt}
+
+\end{document}
+

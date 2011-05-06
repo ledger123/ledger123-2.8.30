@@ -1652,7 +1652,7 @@ sub im_parts {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(partnumber description unit partsgroup newpartsgroup listprice sellprice lastcost rop bin image drawing notes);
+  @column_index = qw(partnumber description unit partsgroup partsgroup_id newpartsgroup listprice sellprice lastcost rop bin image drawing notes onhand warehouse warehouse_id employee employee_id department department_id);
   @flds = @column_index;
   push @flds, qw(parts_id partsgroup_id microfiche barcode tarrif_hscode countryorigin toolnumber);
   unshift @column_index, qw(runningnumber ndx);
@@ -1664,11 +1664,35 @@ sub im_parts {
   
   IM->parts(\%myconfig, \%$form);
 
+  # bp if onhand qty is given for a part we validate warehouse_id, employee_id and department_id
+  for my $i (1 .. $form->{rowcount}) {
+    if ($form->{"onhand_$i"} && $form->{"warehouse_$i"}) {
+	  $form->{"warehouse_id_$i"} = Form->get_lookupkey(\%myconfig, $form->{"warehouse_$i"}, "warehouse", "description");
+
+	  # department and employee are not mandatory
+	  if ($form->{"employee_$i"} ne "") {
+	    $form->{"employee_id_$i"} = Form->get_lookupkey(\%myconfig, $form->{"employee_$i"}, "employee", "name");
+	  }
+	  if ($form->{"department_$i"} ne "") {
+	    $form->{"department_id_$i"} = Form->get_lookupkey(\%myconfig, $form->{"department_$i"}, "department", "description");
+	  }
+
+	}
+
+	if ($form->{"partsgroup_id_$i"} eq "") {
+     $form->{"partsgroup_id_$i"} = Form->get_lookupkey(\%myconfig, $form->{"partsgroup_$i"}, "partsgroup", "partsgroup");
+	}
+
+  }  
+
+
   $column_data{runningnumber} = "&nbsp;";
   $column_data{partnumber} = $locale->text('Number');
   $column_data{description} = $locale->text('Description');
   $column_data{unit} = $locale->text('Unit');
   $column_data{partsgroup} = $locale->text('Group');
+  $column_data{partsgroup_id} = $locale->text('Gr ID');
+  $column_data{newpartsgroup} = $locale->text('New Group');
   $column_data{listprice} = $locale->text('List Price');
   $column_data{sellprice} = $locale->text('Sell Price');
   $column_data{lastcost} = $locale->text('Last Cost');
@@ -1677,7 +1701,13 @@ sub im_parts {
   $column_data{image} = $locale->text('Image');
   $column_data{drawing} = $locale->text('Drawing');
   $column_data{notes} = $locale->text('Notes');
-
+  $column_data{onhand} = $locale->text('On Hand');
+  $column_data{warehouse} = $locale->text('Warehouse');
+  $column_data{warehouse_id} = $locale->text('WH ID');
+  $column_data{employee} = $locale->text('Employee');
+  $column_data{employee_id} = $locale->text('Em ID');
+  $column_data{department} = $locale->text('Department');
+  $column_data{department_id} = $locale->text('Dep ID');
   $form->header;
  
   print qq|
@@ -1794,7 +1824,8 @@ sub import_parts {
       $newform->{"partnumber"} = $form->{"partnumber_$i"};
       $newform->{"description"} = $form->{"description_$i"};
       $newform->{"unit"} = $form->{"unit_$i"};
-      $newform->{"partsgroup"} = qq|$form->{"partsgroup_$i"}--$form->{"partsgroup_id_$i"}|;
+      $newform->{"partsgroup"} = $form->{"partsgroup_$i"};
+      $newform->{"partsgroup_id"} = $form->{"partsgroup_id_$i"};
       $newform->{"listprice"} = $form->{"listprice_$i"};
       $newform->{"sellprice"} = $form->{"sellprice_$i"};
       $newform->{"lastcost"} = $form->{"lastcost_$i"};
@@ -1811,6 +1842,12 @@ sub import_parts {
       $newform->{"IC_income"} = $form->{"IC_income"};
       $newform->{"IC_expense"} = $form->{"IC_expense"};
       $newform->{"taxaccounts"} = $form->{"taxaccounts"};
+# bp 2010/08/24
+      $newform->{"onhand"} = $form->{"onhand_$i"};
+      $newform->{"warehouse_id"} = $form->{"warehouse_id_$i"};
+      $newform->{"employee_id"} = $form->{"employee_id_$i"};     
+      $newform->{"department_id"} = $form->{"department_id_$i"};     
+
       for (split / /, $form->{taxaccounts}) { $newform->{"IC_tax_$_"} = $form->{"IC_tax_$_"} }
       
       $form->info("${m}. ".$locale->text('Add part ...'));

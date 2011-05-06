@@ -339,11 +339,17 @@ sub save {
     
   }
 
-  my $partsgroup_id;
-  ($null, $partsgroup_id) = split /--/, $form->{partsgroup};
-  $partsgroup_id *= 1;
+# parts update function does not transmit $form->{partsgroup_id}  
+  if (! $form->{partsgroup_id}) { 
+#    my $partsgroup_id;
+    ($null, $form->{partsgroup_id}) = split /--/, $form->{partsgroup};
+    $form->{partsgroup_id} *= 1;
+  }
 
-  $form->{partnumber} = $form->update_defaults($myconfig, "partnumber", $dbh) if ! $form->{partnumber};
+
+  if ($form->{partnumber} == 0 || $form->{partnumber} eq "") {
+    $form->{partnumber} = $form->update_defaults(\%myconfig, "partnumber", $dbh);
+  }
 
   $query = qq|UPDATE parts SET
 	      partnumber = |.$dbh->quote($form->{partnumber}).qq|,
@@ -370,7 +376,7 @@ sub save {
 	      image = '$form->{image}',
 	      drawing = '$form->{drawing}',
 	      microfiche = '$form->{microfiche}',
-	      partsgroup_id = $partsgroup_id,
+	      partsgroup_id = '$form->{partsgroup_id}',
 	      toolnumber = '$form->{toolnumber}',
 	      countryorigin = '$form->{countryorigin}',
 	      tariff_hscode = '$form->{tariff_hscode}',
@@ -392,6 +398,13 @@ sub save {
     }
   }
 
+  # bp 2010/08/29
+  # Initial stock will be set if 'onhand' and 'warehouse_id' are set
+  if ($form->{item} eq 'part') {
+    if ($form->{onhand} ne "" && $form->{warehouse_id} ne "") {
+      &adjust_inventory($dbh, $form, $form->{id}, $form->{onhand});
+    }
+  }
 
   # insert taxes
   for (split / /, $form->{taxaccounts}) {
@@ -1090,15 +1103,15 @@ sub all_parts {
 		 'invnumber' => 20,
 		 'ordnumber' => 21,
 		 'quonumber' => 22,
-		 'name' => 24,
-		 'employee' => 25,
-		 'curr' => 26,
-		 'toolnumber' => 29,
-		 'countryorigin' => 30,
-		 'tariff_hscode' => 31,
-		 'barcode' => 32,
-		 'make' => 33,
-		 'model' => 34
+		 'name' => 25,
+		 'employee' => 26,
+		 'curr' => 27,
+		 'toolnumber' => 30,
+		 'countryorigin' => 31,
+		 'tariff_hscode' => 32,
+		 'barcode' => 33,
+		 'make' => 34,
+		 'model' => 35
 	       );
     
     $sortorder = $form->sort_order(\@a, \%ordinal);
@@ -1147,7 +1160,7 @@ sub all_parts {
 		    p.priceupdate, p.image, p.drawing, p.microfiche,
 		    p.assembly, a.transdate,
 		    pg.partsgroup, a.invnumber, a.ordnumber, a.quonumber,
-		    i.trans_id, ct.name, e.name AS employee,
+		    i.trans_id, 0 AS shipped, ct.name, e.name AS employee,
 		    a.curr, a.till, p.notes, p.toolnumber,
 		    p.countryorigin, p.tariff_hscode, p.barcode
 		    $makemodelflds|;
@@ -1157,7 +1170,7 @@ sub all_parts {
 	my $rflds = $flds;
         # armaghan disabled sign change
 	# $rflds =~ s/i.qty AS onhand/i.qty * -1 AS onhand/;
-
+    # bp 2010/03/22 add ship qyt from orderitems 
 	$query = qq|
 	            SELECT $rflds, 'ir' AS module, '' AS type,
 		    (SELECT sell FROM exchangerate ex
@@ -1224,12 +1237,13 @@ sub all_parts {
 		 p.priceupdate, p.image, p.drawing, p.microfiche,
 		 p.assembly, NULL AS transdate,
 		 pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
-		 i.trans_id, ct.name, e.name AS employee,
+		 i.trans_id, i.ship AS shipped, ct.name, e.name AS employee,
 		 a.curr, '0' AS till, p.notes, p.toolnumber,
 		 p.countryorigin, p.tariff_hscode, p.barcode
 		 $makemodelflds|;
 
       if ($form->{ordered}) {
+          # bp 2010/03/22 added ship qty
          $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
                  0 - i.qty AS onhand, i.unit, p.bin, i.sellprice,
 	         p.listprice, p.lastcost, p.rop, p.weight,
@@ -1237,7 +1251,7 @@ sub all_parts {
 		 p.priceupdate, p.image, p.drawing, p.microfiche,
 		 p.assembly, NULL AS transdate,
 		 pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
-		 i.trans_id, ct.name, e.name AS employee,
+		 i.trans_id, 0 - i.ship AS shipped, ct.name, e.name AS employee,
 		 a.curr, '0' AS till, p.notes, p.toolnumber,
 		 p.countryorigin, p.tariff_hscode, p.barcode
 		 $makemodelflds|;
@@ -1262,6 +1276,7 @@ sub all_parts {
       }
       
       if ($form->{onorder}) {
+        # bp 2010/03/22 add ship qty
         $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
                    i.qty AS onhand, i.unit, p.bin, i.sellprice,
 		   p.listprice, p.lastcost, p.rop, p.weight,
@@ -1269,7 +1284,7 @@ sub all_parts {
 		   p.priceupdate, p.image, p.drawing, p.microfiche,
 		   p.assembly, NULL AS transdate,
 		   pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
-		   i.trans_id, ct.name, e.name AS employee,
+		   i.trans_id, i.ship AS shipped, ct.name, e.name AS employee,
 		   a.curr, '0' AS till, p.notes, p.toolnumber,
 		   p.countryorigin, p.tariff_hscode, p.barcode
 		   $makemodelflds|;
@@ -1313,6 +1328,7 @@ sub all_parts {
 	$ordwhere .= " AND a.id = 0";
       }
 
+      # bp 2010/03/22 added ship qty
       $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
                  i.qty AS onhand, i.unit, p.bin, i.sellprice,
 	         p.listprice, p.lastcost, p.rop, p.weight,
@@ -1320,7 +1336,7 @@ sub all_parts {
 		 p.priceupdate, p.image, p.drawing, p.microfiche,
 		 p.assembly, NULL AS transdate,
 		 pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
-		 i.trans_id, ct.name, e.name AS employee,
+		 i.trans_id, i.ship AS shipped, ct.name, e.name AS employee,
 		 a.curr, '0' AS till, p.notes, p.toolnumber,
 		 p.countryorigin, p.tariff_hscode, p.barcode
 		 $makemodelflds|;
@@ -1346,6 +1362,7 @@ sub all_parts {
       }
       
       if ($form->{rfq}) {
+        # bp 2010/03/22 added ship qty
         $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
                    i.qty AS onhand, i.unit, p.bin, i.sellprice,
 		   p.listprice, p.lastcost, p.rop, p.weight,
@@ -1353,7 +1370,7 @@ sub all_parts {
 		   p.priceupdate, p.image, p.drawing, p.microfiche,
 		   p.assembly, NULL AS transdate,
 		   pg.partsgroup, '' AS invnumber, a.ordnumber, a.quonumber,
-		   i.trans_id, ct.name, e.name AS employee,
+		   i.trans_id, i.ship AS shipped, ct.name, e.name AS employee,
 		   a.curr, '0' AS till, p.notes, p.toolnumber,
 		   p.countryorigin, p.tariff_hscode, p.barcode
 		   $makemodelflds|;

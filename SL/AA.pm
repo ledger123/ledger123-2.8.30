@@ -1403,5 +1403,53 @@ sub ship_to {
 }
 
 
+sub transport {
+  my ($self, $myconfig, $form) = @_;
+
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+
+  AA->company_details($myconfig, $form, $dbh);
+
+  my $table = ($form->{vc} eq 'customer') ? 'ar' : 'ap';
+  my $query;
+
+  # transport partner assigned in customer/vendor transport_id?       
+    $query = qq|SELECT
+		 v.name as transportname, a.address1 as transportaddress1, a.address2 as transportaddress2,
+		 a.city as transportcity, a.state as transportstate, a.zipcode as transportzipcode,
+		 a.country as transportcountry, v.contact as transportcontact, v.phone as  transportphone,
+		 v.fax as transportfax, v.email as transportemail, v.cc as transportcc, v.bcc as transportbcc  
+       FROM vendor v
+        join address a ON v.id = a.trans_id 
+        WHERE v.id = (SELECT transport_id FROM $form->{vc} WHERE id = $form->{"$form->{vc}_id"})|;
+
+  if ($form->{id}) {
+    $query .= qq|
+                 EXCEPT
+        SELECT
+		 t.transportname, t.transportaddress1, t.transportaddress2,
+		 t.transportcity, t.transportstate, t.transportzipcode,
+		 t.transportcountry, t.transportcontact, t.transportphone,
+		 t.transportfax, t.transportemail, t.transportcc, t.transportbcc
+		 FROM transport t
+		 WHERE t.trans_id = '$form->{id}'|;
+  }
+
+  my $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  
+  my $ref;
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{transport} }, $ref;
+  }
+   
+  $sth->finish;
+
+  $dbh->disconnect;
+  
+}
+
+
 1;
 

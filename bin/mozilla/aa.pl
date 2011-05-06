@@ -1263,7 +1263,8 @@ sub update {
   $form->{paidaccounts} = $j;
 
   $ml = ($form->{type} =~ /_note/) ? -1 : 1;
-  $form->{creditremaining} -= ($form->{invtotal} - $totalpaid + $form->{oldtotalpaid} - $form->{oldinvtotal}) * $ml;
+  $amount = ($form->{invtotal} - $totalpaid + $form->{oldtotalpaid} - $form->{oldinvtotal}) * $ml;
+  $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, $amount);
   $form->{oldinvtotal} = $form->{invtotal};
   $form->{oldtotalpaid} = $totalpaid;
 

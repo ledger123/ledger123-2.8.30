@@ -24,9 +24,12 @@ sub get_vc {
                remittance_voucher => { ar => customer },
                packing_list => { oe => customer, ar => customer, ap => vendor },
 	       sales_order => { oe => customer },
+           delivery_list => {oe => customer}, 
+	       transport_order => { oe => customer },
 	       work_order => { oe => customer },
 	       pick_list => { oe => customer, ar => customer, ap => vendor },
 	       purchase_order => { oe => vendor },
+	       pickup_order => { oe => vendor },
 	       bin_list => { oe => customer, ar => customer, ap => vendor },
 	       sales_quotation => { oe => customer },
 	       request_quotation => { oe => vendor },
@@ -175,15 +178,26 @@ sub get_spoolfiles {
                remittance_voucher => { ar => customer },
                packing_list => { oe => customer, ar => customer, ap => vendor },
 	       sales_order => { oe => customer },
+	       delivery_list => { oe => customer },
+	       transport_order => { oe => customer },
 	       work_order => { oe => customer },
 	       pick_list => { oe => customer, ar => customer, ap => vendor },
 	       purchase_order => { oe => vendor },
+	       pickup_order => { oe => vendor },
 	       bin_list => { oe => customer, ar => customer, ap => vendor },
 	       sales_quotation => { oe => customer },
 	       request_quotation => { oe => vendor }
 	     );
  
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
+  ($form->{transportdatefrom}, $form->{transportdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
+
+  my $datefld;
+  if ($form->{type} eq 'transport_order' || $form->{type} eq 'pickup_order') {
+      $datefld = "transportdate";
+  } else {
+      $datefld = "transdate";
+  }
 
   my $where;
 
@@ -304,15 +318,17 @@ sub get_spoolfiles {
 		  $union
 		  SELECT a.id, vc.name,
 		  vc.$arap{$form->{type}}{$item}number AS vcnumber,
-		  a.$invnumber AS invnumber, a.transdate,
+		  a.$invnumber AS invnumber, a.$datefld,
 		  a.ordnumber, a.quonumber, $invoice AS invoice,
 		  '$item' AS module, s.spoolfile, a.description, a.amount,
-		  ad.city, vc.email, '$arap{$form->{type}}{$item}' AS db,
-		  vc.id AS vc_id
+		  ad.city, vc.email, vc.cc, vc.bcc, '$arap{$form->{type}}{$item}' AS vc,
+		  vc.id AS vc_id, t.transportname, t.transportemail AS t_email, 
+		  t.transportcc AS t_cc, t.transportbcc AS t_bcc
 		  FROM $item a
 		  JOIN $arap{$form->{type}}{$item} vc ON (a.$arap{$form->{type}}{$item}_id = vc.id)
 		  JOIN address ad ON (ad.trans_id = vc.id)
 		  JOIN status s ON (s.trans_id = a.id)
+		  LEFT JOIN transport t ON (t.trans_id = a.id) 
 		  WHERE s.spoolfile IS NOT NULL
 		  AND s.formname LIKE '$wildcard$form->{type}'|;
       } else {
@@ -372,15 +388,17 @@ sub get_spoolfiles {
 		  $union
 		  SELECT a.id, vc.name,
 		  vc.$arap{$form->{type}}{$item}number AS vcnumber,
-		  a.$invnumber AS invnumber, a.transdate,
+		  a.$invnumber AS invnumber, a.$datefld,
 		  a.ordnumber, a.quonumber, $invoice AS invoice,
 		  '$item' AS module, '' AS spoolfile, a.description, a.amount,
 		  '$arap{$form->{type}}{$item}' AS vc,
-		  ad.city, vc.email, '$arap{$form->{type}}{$item}' AS db,
-                  vc.id AS vc_id
+		  ad.city, vc.email, vc.cc, vc.bcc, '$arap{$form->{type}}{$item}' AS vc,
+                  vc.id AS vc_id, t.transportname, t.transportemail AS t_email, 
+                  t.transportcc AS t_cc, t.transportbcc AS t_bcc
 		  FROM $item a
 		  JOIN $arap{$form->{type}}{$item} vc ON (a.$arap{$form->{type}}{$item}_id = vc.id)
 		  JOIN address ad ON (ad.trans_id = vc.id)
+		  LEFT JOIN transport t ON (t.trans_id = a.id) 
 		  WHERE $where|;
       }
 
@@ -419,6 +437,9 @@ sub get_spoolfiles {
       $query .= " AND a.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
       $query .= " AND a.transdate <= '$form->{transdateto}'" if $form->{transdateto};
 
+      $query .= " AND a.transportdate >= '$form->{transportdatefrom}'" if $form->{transportdatefrom};
+      $query .= " AND a.transportdate <= '$form->{transportdateto}'" if $form->{transportdateto};
+
       $union = "UNION";
 
     }
@@ -427,14 +448,15 @@ sub get_spoolfiles {
   my %ordinal = ( name => 2,
                   vcnumber => 3,
                   invnumber => 4,
-                  transdate => 5,
+                  $datefld => 5,
 		  ordnumber => 6,
 		  quonumber => 7,
 		  description => 11
 		);
 
   my @a = ();
-  push @a, ("transdate", "$invnumber", "name");
+  
+  push @a, ("$datefld", "$invnumber", "name");
   my $sortorder = $form->sort_order(\@a, \%ordinal);
   $query .= " ORDER by $sortorder";
 

@@ -211,6 +211,19 @@ sub create_links {
   # get currencies
   $form->{currencies} = $form->get_currencies($dbh, $myconfig);
 
+  # get transport companies
+  $query = qq|SELECT id,name
+              FROM vendor
+         WHERE transportcompany IS TRUE
+	      ORDER BY name|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{all_transport} }, $ref;
+  }
+  $sth->finish;
+ 
   $dbh->disconnect;
 
 }
@@ -383,20 +396,29 @@ sub save {
   $form->{"$form->{db}number"} = $form->update_defaults($myconfig, "$form->{db}number", $dbh) if ! $form->{"$form->{db}number"};
  
   my %rec;
-  for (qw(employee pricegroup business paymentmethod)) {
+  for (qw(employee pricegroup business paymentmethod transport)) {
     ($null, $rec{"${_}_id"}) = split /--/, $form->{$_};
     $rec{"${_}_id"} *= 1;
   }
+  
   
   for (qw(arap payment discount)) {
     ($rec{"${_}_accno"}) = split /--/, $form->{"${_}_accno"};
   }
 
-    
   my $gifi;
   $gifi = qq|
 	      gifi_accno = '$form->{gifi_accno}',| if $form->{db} eq 'vendor';
 
+  my $transportcompany;
+  if ($form->{db} eq 'vendor') {
+    if ($form->{transportcompany}) {
+        $transportcompany = "transportcompany = TRUE,";
+    } else {
+        $transportcompany = "transportcompany = FALSE,";
+    }
+  } 
+ 
   $query = qq|UPDATE $form->{db} SET
               $form->{db}number = |.$dbh->quote($form->{"$form->{db}number"}).qq|,
 	      name = |.$dbh->quote($form->{name}).qq|,
@@ -430,7 +452,9 @@ sub save {
 	      threshold = $form->{threshold},
 	      discountterms = $form->{discountterms},
 	      paymentmethod_id = $rec{paymentmethod_id},
-	      remittancevoucher = '$form->{remittancevoucher}'
+	      remittancevoucher = '$form->{remittancevoucher}',
+	      $transportcompany
+	      transport_id = $rec{transport_id}
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 
@@ -589,6 +613,10 @@ sub search {
     $where .= " AND (lower(ad.address1) LIKE '$var' OR lower(ad.address2) LIKE '$var')";
   }
   
+  if ($form->{transportcompany}) {
+    $where .= " AND c.transportcompany IS TRUE";
+  }
+
   if ($form->{startdatefrom}) {
     $where .= " AND c.startdate >= '$form->{startdatefrom}'";
   }

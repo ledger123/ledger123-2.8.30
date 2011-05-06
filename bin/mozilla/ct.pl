@@ -113,6 +113,18 @@ sub create_links {
     $form->{selectemployee} = $form->escape($form->{selectemployee},1);
   }
 
+  if (@{ $form->{all_transport} }) {
+    $form->{selecttransport} = qq|\n|;
+    for (@{ $form->{all_transport} }) {
+      $form->{selecttransport} .= qq|$_->{name}--$_->{id}\n|;
+      if ($form->{transport_id} eq $_->{id}) {
+          # required by general function select_option (text--id)
+          $form->{transport} = qq|$_->{name}--$_->{id}|;
+      }
+    }
+    $form->{selecttransport} = $form->escape($form->{selecttransport},1);
+   }
+
 }
 
  
@@ -368,6 +380,7 @@ sub include_in_report {
     push @a, qq|<input name="l_employee" type=checkbox class=checkbox value=Y> |.$locale->text('Employee');
     push @a, qq|<input name="l_manager" type=checkbox class=checkbox value=Y> |.$locale->text('Manager');
     push @a, qq|<input name="l_gifi_accno" type=checkbox class=checkbox value=Y> |.$locale->text('GIFI');
+    push @a, qq|<input name="l_transportcompany" type=checkbox class=checkbox value=Y> |.$locale->text('Transport Company');
 
   }
 
@@ -473,6 +486,10 @@ sub search_name {
  	  <th align=right nowrap>|.$locale->text('Employee').qq|</th>
 	  <td><input name=employee size=32></td>
 |;
+    $transportcompany = qq|
+      <th align=right nowrap>|.$locale->text('Transport Company').qq|</th>
+      <td align=left><input name=transportcompany class=checkbox type=checkbox></td>
+|;
   }
  
   $focus = "name";
@@ -548,8 +565,12 @@ sub search_name {
 		<td><input name=country size=32></td>
 	      </tr>
 	      <tr>
+	      <tr>
 		<th align=right nowrap>|.$locale->text('Startdate').qq|</th>
 		<td>|.$locale->text('From').qq| <input name=startdatefrom size=11 class=date title="$myconfig{dateformat}"> |.$locale->text('To').qq| <input name=startdateto size=11 class=date title="$myconfig{dateformat}"></td>
+	      </tr>
+	      <tr>
+	         $transportcompany
 	      </tr>
 	    </table>
 	  </td>
@@ -657,7 +678,7 @@ sub list_names {
 
   push @columns, (
 	     iban, bic, remittancevoucher,
-	     startdate, enddate,
+	     transportcompany, transport, startdate, enddate,
 	     invnumber, invamount, invtax, invtotal,
 	     ordnumber, ordamount, ordtax, ordtotal,
 	     quonumber, quoamount, quotax, quototal);
@@ -738,6 +759,11 @@ sub list_names {
     $callback .= "&country=".$form->escape($form->{country},1);
     $href .= "&country=".$form->escape($form->{country});
     $option .= "\n<br>".$locale->text('Country')." : $form->{country}";
+  }
+  if ($form->{transportcompany}) {
+    $callback .= "&transportcompany=".$form->escape($form->{transportcompany},1);
+    $href .= "&transportcompany=".$form->escape($form->{transportcompany});
+    $option .= "\n<br>".$locale->text('Transport Company')." : $form->{transportcompany}";
   }
   if ($form->{contact}) {
     $callback .= "&contact=".$form->escape($form->{contact},1);
@@ -868,6 +894,7 @@ sub list_names {
   $column_header{gifi_accno} = qq|<th><a class=listheading href=$href&sort=gifi_accno>|.$locale->text('GIFI').qq|</a></th>|;
   $column_header{sic_code} = qq|<th><a class=listheading href=$href&sort=sic_code>|.$locale->text('SIC').qq|</a></th>|;
   $column_header{business} = qq|<th><a class=listheading href=$href&sort=business>|.$locale->text('Type of Business').qq|</a></th>|;
+  $column_header{transportcompany} = qq|<th><a class=listheading href=$href&sort=transportcompany>|.$locale->text('Trans. Comp.').qq|</a></th>|;
 
   $column_header{bank} = qq|<th class=listheading>|.$locale->text('Bank').qq|</th>|;
   $column_header{bankname} = qq|<th class=listheading>|.$locale->text('Bank').qq|</th>|;
@@ -1063,6 +1090,9 @@ sub list_names {
       }
       if ($form->{l_remittancevoucher}) {
 	$column_data{remittancevoucher} = "<td align=center>". (($ref->{remittancevoucher}) ? "*" : "&nbsp;") . "</td>";
+      }
+      if ($form->{l_transportcompany}) {
+	$column_data{transportcompany} = "<td align=center>". (($ref->{transportcompany}) ? "*" : "&nbsp;") . "</td>";
       }
     }
    
@@ -1672,6 +1702,25 @@ sub form_header {
 |;
   }
 
+  # transport partner
+  if ($form->{selecttransport}) {
+
+    $transportpartner = qq|
+ 	  <th align=right>|.$locale->text('Transport Partner').qq|</th>
+	  <td><select name="transport">|
+	  .$form->select_option($form->{selecttransport}, $form->{transport},1 )
+	  .qq|</select>
+	  </td>
+|;
+  }
+
+  if ($form->{db} eq 'vendor') {
+    $form->{transportcompany} = ($form->{transportcompany}) ? "checked" : "";
+    $transportcompany = qq|
+        <th align=right>|.$locale->text('Transport Company').qq|</th>
+        <td align=left><input name=transportcompany class=checkbox type=checkbox value=1 $form->{transportcompany}></td>
+         |; 
+  }
 
 # $locale->text('Add Customer')
 # $locale->text('Add Vendor')
@@ -1828,6 +1877,12 @@ sub form_header {
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
 		<td><input name=country size=32 maxlength=32 value="|.$form->quote($form->{country}).qq|"></td>
 	      </tr>
+	      <tr><td colspan="2">&nbsp;</td></tr>
+	      <tr><td colspan="2">&nbsp;</td></tr>
+	      <tr><td colspan="2">&nbsp;</td></tr>
+	      <tr>
+             $transportpartner
+	      </tr>
 	    </table>
 	  </td>
 
@@ -1904,6 +1959,9 @@ sub form_header {
 	  $currency
 	</tr>
 	<tr valign=top>
+    <tr>
+      $transportcompany
+    </tr>
 	  $employee
 	  <td colspan=4>
 	    <table>

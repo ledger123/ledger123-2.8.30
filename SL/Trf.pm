@@ -11,7 +11,6 @@ sub transfer_details {
 
    my $runningnumber = 1;
    my $linetotal = 0;
-   my $totalnetweight = 0;
    for $i (1 .. $form->{rowcount} - 1){
       push(@{ $form->{runningnumber} }, $runningnumber++);
       push (@{ $form->{number} }, $form->{"partnumber_$i"});
@@ -20,15 +19,10 @@ sub transfer_details {
       push (@{ $form->{unit} }, $form->{"unit_$i"});
       push (@{ $form->{qty} }, $form->format_amount($myconfig, $form->{"qty_$i"}, 2));
       push (@{ $form->{cost} }, $form->format_amount($myconfig, $form->{"cost_$i"}, 2));
-      push (@{ $form->{netweight} }, $form->format_amount($myconfig, $form->{"weight_$i"} * $form->{"qty_$i"}, 2));
-
       $linetotal = $form->{"qty_$i"} * $form->{"cost_$i"};
-      push (@{ $form->{linetotal} }, $form->format_amount($myconfig, $linetotal, 2));
-
-      $form->{totalnetweight} += $form->{"weight_$i"} * $form->{"qty_$i"};
       $form->{trftotal} += $linetotal;
+      push (@{ $form->{linetotal} }, $form->format_amount($myconfig, $linetotal, 2));
    }
-   $form->{totalnetweight} = $form->format_amount($myconfig, $form->{totalnetweight}, 2);
    $form->{trftotal} = $form->format_amount($myconfig, $form->{trftotal}, 2);
 }
 
@@ -63,8 +57,8 @@ sub retrieve_item {
      $onhandfld = "(SELECT SUM(qty) FROM inventory i WHERE i.parts_id = p.id AND warehouse_id = $form->{from_warehouse_id}) AS onhand";
   }
   my $query = qq|SELECT p.id, p.partnumber, p.description, p.sellprice,
-		p.listprice, p.lastcost, p.unit, p.assembly, $onhandfld,
-		p.notes AS itemnotes, p.weight
+		p.listprice, p.lastcost, p.unit, p.assembly, $onhandfld, 
+		p.notes AS itemnotes
 		FROM parts p
 		$where|;
   my $sth = $dbh->prepare($query);

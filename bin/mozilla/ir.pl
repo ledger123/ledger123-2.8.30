@@ -1068,7 +1068,7 @@ sub update {
 	}
 
 	$ml = ($form->{type} eq 'invoice') ? 1 : -1;
-	$form->{creditremaining} -= ($amount * $ml);
+    $form->{creditremaining} = $form->adjust_creditremaining(\%myconfig, $amount * $ml);
 	
 	$form->{"sellprice_$i"} = $form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $decimalplaces);
 
