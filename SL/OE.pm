@@ -363,7 +363,7 @@ sub save {
       $discount = $form->round_amount($form->{"sellprice_$i"} * $form->{"discount_$i"}, $decimalplaces);
       $form->{"sellprice_$i"} = $form->round_amount($form->{"sellprice_$i"} - $discount, $decimalplaces);
 
-      $linetotal = $form->round_amount($form->{"sellprice_$i"} * $form->{"qty_$i"}, $form->{precision});
+      $linetotal = $form->round_amount($form->{"sellprice_$i"} * $form->{"qty_$i"} * (1 - $form->{"discount_$i"}/100), $form->{precision});
       
       @taxaccounts = split / /, $form->{"taxaccounts_$i"};
       $ml = 1;
@@ -1289,7 +1289,7 @@ sub order_details {
       # keep a netprice as well, (sellprice - discount)
       $form->{"netprice_$i"} = $sellprice - $discount;
 
-      my $linetotal = $form->round_amount($form->{"qty_$i"} * $form->{"netprice_$i"}, $form->{precision});
+      my $linetotal = $form->round_amount($form->{"qty_$i"} * $form->{"sellprice_$i"} * (1 - $form->{"discount_$i"}/100), $form->{precision});
 
       if ($form->{"inventory_accno_id_$i"} || $form->{"assembly_$i"}) {
 	push(@{ $form->{part} }, $form->{"sku_$i"});

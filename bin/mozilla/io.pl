@@ -209,9 +209,11 @@ function CheckAll(v) {
       }
     }
 
-    $discount = $form->round_amount($form->{"sellprice_$i"} * $form->{"discount_$i"}/100, $decimalplaces);
-    $linetotal = $form->round_amount($form->{"sellprice_$i"} - $discount, $decimalplaces);
-    $linetotal = $form->round_amount($linetotal * $form->{"qty_$i"}, $form->{precision});
+    ## armaghan 04-apr-2011 old discount calc code is commented out and new code is below it.
+    #$discount = $form->round_amount($form->{"sellprice_$i"} * $form->{"discount_$i"}/100, $decimalplaces);
+    #$linetotal = $form->round_amount($form->{"sellprice_$i"} - $discount, $decimalplaces);
+    #$linetotal = $form->round_amount($linetotal * $form->{"qty_$i"}, $form->{precision});
+    $linetotal = $form->round_amount($form->{"sellprice_$i"} * $form->{"qty_$i"} * (1 - $form->{"discount_$i"}/100), $form->{precision});
 
     if (($rows = $form->numtextrows($form->{"description_$i"}, 46, 6)) > 1) {
       $form->{"description_$i"} = $form->quote($form->{"description_$i"});
