@@ -133,7 +133,7 @@ ALTER TABLE customer
   ADD COLUMN creditnumber VARCHAR(20),
   ADD COLUMN creditexpiry VARCHAR(4),
   ADD COLUMN creditname VARCHAR(50),
-  ADD COLUMN creditcsv VARCHAR(3)
+  ADD COLUMN creditcvs VARCHAR(4)
 ;
   
 

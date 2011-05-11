@@ -1776,6 +1776,32 @@ sub form_header {
 
   $form->{remittancevoucher} = ($form->{remittancevoucher}) ? "checked" : "";
 
+  my $ccinfo;
+  if ($form->{db} eq 'customer') {
+     $ccinfo = qq|
+     	      <tr>
+		<th align=right>|.$locale->text('Card Type').qq|</th>
+		<td><input name=creditcard size=10 maxlength=10 value="$form->{creditcard}"></td>
+	      </tr>
+     	      <tr>
+		<th align=right>|.$locale->text('Card Number').qq|</th>
+		<td><input name=creditnumber size=20 maxlength=20 value="$form->{creditnumber}"></td>
+	      </tr>
+     	      <tr>
+		<th align=right>|.$locale->text('Card Expiry').qq|</th>
+		<td><input name=creditexpiry size=4 maxlength=4 value="$form->{creditexpiry}"></td>
+	      </tr>
+     	      <tr>
+		<th align=right>|.$locale->text('Card Name').qq|</th>
+		<td><input name=creditname size=30 maxlength=30 value="$form->{creditname}"></td>
+	      </tr>
+     	      <tr>
+		<th align=right>|.$locale->text('Card CVS').qq|</th>
+		<td><input name=creditcvs size=4 maxlength=4 value="$form->{creditcvs}"></td>
+	      </tr>
+|;
+  }
+
   $form->header;
 
   print qq|
@@ -1929,6 +1955,7 @@ sub form_header {
 		<td align=right><input name=remittancevoucher class=checkbox type=checkbox value=1 $form->{remittancevoucher}></td>
 		<th align=left>|.$locale->text('Remittance Voucher').qq|</th>
 	      </tr>
+	      $ccinfo
 	    </table>
 	  </td>
 	  <td colspan=4>

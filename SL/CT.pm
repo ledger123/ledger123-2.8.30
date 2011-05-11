@@ -430,7 +430,12 @@ sub save {
 	      threshold = $form->{threshold},
 	      discountterms = $form->{discountterms},
 	      paymentmethod_id = $rec{paymentmethod_id},
-	      remittancevoucher = '$form->{remittancevoucher}'
+	      remittancevoucher = '$form->{remittancevoucher}',
+	      creditcard  = '$form->{creditcard}',
+	      creditnumber  = '$form->{creditnumber}',
+	      creditexpiry  = '$form->{creditexpiry}',
+	      creditname  = '$form->{creditname}',
+	      creditcvs  = '$form->{creditcvs}'
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 
