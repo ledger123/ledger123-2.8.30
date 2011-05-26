@@ -1656,7 +1656,7 @@ sub save_inventory {
 
   for $i (1 .. $form->{rowcount} -1) {
 
-    $ship = (abs($form->{"ship_$i"}) > abs($form->{"qty_$i"})) ? $form->{"qty_$i"} : $form->{"ship_$i"};
+    $ship = $form->{"ship_$i"};
     
     if ($ship) {
       #bp 2010-03-11 add serialnumber
