@@ -201,11 +201,10 @@ sub search {
 	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|<option value="|.$form->quote($_->{description}).qq|--$_->{id}">$_->{description}\n| }
     }
     @l_department = (qq|<input name="l_department" class=checkbox type=checkbox value=Y>|, $locale->text('Department'));
-
     $department = qq|
   	<tr>
 	  <th align=right>|.$locale->text('Department').qq|</th>
-	  <td><select name=department>$selectdepartment</select></td>
+	  <td><select name=department>$form->{selectdepartment}</select></td>
 	</tr>
 |;
   }
