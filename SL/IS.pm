@@ -242,7 +242,7 @@ sub invoice_details {
       # keep a netprice as well, (sellprice - discount)
       $form->{"netprice_$i"} = $sellprice - $discount;
       
-      my $linetotal = $form->round_amount($form->{"qty_$i"} * $form->{"netprice_$i"}, $form->{precision});
+      my $linetotal = $form->round_amount($form->{"qty_$i"} * $sellprice * (1 - $form->{"discount_$i"}/100), $form->{precision});
 
       if ($form->{"inventory_accno_id_$i"} || $form->{"assembly_$i"}) {
 	push(@{ $form->{part} }, $form->{"partnumber_$i"});
@@ -875,10 +875,10 @@ sub post_invoice {
       $form->{"discount_$i"} = $form->parse_amount($myconfig, $form->{"discount_$i"})/100;
      
       # deduct discount
-      $form->{"sellprice_$i"} = $fxsellprice - $form->round_amount($fxsellprice * $form->{"discount_$i"}, $decimalplaces);
+      $form->{"sellprice_$i"} = $fxsellprice;
       
       # linetotal
-      my $fxlinetotal = $form->round_amount($form->{"sellprice_$i"} * $form->{"qty_$i"}, $form->{precision});
+      my $fxlinetotal = $form->round_amount($form->{"sellprice_$i"} * $form->{"qty_$i"} * (1 - $form->{"discount_$i"}), $form->{precision});
 
       $amount = $fxlinetotal * $form->{exchangerate};
       my $linetotal = $form->round_amount($amount, $form->{precision});

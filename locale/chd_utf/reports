@@ -52,6 +52,7 @@ $self{texts} = {
   'Invoice Date'                => 'Rechnungsdatum',
   'Invoice Number'              => 'Rechnungsnummer',
   'Invoices'                    => 'Rechnungen',
+  'Item'                        => 'Pos',
   'Last Cost'                   => 'Letzte Kosten',
   'Markup %'                    => 'Marge %',
   'Month'                       => 'Monat',

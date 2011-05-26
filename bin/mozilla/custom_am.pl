@@ -1,5 +1,7 @@
 1;
 
+require "$form->{path}/mylib.pl";
+
 sub continue { &{$form->{nextsub} } };
 
 sub ask_dbcheck {
@@ -275,6 +277,45 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
 </body>
 </html>|;
   $dbh->disconnect;
+}
+
+
+
+sub getsql {
+  $form->{title} = $locale->text('CSV Report');
+  $form->header;
+  print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br />|;
+  print qq|<form method=post action='$form->{script}'>|;
+
+  $sqlstmt = qq|
+SELECT partnumber, description
+FROM parts
+WHERE 1=2
+ORDER BY partnumber
+|;
+  print qq|<textarea name=sqlstmt rows=10 cols=70 wrap>$sqlstmt</textarea><br />|;
+  print qq|<input name=copyfromcsv type=checkbox class=checkbox value=1 >|;
+  print $locale->text('Add <b>COPY FROM CSV</b>');
+  print qq|<a href="http://www.ledger123.com/generic-csv-import/"> (Detail)</a>|;
+  print qq|<br /><br />|;
+  print qq|<input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">|;
+  $form->{nextsub} = 'bldcsv';
+  $form->hide_form(qw(title path nextsub login));
+}
+
+sub bldcsv {
+   if (($myconfig{acs} =~ /Export--CSV/) or ($myconfig{role} ne 'admin')){
+       $form->error($locale->text('Unauthorized access'));
+   } else {
+     if ($form->{sqlstmt} =~ /^select/i){
+       $sqlstmt = $form->{sqlstmt};
+       $dbh = $form->dbconnect(\%myconfig);
+       #$form->error($sqlstmt);
+       &export_to_csv($dbh, $sqlstmt, "report", $form->{copyfromcsv});
+     } else {
+       $form->error('Not allowed');
+     }
+   }
 }
 
 ######

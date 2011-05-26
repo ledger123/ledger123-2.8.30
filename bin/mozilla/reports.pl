@@ -396,7 +396,7 @@ sub gl_search {
    &print_checkbox('l_credit', $locale->text('Credit'), 'checked', '');
    &print_checkbox('l_balance', $locale->text('Balance'), 'checked', '<br>');
    &print_checkbox('l_group', $locale->text('Group'), '', '');
-   #&print_checkbox('l_sql', $locale->text('SQL'), '');
+   &print_checkbox('l_csv', $locale->text('CSV'), '');
    print qq|</td></tr>|;
    &end_table;
    print('<hr size=3 noshade>');
@@ -571,7 +571,7 @@ sub gl_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, 'parts_onhand');
+	&export_to_csv($dbh, $query, 'gl');
 	exit;
    }
    $sth = $dbh->prepare($query);
@@ -904,11 +904,16 @@ sub income_statement {
 <td>|;
 
    my $dbh = $form->dbconnect(\%myconfig);
-   my $query = qq|SELECT id, projectnumber FROM project ORDER BY projectnumber|;
+   my $query;
+   if ($form->{pivotby} eq 'project'){
+      $query = qq|SELECT id, projectnumber description FROM project ORDER BY 2|;
+   } else {
+      $query = qq|SELECT id, description FROM department ORDER BY 2|;
+   }
    my $sth = $dbh->prepare($query) || $form->dberror($query);
    $sth->execute || $form->dberror($query);
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1 checked>$ref->{projectnumber}<br>\n|;
+      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1 checked>$ref->{description}<br>\n|;
    }
 
 print qq|
@@ -917,7 +922,7 @@ print qq|
 <hr>
 <input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">|;
    $form->{nextsub} = 'generate_income_statement';
-   $form->hide_form(qw(title path nextsub login));
+   $form->hide_form(qw(title path nextsub login pivotby));
    print qq|
 </form>
 </body>
@@ -927,8 +932,17 @@ print qq|
 
 #-------------------------------
 sub generate_income_statement {
+   if ($form->{pivotby} eq 'project'){
+      &income_statement_by_project;
+   } else {
+      &income_statement_by_department;
+   }
+}
+
+#---------------
+sub income_statement_by_project {
   $form->header;
-  print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br />|;
+  print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br/>|;
   print qq|<h4>INCOME STATEMENT</h4>|;
   print qq|<h4>for Period</h4>|;
   print qq|<h4>From $form->{datefrom}</h4>| if $form->{datefrom};
@@ -1049,6 +1063,134 @@ sub generate_income_statement {
   for (keys %projects){ print qq|<td><hr noshade size=2></td>|; }
   print qq|</tr>|;
 }
+
+#---------------
+sub income_statement_by_department {
+  $form->header;
+  print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br/>|;
+  print qq|<h4>INCOME STATEMENT</h4>|;
+  print qq|<h4>for Period</h4>|;
+  print qq|<h4>From $form->{datefrom}</h4>| if $form->{datefrom};
+  print qq|<h4>To $form->{dateto}</h4>| if $form->{dateto};
+  my $dbh = $form->dbconnect(\%myconfig);
+  my $query = qq|SELECT id, description FROM department ORDER BY 2|;
+  my $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute || $form->dberror($query);
+
+  my %departments;
+  my $is_query = qq|SELECT c.accno, c.description, c.category, charttype,\n|;
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+     if ($form->{"p_$ref->{id}"}){
+	$departments{"p_$ref->{id}"} = $ref->{description};
+        $is_query .= qq|SUM(CASE WHEN d.department_id = $ref->{id} THEN ac.amount ELSE 0 END) AS p_$ref->{id},\n|
+     }
+  }
+  $sth->finish;
+  chop $is_query;
+  chop $is_query;
+  my $where = qq|c.category IN ('I', 'E')|;
+  my $ywhere = qq| 1 = 1 |;
+  if ($form->{datefrom}){
+    $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
+    $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
+  }
+  if ($form->{dateto}){
+    $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
+    $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
+  }
+  $where .= qq| AND ac.trans_id NOT IN (SELECT trans_id FROM yearend WHERE $ywhere)|;
+
+  $is_query .= qq| 
+		FROM acc_trans ac
+		JOIN chart c ON (c.id = ac.chart_id)
+		JOIN dpt_trans d ON (d.trans_id = ac.trans_id)
+		WHERE $where
+		GROUP BY c.accno, c.description, c.category, c.charttype
+		ORDER BY c.accno
+  |;
+
+  $sth = $dbh->prepare($is_query) || $form->dberror($is_query);
+  $sth->execute || $form->dberror($is_query);
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+	$form->{$ref->{category}}{$ref->{accno}}{accno} = "$ref->{accno}";
+	$form->{$ref->{category}}{$ref->{accno}}{charttype} = "$ref->{charttype}";
+	$form->{$ref->{category}}{$ref->{accno}}{category} = "$ref->{category}";
+	$form->{$ref->{category}}{$ref->{accno}}{description} = "$ref->{description}";
+	for (keys %departments){
+	   $form->{$ref->{category}}{$ref->{accno}}{$_} = "$ref->{$_}";
+	}
+  }
+  $sth->finish;
+
+  print qq|
+<table>
+<tr>
+<th>&nbsp;</th><th>&nbsp;</th>
+|;
+
+  for (keys %departments){ print qq|<th>$departments{$_}</th>| }
+  print qq|
+</tr>
+|;
+
+  # Print INCOME
+  print qq|<tr><td colspan=2><b>INCOME<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
+  foreach $accno (sort keys %{ $form->{I} }){
+     print qq|<tr>|;
+     print qq|<td>$form->{I}{$accno}{accno}</td>|;
+     print qq|<td>$form->{I}{$accno}{description}</td>|;
+     for (keys %departments){ 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
+	$form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
+     }
+     print qq|</tr>|;
+  }
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %departments){ print qq|<td><hr noshade size=1></td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2 align=right><b>TOTAL INCOME</b></td>|;
+  for (keys %departments){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %departments){ print qq|<td><hr noshade size=2></td>|; }
+  print qq|</tr>|;
+
+  # Print EXPENSES
+  print qq|<tr><td colspan=2><b>EXPENSES<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
+  foreach $accno (sort keys %{ $form->{E} }){
+     print qq|<tr>|;
+     print qq|<td>$form->{E}{$accno}{accno}</td>|;
+     print qq|<td>$form->{E}{$accno}{description}</td>|;
+     for (keys %departments){ 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
+	$form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
+     }
+     print qq|</tr>|;
+  }
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %departments){ print qq|<td><hr noshade size=1></td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2 align=right><b>TOTAL EXPENSES</b></td>|;
+  for (keys %departments){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %departments){ print qq|<td><hr noshade size=2></td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2 align=right><b>INCOME (LOSS)</b></td>|;
+  for (keys %departments){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; }
+  print qq|</tr>|;
+
+  print qq|<tr><td colspan=2>&nbsp;</td>|;
+  for (keys %departments){ print qq|<td><hr noshade size=2></td>|; }
+  print qq|</tr>|;
+}
+
+
 
 #===================================
 #

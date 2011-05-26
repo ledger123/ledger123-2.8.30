@@ -1217,6 +1217,9 @@ sub post {
 
 sub print_and_post {
 
+  $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
+  $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
+
   $form->error($locale->text('Select postscript or PDF!')) if $form->{format} !~ /(postscript|pdf)/;
   $form->error($locale->text('Select a Printer!')) if $form->{media} eq 'screen';
 
