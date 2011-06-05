@@ -29,6 +29,9 @@ sub post_transaction {
   my $null;
   ($null, $form->{department_id}) = split(/--/, $form->{department});
   $form->{department_id} *= 1;
+
+  ($null, $form->{warehouse_id}) = split(/--/, $form->{warehouse});
+  $form->{warehouse_id} *= 1;
   
   my %defaults = $form->get_defaults($dbh, \@{['fx%accno_id', 'cdt', 'precision']});
   $form->{precision} = $defaults{precision};
@@ -289,6 +292,7 @@ sub post_transaction {
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      intnotes = |.$dbh->quote($form->{intnotes}).qq|,
 	      department_id = $form->{department_id},
+	      warehouse_id = $form->{warehouse_id},
 	      employee_id = $form->{employee_id},
 	      ponumber = |.$dbh->quote($form->{ponumber}).qq|,
 	      cashdiscount = $form->{cashdiscount},
@@ -1184,7 +1188,7 @@ sub get_name {
 
   # setup last accounts used for this customer/vendor
   if (!$form->{id}) {
-    for (qw(department_id department)) { delete $form->{$_} }
+    for (qw(department_id department warehouse warehouse_id)) { delete $form->{$_} }
     
     if ($form->{type} =~ /_(order|quotation)/) {
       $query = qq|SELECT MAX(o.id),
@@ -1200,7 +1204,7 @@ sub get_name {
     } elsif ($form->{type} =~ /invoice/) {
       $query = qq|SELECT c.accno, c.description,
 		  a.department_id, d.description AS department,
-		  a.warehouse_id, d.description AS warehouse,
+		  a.warehouse_id, w.description AS warehouse,
 		  l.description AS translation
 		  FROM chart c
 		  JOIN acc_trans ac ON (ac.chart_id = c.id)
@@ -1215,12 +1219,14 @@ sub get_name {
       $query = qq|SELECT c.accno, c.description, c.link, c.category,
 		  ac.project_id, p.projectnumber, a.department_id,
 		  d.description AS department,
+		  a.warehouse_id, w.description AS warehouse,
 		  l.description AS translation
 		  FROM chart c
 		  JOIN acc_trans ac ON (ac.chart_id = c.id)
 		  JOIN $arap a ON (a.id = ac.trans_id)
 		  LEFT JOIN project p ON (ac.project_id = p.id)
 		  LEFT JOIN department d ON (d.id = a.department_id)
+		  LEFT JOIN warehouse w ON (w.id = a.warehouse_id)
 		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 		  WHERE a.$form->{vc}_id = $form->{"$form->{vc}_id"}
 		  AND a.id IN (SELECT max(id) FROM $arap
@@ -1229,7 +1235,6 @@ sub get_name {
 
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
-
     my $i = 0;
     while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
       $form->{department} = $ref->{department};
@@ -1249,7 +1254,6 @@ sub get_name {
     $sth->finish;
     $form->{rowcount} = $i if ($i && !$form->{type});
   }
-  
   $dbh->disconnect if $disconnect;
   
 }
