@@ -1702,7 +1702,7 @@ sub retrieve_invoice {
     # retrieve individual items
     $query = qq|SELECT
 		p.partnumber, i.description, i.qty, i.fxsellprice, i.sellprice,
-		i.parts_id AS id, i.unit, p.bin, i.deliverydate,
+		i.parts_id AS id, i.parts_id AS old_id, i.unit, p.bin, i.deliverydate,
 		pr.projectnumber,
                 i.project_id, i.serialnumber, i.ordernumber,
 		i.ponumber AS customerponumber,
@@ -1823,7 +1823,11 @@ sub retrieve_item {
     $where .= qq| AND p.partsgroup_id = $var|;
     $vwhere .= qq| AND p.partsgroup_id = $var|;
   }
-  
+
+  if ($form->{shipped} or $form->{oe_id}){
+     $where .= qq| AND p.inventory_accno_id IS NULL|;
+  }
+ 
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 

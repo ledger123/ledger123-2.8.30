@@ -259,7 +259,7 @@ function CheckAll(v) {
     }
     
     my $readonly;
-    $readonly = ' READONLY' if $form->{shipped};
+    $readonly = ' READONLY' if $form->{"old_id_$i"} and ($form->{oe_id} or $form->{shipped});
 
     $column_data{runningnumber} = qq|<td><input name="runningnumber_$i" size=3 value=$i></td>|;
     $column_data{partnumber} = qq|<td><input name="partnumber_$i" size=15 value="|.$form->quote($form->{"partnumber_$i"}).qq|" accesskey="$i" title="[Alt-$i]" $readonly>$skunumber</td>|;
@@ -291,7 +291,7 @@ function CheckAll(v) {
 <input type=hidden name="oldship_$i" value="$form->{"ship_$i"}">
 |;
 
-    $form->hide_form(map { "${_}_$i" } qw(orderitems_id id weight listprice lastcost taxaccounts pricematrix sku onhand bin assembly inventory_accno_id income_accno_id expense_accno_id));
+    $form->hide_form(map { "${_}_$i" } qw(orderitems_id id old_id weight listprice lastcost taxaccounts pricematrix sku onhand bin assembly inventory_accno_id income_accno_id expense_accno_id));
   
     $project = qq|
                 <b>$projectnumber</b>
@@ -673,6 +673,7 @@ sub new_item {
 	    );
 
   delete $button{'Add Part'} if $myconfig{acs} =~ /Goods \& Services--Add Part/;
+  delete $button{'Add Part'} if $form->{shipped};
   delete $button{'Add Service'} if $myconfig{acs} =~ /Goods \& Services--Add Service/;
   
   $form->header;

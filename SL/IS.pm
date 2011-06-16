@@ -1918,7 +1918,7 @@ sub retrieve_invoice {
 
     # retrieve individual items
     $query = qq|SELECT i.description, i.qty, i.fxsellprice, i.sellprice,
-		i.discount, i.parts_id AS id, i.unit, i.deliverydate,
+		i.discount, i.parts_id AS id, i.parts_id AS old_id, i.unit, i.deliverydate,
 		i.project_id, pr.projectnumber, i.serialnumber, i.ordernumber,
 		i.ponumber AS customerponumber, i.itemnotes, i.lineitemdetail,
 		p.partnumber, p.assembly, p.bin,
@@ -2030,6 +2030,10 @@ sub retrieve_item {
     } else {
       $where .= qq| AND p.partsgroup_id = $var|;
     }
+  }
+
+  if ($form->{shipped} or $form->{oe_id}){
+     $where .= qq| AND p.inventory_accno_id IS NULL AND p.assembly = '0'|;
   }
 
   if ($form->{"description_$i"} ne "") {

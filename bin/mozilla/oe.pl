@@ -2254,6 +2254,7 @@ sub invoice {
   
   for $i (1 .. $form->{rowcount}) {
     $form->{"deliverydate_$i"} = $form->{"reqdate_$i"};
+    $form->{"old_id_$i"} = $form->{"id_$i"};
     for (qw(qty sellprice discount)) { $form->{"${_}_$i"} = $form->format_amount(\%myconfig, $form->{"${_}_$i"}) }
   }
 
