@@ -128,7 +128,6 @@ sub form_header {
    $form->{selectto_warehouse} 		= $form->escape($form->{selectto_warehouse},1);
    $form->{selectpartsgroup} 		= $form->escape($form->{selectpartsgroup},1);
 
-   $form->hide_form(qw(rowcount selectdepartment selectfrom_warehouse selectto_warehouse selectpartsgroup));
 
    print('<hr size=3 noshade>');
 
@@ -143,11 +142,13 @@ sub form_header {
       $selected = ''; $selected = 'selected' if $form->{format} eq $_;
       $form->{selectformat} .= qq|<option value="$_" $selected>$_</option>\n|
    }
+   $form->{selectformname} = qq|transfer--|.$locale->text('Transfer');
+   $form->{formname} = 'transfer';
    print qq|  
 <table width="100%">
 
     <tbody><tr>
-      <td><select name="formname"><option value="transfer" selected="selected">Transfer
+      <td><select name="formname">|.$form->select_option($form->{selectformname}, $form->{formname}, undef, 1).qq|
 </option></select></td>
       <td></td>
       <td><select name="format">$form->{selectformat}</select></td>
@@ -162,10 +163,13 @@ sub form_header {
   </tbody></table>
 |;
 
+   $form->hide_form(qw(vc rowcount selectdepartment selectfrom_warehouse selectto_warehouse selectpartsgroup selectformname));
+
    %button = ( 'Update' => { ndx => 1, key => 'U', value => $locale->text('Update') },
 	       'Print' => { ndx => 2, key => 'P', value => $locale->text('Print') },
 	       'Save' => { ndx => 3, key => 'S', value => $locale->text('Save') },
-	       'Delete' => { ndx => 4, key => 'D', value => $locale->text('Delete') },
+	       'E-mail' => { ndx => 4, key => 'E', value => $locale->text('E-mail') },
+	       'Delete' => { ndx => 5, key => 'D', value => $locale->text('Delete') },
    );
 
    $transdate = $form->datetonum(\%myconfig, $form->{"transdate"});
@@ -203,6 +207,7 @@ sub create_links {
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
   $form->{locked} = ($form->{revtrans}) ? '1' : ($form->datetonum(\%myconfig, $form->{transdate}) <= $form->{closedto});
 
+  $form->{vc} = 'customer'; # Stub to satisfy e_email sub in io.pl
   $form->get_partsgroup(\%myconfig, { language_code => $form->{language_code}, searchitems => 'nolabor' });
   
   if (@{ $form->{all_partsgroup} }) {

@@ -1269,6 +1269,7 @@ sub company_details {
   $dbh = $form->dbconnect($myconfig) unless $dbh;
   
   # get rest for the customer/vendor
+  $form->{"$form->{vc}_id"} *= 1;
   my $query = qq|SELECT ct.$form->{vc}number, ct.name, ad.address1, ad.address2,
                  ad.city, ad.state, ad.zipcode, ad.country,
 	         ct.contact, ct.phone as $form->{vc}phone,
