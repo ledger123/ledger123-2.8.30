@@ -229,18 +229,6 @@ sub create_links {
     }
   }
   
-  # warehouses
-  if (@{ $form->{all_warehouse} }) {
-    if ($myconfig{warehouse_id} and $myconfig{role} eq 'user'){
-    	$form->{selectwarehouse} = qq|$myconfig{warehouse}--$myconfig{warehouse_id}\n|;
-    } else { 
-    	$form->{selectwarehouse} = "\n"; 
-    	$form->{warehouse} = "$form->{warehouse}--$form->{warehouse_id}" if $form->{warehouse_id};
-
-    	for (@{ $form->{all_warehouse} }) { $form->{selectwarehouse} .= qq|$_->{description}--$_->{id}\n| }
-    }
-  }
- 
   $form->{employee} = "$form->{employee}--$form->{employee_id}";
   # sales staff
   if (@{ $form->{all_employee} }) {
@@ -268,7 +256,7 @@ sub create_links {
   }
 
   $form->{"select$form->{vc}"} = $form->escape($form->{"select$form->{vc}"},1);
-  for (qw(formname currency department warehouse employee projectnumber language paymentmethod)) { $form->{"select$_"} = $form->escape($form->{"select$_"},1) }
+  for (qw(formname currency department employee projectnumber language paymentmethod)) { $form->{"select$_"} = $form->escape($form->{"select$_"},1) }
   
   $netamount = 0;
   $tax = 0;
@@ -482,16 +470,7 @@ sub form_header {
 	      </tr>
 | if $form->{selectdepartment};
 
-   $warehouse = qq|
-              <tr>
-	        <th align="right" nowrap>|.$locale->text('Warehouse').qq|</th>
-		<td colspan=3><select name=warehouse>|
-		.$form->select_option($form->{selectwarehouse}, $form->{warehouse}, 1).qq|
-		</select>
-		</td>
-	      </tr>
-| if $form->{selectwarehouse};
-
+ 
   $n = ($form->{creditremaining} < 0) ? "0" : "1";
 
   if ($form->{vc} eq 'customer') {
@@ -644,7 +623,7 @@ sub form_header {
 
   $form->hide_form(qw(id type printed emailed sort closedto locked oldtransdate oldduedate oldcurrency audittrail recurring checktax creditlimit creditremaining defaultcurrency rowcount oldterms batch batchid batchnumber batchdescription cdt precision remittancevoucher));
   $form->hide_form("select$form->{vc}");
-  $form->hide_form(map { "select$_" } qw(formname currency department warehouse employee projectnumber language paymentmethod));
+  $form->hide_form(map { "select$_" } qw(formname currency department employee projectnumber language paymentmethod));
   $form->hide_form("old$form->{vc}", "$form->{vc}_id", "old$form->{vc}number");
   $form->hide_form(map { "select$_" } ("$form->{ARAP}_amount", "$form->{ARAP}", "$form->{ARAP}_paid", "$form->{ARAP}_discount"));
 
@@ -693,7 +672,6 @@ sub form_header {
 	  <td align=right>
 	    <table>
 	      $department
-	      $warehouse
 	      $employee
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Invoice Number').qq|</th>
@@ -1302,7 +1280,6 @@ sub post {
   $form->isblank("transdate", $locale->text('Invoice Date missing!'));
   $form->isblank($form->{vc}, $label);
   $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
-  $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
   
   $transdate = $form->datetonum(\%myconfig, $form->{transdate});
 

@@ -2380,7 +2380,6 @@ sub create_links {
 		a.terms, a.cashdiscount, a.discountterms,
 		c.name AS $vc, c.${vc}number, a.department_id,
 		d.description AS department,
-		a.warehouse_id, w.description AS warehouse,
 		a.amount AS oldinvtotal, a.paid AS oldtotalpaid,
 		a.employee_id, e.name AS employee, c.language_code,
 		a.ponumber, a.approved,
@@ -2393,7 +2392,6 @@ sub create_links {
 		JOIN $vc c ON (a.${vc}_id = c.id)
 		LEFT JOIN employee e ON (e.id = a.employee_id)
 		LEFT JOIN department d ON (d.id = a.department_id)
-		LEFT JOIN warehouse w ON (w.id = a.warehouse_id)
 		LEFT JOIN vr ON (vr.trans_id = a.id)
 		LEFT JOIN br ON (br.id = vr.br_id)
 		LEFT JOIN chart ch ON (ch.id = a.bank_id)
