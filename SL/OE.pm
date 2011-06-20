@@ -1289,7 +1289,7 @@ sub order_details {
       # keep a netprice as well, (sellprice - discount)
       $form->{"netprice_$i"} = $sellprice - $discount;
 
-      my $linetotal = $form->round_amount($form->{"qty_$i"} * $form->{"sellprice_$i"} * (1 - $form->{"discount_$i"}/100), $form->{precision});
+      my $linetotal = $form->round_amount($form->{"qty_$i"} * $sellprice * (1 - $form->{"discount_$i"}/100), $form->{precision});
 
       if ($form->{"inventory_accno_id_$i"} || $form->{"assembly_$i"}) {
 	push(@{ $form->{part} }, $form->{"sku_$i"});
