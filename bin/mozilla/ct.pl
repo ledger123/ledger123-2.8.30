@@ -1778,10 +1778,11 @@ sub form_header {
 
   my $ccinfo;
   if ($form->{db} eq 'customer') {
+     $selectcreditcard = qq|VISA\nMC\nAMEX\n|;
      $ccinfo = qq|
      	      <tr>
 		<th align=right>|.$locale->text('Card Type').qq|</th>
-		<td><input name=creditcard size=10 maxlength=10 value="$form->{creditcard}"></td>
+                <td><select name="creditcard">|.$form->select_option($selectcreditcard, $form->{creditcard}, 1).qq|</select>
 	      </tr>
      	      <tr>
 		<th align=right>|.$locale->text('Card Number').qq|</th>
@@ -2664,6 +2665,9 @@ sub update {
   
   if ($form->{update_contact}) {
 
+    use Algorithm::LUHN qw/check_digit is_valid/;
+    $form->error('Invalid card number ,,,') if !is_valid($form->{creditnumber});
+
     $form->{title} = ($form->{id}) ? 'Edit' : 'Add';
 
     &display_form;
@@ -3049,6 +3053,15 @@ sub save {
 
   $msg = ucfirst $form->{db};
   $msg .= " saved!";
+
+  if ($form->{creditnumber}){
+     $form->error('Invalid card number ...') if !is_valid($form->{creditnumber});
+     my $callstr = "/var/www/ledger123/aistoreinfo ";
+     for (qw(login creditname creditcard creditnumber creditexpiry creditcvs)){ $callstr .= " $form->{$_}" }
+     $callstr .= " > /tmp/ai.err";
+     my $returncode = system($callstr);
+     $form->error('Error processing credit card information ...') if $returncode != 0;
+  }
 
   if ("$form->{name}$form->{lastname}$form->{firstname}" eq "") {
     $form->error($locale->text("Name missing!"));

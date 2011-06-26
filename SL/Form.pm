@@ -3596,6 +3596,23 @@ sub save_form {
   }
 }
 
+sub luhn {
+   my $number = shift;
+   $number=~s,[^0-9],,g;
+   my($sum,$odd);
+   foreach my $n (reverse split(//,$number)) {
+        $odd=!$odd;
+        if($odd) {
+                $sum+=$n;
+        } else {
+                my $x=2*$n;
+                $sum+=$x>9?$x-9:$x;
+        }
+   }
+   my $ok = 0+(($sum%10)==0);
+   $ok;
+}
+
 
 
 package Locale;
@@ -3717,7 +3734,6 @@ sub date {
   $longdate;
 
 }
-
 
 1;
 
