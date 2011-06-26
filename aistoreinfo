@@ -1,0 +1,6 @@
+#!/bin/bash
+if [ $# -ne 6 ] ; then
+       echo "Wrong number of arguments"
+       exit 1
+fi
+exit 0
