@@ -2521,9 +2521,9 @@ sub im_transactions {
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
   if ($form->{vc} eq 'customer'){
-    @column_index = qw(ndx invnumber customernumber name transdate amount description notes source memo);
+    @column_index = qw(ndx invnumber customernumber name transdate account account_description amount description notes source memo);
   } else {
-    @column_index = qw(ndx invnumber vendornumber name transdate amount description notes source memo);
+    @column_index = qw(ndx invnumber vendornumber name transdate account account_description amount description notes source memo);
   }
   @flds = @column_index;
   push @flds, qw(vendor_id customer_id employee employee_id);
@@ -2546,6 +2546,7 @@ sub im_transactions {
   $column_data{"$form->{vc}number"} = $locale->text('Number');
   $column_data{name} = $locale->text('Name');
   $column_data{transdate} = $locale->text('Invoice Date');
+  $column_data{account} = $locale->text('Account');
   $column_data{amount} = $locale->text('Amount');
 
   $form->header;
@@ -2635,41 +2636,51 @@ sub import_transactions {
 
   my $m = 0;
   $newform = new Form;
-  
+ 
+  $newform->{invnumber} = 'null';
+  my $linenum = 1;
   for my $i (1 .. $form->{rowcount}) {
-    
     if ($form->{"ndx_$i"}) {
-
       $m++;
-      
-      for (keys %$newform) { delete $newform->{$_} };
-
-      $newform->{vc} = $form->{vc};
-      $newform->{type} = 'transaction';
-
-      $newform->{$form->{vc}} = qq|form->{"name_$i"}--$form->{"$form->{vc}_id_$i"}|;
-      $newform->{"old$form->{vc}"} = $newform->{$form->{vc}};
-      $newform->{"$form->{vc}_id"} = $form->{"$form->{vc}_id_$i"};
-      $newform->{$form->{ARAP}}= $form->{arapaccount};
-      $newform->{currency} = $form->{currency};
-      $newform->{defaultcurrency} = $form->{currency};
-      $newform->{employee}= qq|$form->{"employee_$i"}--$form->{"employee_id_$i"}|;
-      $newform->{invnumber} = $form->{"invnumber_$i"};
+      if ($newform->{invnumber} ne $form->{"invnumber_$i"}){
+         if ($newform->{invnumber} ne 'null'){ 
+            $form->info("${m}. ".$locale->text('Add transaction ...'));
+            if (AA->post_transaction(\%myconfig, \%$newform)) {
+ 	      $form->info(qq| $newform->{invnumber}, $form->{"$form->{vc}number_$i"}|);
+	      $form->info(" ... ".$locale->text('ok')."\n");
+            } else {
+	      $form->error($locale->text('Posting failed!'));
+            }
+         }
+         for (keys %$newform) { delete $newform->{$_} }
+	 $newform->{vc} = $form->{vc};
+	 $newform->{type} = 'transaction';
+         $newform->{invnumber} = $form->{"invnumber_$i"};
+         $newform->{$form->{vc}} = qq|$form->{"name_$i"}--$form->{"$form->{vc}_id_$i"}|;
+         $newform->{"old$form->{vc}"} = $newform->{$form->{vc}};
+         $newform->{"$form->{vc}_id"} = $form->{"$form->{vc}_id_$i"};
+         $newform->{$form->{ARAP}}= $form->{arapaccount};
+         $newform->{currency} = $form->{currency};
+         $newform->{defaultcurrency} = $form->{currency};
+         $newform->{employee}= qq|$form->{"employee_$i"}--$form->{"employee_id_$i"}|;
+	 $linenum = 0;
+      }
+      $linenum += 1;
       $newform->{transdate} = $form->{"transdate_$i"};
       $newform->{duedate} = $form->{"transdate_$i"};
       $newform->{notes} = $form->{"notes_$i"};
 
       if ($form->{"amount_$i"} > 0){
          # Set following variables for charge
-         $newform->{amount_1} = $form->{"amount_$i"};
-         $newform->{description_1} = $form->{"description_$i"};
+         $newform->{"amount_$linenum"} = $form->{"amount_$i"};
+         $newform->{"description_$linenum"} = $form->{"description_$i"};
 	 if ($form->{vc} eq 'vendor'){
-            $newform->{"$form->{ARAP}_amount_1"} = $form->{expenseaccount};
+            $newform->{"$form->{ARAP}_amount_$linenum"} = $form->{expenseaccount};
 	 } else {
-            $newform->{"$form->{ARAP}_amount_1"} = $form->{incomeaccount};
+            $newform->{"$form->{ARAP}_amount_$linenum"} = $form->{incomeaccount};
 	 }
          $newform->{oldinvtotal} = $form->{"amount_$i"};
-         $newform->{rowcount} = 2;
+         $newform->{rowcount} = $linenum + 1;
       } 
       if (($form->{"amount_$i"} < 0) or ($form->{markpaid})){
          # Set following variables for payment
@@ -2687,17 +2698,16 @@ sub import_transactions {
          $newform->{paidaccounts} = 2;
       }
 
-      $form->info("${m}. ".$locale->text('Add transaction ...'));
-
-      if (AA->post_transaction(\%myconfig, \%$newform)) {
-	$form->info(qq| $form->{"invnumber_$i"}, $form->{"$form->{vc}number_$i"}|);
-	$form->info(" ... ".$locale->text('ok')."\n");
-      } else {
-	$form->error($locale->text('Posting failed!'));
-      }
     }
   }
-
+  # Post last transaction
+  $form->info("${m}. ".$locale->text('Add transaction ...'));
+  if (AA->post_transaction(\%myconfig, \%$newform)) {
+     $form->info(qq| $newform->{invnumber}, $form->{"$form->{vc}number_$i"}|);
+     $form->info(" ... ".$locale->text('ok')."\n");
+  } else {
+     $form->error($locale->text('Posting failed!'));
+  }
 }
 
 

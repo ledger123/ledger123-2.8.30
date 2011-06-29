@@ -1544,8 +1544,10 @@ sub transactions {
               LEFT JOIN chart c ON (c.id = ct.chart_id)
               LEFT JOIN chart a ON (a.id = vc.arap_accno_id)
               WHERE $form->{vc}number = ?|;
-
   my $cth = $dbh->prepare($query) || $form->dberror($query);
+
+  $query = qq|SELECT description FROM chart WHERE accno = ?|;
+  my $ath = $dbh->prepare($query) || $form->dberror($query);
 
   my @d = split /\n/, $form->{data};
   shift @d if ! $form->{mapfile};
@@ -1558,6 +1560,10 @@ sub transactions {
 	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
 	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
       }
+
+      $ath->execute("$a[$form->{$form->{type}}->{account}{ndx}]");
+      my $ref = $ath->fetchrow_hashref(NAME_lc);
+      $form->{"account_description_$i"} = $ref->{description};
 
       if ($form->{vc} eq 'customer'){
       $cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
