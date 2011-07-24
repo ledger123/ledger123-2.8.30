@@ -888,6 +888,31 @@ sub audit_list {
 sub income_statement {
    $form->{title} = $locale->text('Income Statement');
    $form->header;
+
+  $form->all_years(\%myconfig);
+  if (@{ $form->{all_years} }) {
+    # accounting years
+    $selectaccountingyear = "<option>\n";
+    for (@{ $form->{all_years} }) { $selectaccountingyear .= qq|<option>$_\n| }
+    $selectaccountingmonth = "<option>\n";
+    for (sort keys %{ $form->{all_month} }) { $selectaccountingmonth .= qq|<option value=$_>|.$locale->text($form->{all_month}{$_}).qq|\n| }
+
+    $selectfrom = qq|
+      <tr>
+	<th align=right>|.$locale->text('Period').qq|</th>
+	<td>
+	<select name=month>$selectaccountingmonth</select>
+	<select name=year>$selectaccountingyear</select>
+	<br>
+	<input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+	<input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+	<input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+	<input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+	</td>
+      </tr>
+|;
+  }
+
    print qq|
 <body>
 <table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
@@ -895,10 +920,10 @@ sub income_statement {
 
 <table>
 <tr>
-  <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'></td>
-</tr><tr>
-  <th align=right>|.$locale->text('To').qq|</th><td><input name=dateto size=11 title='$myconfig{dateformat}'></td>
+  <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'>
+  |.$locale->text('To').qq| <input name=dateto size=11 title='$myconfig{dateformat}'></td>
 </tr>
+$selectfrom
 <tr>
 <th>|.$locale->text('Include').qq|:</th>
 <td>|;
@@ -906,7 +931,7 @@ sub income_statement {
    my $dbh = $form->dbconnect(\%myconfig);
    my $query;
    if ($form->{pivotby} eq 'project'){
-      $query = qq|SELECT id, projectnumber description FROM project ORDER BY 2|;
+      $query = qq|SELECT id, projectnumber, description FROM project ORDER BY 2|;
    } else {
       $query = qq|SELECT id, description FROM department ORDER BY 2|;
    }
@@ -932,6 +957,7 @@ print qq|
 
 #-------------------------------
 sub generate_income_statement {
+   ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
    if ($form->{pivotby} eq 'project'){
       &income_statement_by_project;
    } else {
@@ -945,8 +971,8 @@ sub income_statement_by_project {
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br/>|;
   print qq|<h4>INCOME STATEMENT</h4>|;
   print qq|<h4>for Period</h4>|;
-  print qq|<h4>From $form->{datefrom}</h4>| if $form->{datefrom};
-  print qq|<h4>To $form->{dateto}</h4>| if $form->{dateto};
+  print qq|<h4>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h4>| if $form->{datefrom};
+  print qq|<h4>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h4>| if $form->{dateto};
   my $dbh = $form->dbconnect(\%myconfig);
   my $query = qq|SELECT id, projectnumber FROM project ORDER BY projectnumber|;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
@@ -969,7 +995,7 @@ sub income_statement_by_project {
     $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
     $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
   }
-  if ($form->{dateto}){
+  if ($form->{dateto}){	
     $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
     $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
   }
@@ -1070,8 +1096,8 @@ sub income_statement_by_department {
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br/>|;
   print qq|<h4>INCOME STATEMENT</h4>|;
   print qq|<h4>for Period</h4>|;
-  print qq|<h4>From $form->{datefrom}</h4>| if $form->{datefrom};
-  print qq|<h4>To $form->{dateto}</h4>| if $form->{dateto};
+  print qq|<h4>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h4>| if $form->{datefrom};
+  print qq|<h4>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h4>| if $form->{dateto};
   my $dbh = $form->dbconnect(\%myconfig);
   my $query = qq|SELECT id, description FROM department ORDER BY 2|;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
