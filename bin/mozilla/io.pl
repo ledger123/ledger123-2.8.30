@@ -1516,7 +1516,6 @@ sub print_form {
     # followings are stubs for company_details
     $form->{vc} = "customer";
     $form->{customer_id} = 0;
-    $form->{employee} = "Armaghan Saqib--10102";
   }
 
   &validate_items;
