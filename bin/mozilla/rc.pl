@@ -436,6 +436,11 @@ function CheckAll() {
 		<td align=right><input name=null size=11 value=$difference></td>
 		<input type=hidden name=difference value=$difference>
 	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Ignore Difference').qq|</th>
+		<td width=10%></td>
+		<td align="left"><input type=checkbox name=ignorediff value="1"></td>
+	      </tr>
 	    </table>
 	  </td>
 	</tr>
@@ -527,7 +532,9 @@ sub done {
 
   $form->{callback} = "$form->{script}?path=$form->{path}&action=reconciliation&login=$form->{login}";
 
-  $form->error($locale->text('Out of balance!')) if ($form->{difference} *= 1);
+  if (!$form->{ignorediff}){
+     $form->error($locale->text('Out of balance!')) if ($form->{difference} *= 1);
+  }
 
   RC->reconcile(\%myconfig, \%$form);
   $form->redirect;
