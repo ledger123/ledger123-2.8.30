@@ -318,6 +318,7 @@ sub header {
   <title>$self->{titlebar}</title>
   <META NAME="robots" CONTENT="noindex,nofollow" />
   $favicon
+  $self->{customheader}
   $stylesheet
   $charset
 </head>
