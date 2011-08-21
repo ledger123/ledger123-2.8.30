@@ -549,6 +549,7 @@ sub get_accounts {
     if ($form->{method} eq 'cash') {
       $subwhere .= " AND ac.transdate >= '$fromdate'";
       $glwhere = " AND ac.transdate >= '$fromdate'";
+      $where .= " AND ac.transdate >= '$fromdate'";
     } else {
       $where .= " AND ac.transdate >= '$fromdate'";
     }
@@ -1007,7 +1008,7 @@ sub get_accounts {
   my @accno;
   my $accno;
   my $ref;
-  
+
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
