@@ -495,6 +495,7 @@ sub get_accounts {
   my $where = "1 = 1";
   my $glwhere = "";
   my $subwhere = "";
+  my $subwhere2 = "";
   my $yearendwhere = "1 = 1";
   my $item;
  
@@ -548,8 +549,8 @@ sub get_accounts {
   if ($fromdate) {
     if ($form->{method} eq 'cash') {
       $subwhere .= " AND ac.transdate >= '$fromdate'";
+      $subwhere2 .= " AND datepaid >= '$fromdate'";
       $glwhere = " AND ac.transdate >= '$fromdate'";
-      $where .= " AND ac.transdate >= '$fromdate'";
     } else {
       $where .= " AND ac.transdate >= '$fromdate'";
     }
@@ -558,6 +559,7 @@ sub get_accounts {
   if ($todate) {
     $where .= " AND ac.transdate <= '$todate'";
     $subwhere .= " AND ac.transdate <= '$todate'";
+    $subwhere2 .= " AND datepaid <= '$todate'";
     $yearendwhere = "ac.transdate < '$todate'";
   }
 
@@ -626,6 +628,7 @@ sub get_accounts {
 		     WHERE c.link LIKE '%AR_paid%'
 		     AND ac.approved = '1'
 		     $subwhere
+		     AND ac.trans_id IN (SELECT id FROM ar WHERE amount = paid $subwhere2)
 		   )
 		 $project
 		 GROUP BY g.accno, g.description, c.category
@@ -652,6 +655,7 @@ sub get_accounts {
 		     WHERE c.link LIKE '%AR_paid%'
 		     AND ac.approved = '1'
 		     $subwhere
+		     AND ac.trans_id IN (SELECT id FROM ar WHERE amount = paid $subwhere2)
 		   )
 		 $project
 		 GROUP BY c.category
@@ -678,6 +682,7 @@ sub get_accounts {
 		     WHERE c.link LIKE '%AP_paid%'
 		     AND ac.approved = '1'
 		     $subwhere
+		     AND ac.trans_id IN (SELECT id FROM ap WHERE amount = paid $subwhere2)
 		   )
 		 $project
 		 GROUP BY g.accno, g.description, c.category
@@ -704,6 +709,7 @@ sub get_accounts {
 		     WHERE c.link LIKE '%AP_paid%'
 		     AND ac.approved = '1'
 		     $subwhere
+		     AND ac.trans_id IN (SELECT id FROM ap WHERE amount = paid $subwhere2)
 		   )
 		 $project
 		 GROUP BY c.category
@@ -869,6 +875,7 @@ sub get_accounts {
 		     WHERE c.link LIKE '%AR_paid%'
 		     AND ac.approved = '1'
 		     $subwhere
+		     AND ac.trans_id IN (SELECT id FROM ar WHERE amount = paid $subwhere2)
 		   )
 		     
 		 $project
@@ -897,6 +904,7 @@ sub get_accounts {
 		     WHERE c.link LIKE '%AP_paid%'
 		     AND ac.approved = '1'
 		     $subwhere
+		     AND ac.trans_id IN (SELECT id FROM ap WHERE amount = paid $subwhere2)
 		   )
 		     
 		 $project
