@@ -135,6 +135,17 @@ sub reconciliation {
 </form>
 |;
 
+  print "<h3>".$locale->text('Usage Notes').":</h3>";
+  print qq|
+<ol>
+<li>|.$locale->text('Leave from/to dates blank to get all un-reconciled transactions.').qq|</li>
+<li>|.$locale->text('Specify from/to dates to display both reconciled and un-reconciled transactions for that period.').qq|</li>
+<li>|.$locale->text('You can also un-check already reconciled transactions by specifying from/to dates.').qq|</li>
+<li>|.$locale->text('Summary report groups and totals transactions with same date+source. Detail report shows all individual transactions.').qq|</li>
+<li>|.$locale->text(qq|Check 'Ignore Difference' box to ignore statement balance difference and save reconciled transactions.|).qq|</li>
+</ol>
+|;
+
   if ($form->{menubar}) {
     require "$form->{path}/menu.pl";
     &menubar;
