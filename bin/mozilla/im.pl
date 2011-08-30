@@ -98,10 +98,10 @@ sub import {
 	  </td>
 	</tr>| if $form->{ARAP};
 
-
-      $selectincomeaccounts = "";
-      for (@{ $form->{income_accounts} }) { $selectincomeaccounts .= qq|$_->{accno}--$_->{description}\n| }
-      $incomeaccounts = qq|
+      if ($form->{type} ne 'transactions'){
+         $selectincomeaccounts = "";
+         for (@{ $form->{income_accounts} }) { $selectincomeaccounts .= qq|$_->{accno}--$_->{description}\n| }
+         $incomeaccounts = qq|
          <tr>
 	  <th align=right>|.$locale->text("Income Account").qq|</th>
 	  <td>
@@ -110,16 +110,17 @@ sub import {
 	  </td>
 	</tr>| if $form->{ARAP} eq 'AR';
 
-      $selectexpenseaccounts = "";
-      for (@{ $form->{expense_accounts} }) { $selectexpenseaccounts .= qq|$_->{accno}--$_->{description}\n| }
-      $expenseaccounts = qq|
+        $selectexpenseaccounts = "";
+        for (@{ $form->{expense_accounts} }) { $selectexpenseaccounts .= qq|$_->{accno}--$_->{description}\n| }
+        $expenseaccounts = qq|
          <tr>
 	  <th align=right>|.$locale->text("Expense Account").qq|</th>
 	  <td>
 	    <select name=expenseaccount>|.$form->select_option($selectexpenseaccounts)
 	    .qq|</select>
 	  </td>
-	</tr>| if $form->{ARAP} eq 'AP';
+	 </tr>| if $form->{ARAP} eq 'AP';
+      }
     }
   } elsif ($form->{type} eq 'parts') {
 	IC->create_links("IC", \%myconfig, \%$form);
@@ -2670,34 +2671,11 @@ sub import_transactions {
       $newform->{duedate} = $form->{"transdate_$i"};
       $newform->{notes} = $form->{"notes_$i"};
 
-      if ($form->{"amount_$i"} > 0){
-         # Set following variables for charge
-         $newform->{"amount_$linenum"} = $form->{"amount_$i"};
-         $newform->{"description_$linenum"} = $form->{"description_$i"};
-	 if ($form->{vc} eq 'vendor'){
-            $newform->{"$form->{ARAP}_amount_$linenum"} = $form->{expenseaccount};
-	 } else {
-            $newform->{"$form->{ARAP}_amount_$linenum"} = $form->{incomeaccount};
-	 }
-         $newform->{oldinvtotal} = $form->{"amount_$i"};
-         $newform->{rowcount} = $linenum + 1;
-      } 
-      if (($form->{"amount_$i"} < 0) or ($form->{markpaid})){
-         # Set following variables for payment
-         $newform->{datepaid_1} = $form->{"transdate_$i"};
-         $newform->{source_1} = $form->{"source_$i"};
-         $newform->{memo_1} = $form->{"memo_$i"};
-	 if ($form->{markpaid}){
-           $newform->{paid_1} = $form->{"amount_$i"};
-           $newform->{oldtotalpaid} = $form->{"amount_$i"};
-	 } else {
-           $newform->{paid_1} = 0 - $form->{"amount_$i"};
-           $newform->{oldtotalpaid} = 0 - $form->{"amount_$i"};
-	 }
-         $newform->{"$form->{ARAP}_paid_1"} = $form->{paymentaccount};
-         $newform->{paidaccounts} = 2;
-      }
-
+      $newform->{"amount_$linenum"} = $form->{"amount_$i"};
+      $newform->{"description_$linenum"} = $form->{"description_$i"};
+      $newform->{"$form->{ARAP}_amount_$linenum"} = $form->{"account_$i"};
+      $newform->{oldinvtotal} = $form->{"amount_$i"};
+      $newform->{rowcount} = $linenum + 1;
     }
   }
   # Post last transaction

@@ -1586,6 +1586,9 @@ sub transactions {
     $form->{rowcount} = $i;
   }
 
+  $cth->finish;
+  $ath->finish;
+
   $dbh->disconnect;
   chop $form->{ndx};
 }
