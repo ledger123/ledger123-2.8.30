@@ -2132,9 +2132,14 @@ sub onhand_search {
 
 #-------------------------------
 sub onhand_list {
-  # callback to report list
-   my $callback = qq|$form->{script}?action=onhand_list|;
-   for (qw(path login sessionid)) { $callback .= "&$_=$form->{$_}" }
+   # callback to report list
+   my $callback = qq|$form->{script}?action=onhand_list&path=$form->{path}&login=$form->{login}|;
+
+   # link to drill down to inventory activity and columns to be displayed
+   my $link = qq|$form->{script}?action=iactivity_list&path=$form->{path}&login=$form->{login}|;
+   for (qw(l_no l_shippingdate l_reference l_department l_warehouse l_warehouse2 l_unit l_in l_out l_onhand l_subtotal)){
+      $link .= "&$_=Y";
+   }
 
    &split_combos('department,warehouse,partsgroup');
    $form->{department_id} *= 1;
@@ -2206,7 +2211,8 @@ sub onhand_list {
 			ORDER BY $form->{sort} $form->{direction}|;
    } else {
    	$query = qq|SELECT 
-			p.id, 
+			p.id,
+			i.warehouse_id,
 			w.description AS warehouse,
 			p.partnumber, 
 			p.description, 
@@ -2219,7 +2225,7 @@ sub onhand_list {
 			LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
 			WHERE $where
 			AND (p.inventory_accno_id IS NOT NULL OR (p.inventory_accno_id IS NULL AND p.expense_accno_id IS NULL))
-			GROUP BY 1, 2, 3, 4, 5, 6
+			GROUP BY 1, 2, 3, 4, 5, 6, 7
 			ORDER BY $form->{sort} $form->{direction}|;
 
    }
@@ -2295,7 +2301,11 @@ sub onhand_list {
 
 	$column_data{no}   		= rpt_txt($no);
    	$column_data{warehouse}		= rpt_txt($ref->{warehouse});
-   	$column_data{partnumber}	= rpt_txt($ref->{partnumber});
+        if ($form->{summary}){
+   	    $column_data{partnumber}	= rpt_txt($ref->{partnumber}, "$link&partnumber=$ref->{partnumber}&warehouse=$form->{warehouse}");
+	} else {
+   	    $column_data{partnumber}	= rpt_txt($ref->{partnumber}, "$link&partnumber=$ref->{partnumber}&warehouse=$ref->{warehouse}--$ref->{warehouse_id}");
+	}
    	$column_data{description} 	= rpt_txt($ref->{description});
    	$column_data{partsgroup}    	= rpt_txt($ref->{partsgroup});
    	$column_data{unit}    		= rpt_txt($ref->{unit});
