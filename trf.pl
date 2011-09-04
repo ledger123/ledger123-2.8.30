@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -X
 #
 ######################################################################
 # SQL-Ledger ERP
@@ -69,10 +69,10 @@ $locale = new Locale "$myconfig{countrycode}", "$script";
 $form->{charset} = $locale->{charset};
 
 # send warnings to browser
-$SIG{__WARN__} = sub { $form->info($_[0]) };
+$SIG{__WARN__} = sub { eval { $form->info($_[0]); } };
 
 # send errors to browser
-$SIG{__DIE__} = sub { $form->error($_[0]) };
+$SIG{__DIE__} = sub { eval { $form->error($_[0]); } };
 
 $myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
 map { $form->{$_} = $myconfig{$_} } qw(stylesheet timeout) unless ($form->{type} eq 'preferences');
@@ -82,8 +82,25 @@ if ($form->{path} !~ /^bin\//) {
   $form->error($locale->text('Invalid path!')."\n");
 }
 
-# did sysadmin lock us out
+# global lock out
 if (-f "$userspath/nologin") {
+  if (-s "$userspath/nologin") {
+    open(FH, "$userspath/nologin");
+    $message = <FH>;
+    close(FH);
+    $form->error($message);
+  }
+  $form->error($locale->text('System currently down for maintenance!'));
+}
+
+# dataset lock out
+if (-f "$userspath/$myconfig{dbname}.nologin") {
+  if (-s "$userspath/$myconfig{dbname}.nologin") {
+    open(FH, "$userspath/$myconfig{dbname}.nologin");
+    $message = <FH>;
+    close(FH);
+    $form->error($message);
+  }
   $form->error($locale->text('System currently down for maintenance!'));
 }
 
@@ -198,4 +215,20 @@ sub check_password {
   }
 }
 
+
+sub error {
+  my ($msg) = @_;
+
+  if ($ENV{HTTP_USER_AGENT}) {
+    print qq|Content-Type: text/html
+
+<body><h2 class=error>Error!</h2>
+    <p><b>$msg</b>|;
+
+    exit;
+  }
+
+  die "Error: $msg\n";
+
+}
 
