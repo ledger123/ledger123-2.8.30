@@ -2011,9 +2011,9 @@ sub tax_report {
 	      
 		SELECT a.id, '1' AS invoice, $transdate AS transdate,
 		a.invnumber, n.name, n.${vc}number,
-		i.sellprice * i.qty * $ml AS netamount,
+		i.sellprice * i.qty * $ml * (1 - i.discount) AS netamount,
 		i.description,
-		i.sellprice * i.qty * $ml *
+		i.sellprice * i.qty * $ml * (1 - i.discount) * 
 		(SELECT tx.rate FROM tax tx WHERE tx.chart_id = ch.id AND (tx.validto > $transdate OR tx.validto IS NULL) ORDER BY validto LIMIT 1) AS tax,
 		a.till, n.id AS vc_id
 		FROM acc_trans ac
@@ -2053,9 +2053,9 @@ sub tax_report {
 	      
 		SELECT a.id, '1' AS invoice, $transdate AS transdate,
 		a.invnumber, n.name, n.${vc}number,
-		i.sellprice * i.qty * $ml AS netamount,
+		i.sellprice * i.qty * $ml * (1 - i.discount) AS netamount,
 		i.description,
-		i.sellprice * i.qty * $ml *
+		i.sellprice * i.qty * $ml * (1 - i.discount) *
 		(SELECT tx.rate FROM tax tx WHERE tx.chart_id = ch.id AND (tx.validto > $transdate OR tx.validto IS NULL) ORDER BY validto LIMIT 1) AS tax,
 		a.till, n.id AS vc_id
 		FROM acc_trans ac
@@ -2134,7 +2134,7 @@ sub tax_report {
 		
 		  SELECT a.id, '1' AS invoice, $transdate AS transdate,
 		  a.invnumber, n.name, n.${vc}number,
-		  sum(ac.sellprice * ac.qty) * $ml AS netamount,
+		  sum(ac.sellprice * ac.qty * (1 - ac.discount)) * $ml AS netamount,
 		  ac.description,
 		  a.till, n.id AS vc_id
 		  FROM invoice ac
@@ -2180,7 +2180,7 @@ sub tax_report {
 		
 		  SELECT a.id, '1' AS invoice, $transdate AS transdate,
 		  a.invnumber, n.name, n.${vc}number,
-		  sum(ac.sellprice * ac.qty) * $ml AS netamount,
+		  sum(ac.sellprice * ac.qty * (1 - discount)) * $ml AS netamount,
 		  ac.description,
 		  a.till, n.id AS vc_id
 		  FROM invoice ac
