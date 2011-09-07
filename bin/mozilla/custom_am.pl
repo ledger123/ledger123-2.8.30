@@ -166,8 +166,19 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
   # 3. Orphaned Rows
   #-------------------
   print qq|<h3>Orphaned Rows</h3>|;
+  $form->info('To delete these orphaned rows, run following query in psql or phpPgAdmin or pgAdmin3. 
+
+Important: Make sure you have a tested backup before running this delete query.');
+  print qq|<pre>
+DELETE FROM acc_trans 
+WHERE trans_id NOT IN
+(SELECT id FROM ar UNION ALL SELECT id FROM ap UNION ALL SELECT id FROM gl);
+</pre>|;
+	
   $query = qq|
-		SELECT * FROM acc_trans
+		SELECT ac.trans_id, ac.transdate, c.accno, c.description, ac.amount, ac.memo, ac.source
+		FROM acc_trans ac
+		JOIN chart c ON (c.id = ac.chart_id)
 		WHERE trans_id NOT IN 
 			(SELECT id FROM ar 
 			UNION ALL  
@@ -181,12 +192,22 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
   print qq|<tr class=listheading>|;
   print qq|<th class=listheading>|.$locale->text('Trans ID').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Account').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Description').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Memo').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Source').qq|</td>|;
   print qq|</tr>|;
   $i = 0;
   while ($ref = $sth->fetchrow_hashref(NAME_lc)){
      print qq|<tr class=listrow$i>|;
      print qq|<td>$ref->{trans_id}</td>|;
      print qq|<td>$ref->{transdate}</td>|;
+     print qq|<td>$ref->{accno}</td>|;
+     print qq|<td>$ref->{description}</td>|;
+     print qq|<td align="right">$ref->{amount}</td>|;
+     print qq|<td>$ref->{memo}</td>|;
+     print qq|<td>$ref->{source}</td>|;
      print qq|</tr>|;
   }
   print qq|</table>|;
