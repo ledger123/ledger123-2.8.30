@@ -297,9 +297,24 @@ WHERE trans_id NOT IN
 </table>
 </body>
 </html>|;
+
+  #-----------------------------
+  # 7. invoice table with blank dates
+  #-----------------------------
+  print qq|<h3>Missing dates in invoice table</h3>|;
+  $query = qq|SELECT COUNT(*) FROM invoice WHERE transdate IS NULL|;
+  my ($blankrows) = $dbh->selectrow_array($query);
+  if ($blankrows){
+     print qq|<p>There were '| . $blankrows . qq| rows with blank transdate in invoice table. Being corrected now ...'|;
+     $dbh->do('UPDATE invoice SET transdate = (SELECT transdate FROM ar WHERE ar.id = invoice.trans_id) WHERE trans_id IN (SELECT id FROM ar) AND transdate IS NULL');
+     $dbh->do('UPDATE invoice SET transdate = (SELECT transdate FROM ap WHERE ap.id = invoice.trans_id) WHERE trans_id IN (SELECT id FROM ap) AND transdate IS NULL');
+     print qq|<p>... corrected.</p>|;
+  } else {
+     print qq|<p>... ok.</p>|;
+  }
+
   $dbh->disconnect;
 }
-
 
 
 sub getsql {
