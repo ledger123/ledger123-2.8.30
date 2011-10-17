@@ -1221,10 +1221,13 @@ sub search {
 
   # warehouse
   if (@{ $form->{all_warehouse} }) {
-    $form->{selectwarehouse} = "\n";
-    $form->{warehouse} = qq|$form->{warehouse}--$form->{warehouse_id}|;
-
-    for (@{ $form->{all_warehouse} }) { $form->{selectwarehouse} .= qq|$_->{description}--$_->{id}\n| }
+    if ($myconfig{warehouse} and $myconfig{role} eq 'user'){
+      $form->{selectwarehouse} = qq|$myconfig{warehouse}--$myconfig{warehouse_id}\n|;
+    } else { 
+      $form->{selectwarehouse} = "\n"; 
+      $form->{warehouse} = qq|$form->{warehouse}--$form->{warehouse_id}|;
+      for (@{ $form->{all_warehouse} }) { $form->{selectwarehouse} .= qq|$_->{description}--$_->{id}\n| }
+    }
 
     $warehouse = qq|
 	    <tr>
