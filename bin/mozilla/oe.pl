@@ -2603,6 +2603,7 @@ sub display_ship_receive {
     for (qw(ship grossweight netweight volume)){
       $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"});
     }
+    $form->{"netweight_$i"} = $form->{"ship_$i"} * $form->{"weight_$i"};
 
     $description = $form->{"description_$i"};
     $description =~ s/\r?\n/<br>/g;
@@ -2625,7 +2626,7 @@ sub display_ship_receive {
     print qq|
         </tr>
 |;
-    $form->hide_form(map { "${_}_$i"} qw(partnumber description itemnotes lineitemdetail sku orderitems_id id partsgroup unit bin qty));
+    $form->hide_form(map { "${_}_$i"} qw(partnumber description itemnotes lineitemdetail sku orderitems_id id partsgroup unit bin qty weight));
 
     if ($form->{type} eq 'ship_order') {
       print qq|
