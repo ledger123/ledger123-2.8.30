@@ -111,18 +111,21 @@ sub all_transactions {
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
 
   my $subwhere;
+  my $subwhere2;
 
   if ($form->{fromdate}) {
     $fromdate_where = qq|
                  AND ac.transdate >= '$form->{fromdate}'
 		| if $form->{method} ne 'cash';
     $subwhere = qq| AND ac.transdate >= '$form->{fromdate}'|;
+    $subwhere2 .= " AND datepaid >= '$form->{fromdate}'";
   }
   if ($form->{todate}) {
     $todate_where = qq|
                  AND ac.transdate <= '$form->{todate}'
 		|;
     $subwhere .= qq| AND ac.transdate <= '$form->{todate}'|;
+    $subwhere2 .= " AND datepaid <= '$form->{todate}'";
   }
 
   my $subquery = qq|
@@ -133,6 +136,7 @@ sub all_transactions {
 		WHERE (c.link LIKE '%AP_paid%' OR c.link LIKE '%AR_paid')
 		AND ac.approved = '1'
 		$subwhere
+		AND ac.trans_id IN (SELECT id FROM ar WHERE amount = paid $subwhere2)
   )| if $form->{method} eq 'cash';
 
 
