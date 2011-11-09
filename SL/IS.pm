@@ -778,11 +778,21 @@ sub post_invoice {
                 WHERE id = $form->{id}|;
 
     if ($dbh->selectrow_array($query)) {
+      $query = qq|SELECT id FROM oe WHERE aa_id = $form->{id}|;
+      $form->{oe_id} = $dbh->selectrow_array($query);
+      if ($form->{oe_id}){
+         $dbh->do("DELETE FROM inventory WHERE trans_id = $form->{oe_id}"); # Delete any 'inventory' transactions saved from order. For existing invoices.
+      }
+
       &reverse_invoice($dbh, $form);
     } else {
       $query = qq|INSERT INTO ar (id)
                   VALUES ($form->{id})|;
       $dbh->do($query) || $form->dberror($query);
+
+      if ($form->{order_id}){
+         $dbh->do("DELETE FROM inventory WHERE trans_id = $form->{order_id}"); # Delete any 'inventory' transactions saved from order.
+      }
     }
     
   }
@@ -1031,7 +1041,7 @@ sub post_invoice {
       }
 
       # armaghan - manage warehouse inventory from sale/purchase invoices
-      if (!$form->{shipped}){ # if we are not coming from order screen.
+      #if (!$form->{shipped}){ # if we are not coming from order screen.
          $query = qq|INSERT INTO inventory (
                         warehouse_id, parts_id, trans_id,
                         orderitems_id, qty,
@@ -1046,7 +1056,7 @@ sub post_invoice {
                         $dbh->quote($form->{"itemnotes_$i"}) . qq|, | .
 			$dbh->quote($form->{"description_$i"}) . qq|, $id)|;
          $dbh->do($query) || $form->dberror($query);
-      }
+      #}
 
       # add id
       $form->{acc_trans}{lineitems}[$ndx]->{id} = $id;
