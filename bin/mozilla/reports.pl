@@ -747,7 +747,7 @@ sub audit_search {
 sub audit_list {
   # callback to report list
    my $callback = qq|$form->{script}?action=audit_list|;
-   for (qw(path login sessionid)) { $callback .= "&$_=$form->{$_}" }
+   for (qw(path login)) { $callback .= "&$_=$form->{$_}" }
 
    &split_combos('employee');
    $form->{employee_id} *= 1;
@@ -931,9 +931,9 @@ $selectfrom
    my $dbh = $form->dbconnect(\%myconfig);
    my $query;
    if ($form->{pivotby} eq 'project'){
-      $query = qq|SELECT id, projectnumber, description FROM project ORDER BY 2|;
+      $query = qq|SELECT id, projectnumber, description FROM project UNION SELECT 0, '(blank)', '(blank)' ORDER BY 2|;
    } else {
-      $query = qq|SELECT id, description FROM department ORDER BY 2|;
+      $query = qq|SELECT id, description FROM department UNION SELECT 0, '(blank)' ORDER BY 2|;
    }
    my $sth = $dbh->prepare($query) || $form->dberror($query);
    $sth->execute || $form->dberror($query);
@@ -974,7 +974,7 @@ sub income_statement_by_project {
   print qq|<h4>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h4>| if $form->{datefrom};
   print qq|<h4>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h4>| if $form->{dateto};
   my $dbh = $form->dbconnect(\%myconfig);
-  my $query = qq|SELECT id, projectnumber FROM project ORDER BY projectnumber|;
+  my $query = qq|SELECT id, projectnumber FROM project UNION ALL SELECT 0, '(blank)' ORDER BY projectnumber|;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
   $sth->execute || $form->dberror($query);
 
@@ -1121,7 +1121,7 @@ sub income_statement_by_department {
   print qq|<h4>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h4>| if $form->{datefrom};
   print qq|<h4>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h4>| if $form->{dateto};
   my $dbh = $form->dbconnect(\%myconfig);
-  my $query = qq|SELECT id, description FROM department ORDER BY 2|;
+  my $query = qq|SELECT id, description FROM department UNION SELECT 0, '(blank)' ORDER BY description|;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
   $sth->execute || $form->dberror($query);
 
