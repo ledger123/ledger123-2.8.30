@@ -1023,38 +1023,47 @@ sub income_statement_by_project {
   $sth->finish;
 
   print qq|
-<table>
+<table cellpadding="5">
 <tr>
 <th>&nbsp;</th><th>&nbsp;</th>
 |;
 
   for (keys %projects){ print qq|<th>$projects{$_}</th>| }
-  print qq|
+  print qq|<th>|.$locale->text('Total').qq|</th>
 </tr>
 |;
 
+  my $line_total = 0;
   # Print INCOME
   print qq|<tr><td colspan=2><b>INCOME<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
   foreach $accno (sort keys %{ $form->{I} }){
      print qq|<tr>|;
      print qq|<td>$form->{I}{$accno}{accno}</td>|;
      print qq|<td>$form->{I}{$accno}{description}</td>|;
-     for (keys %projects){ 
+     $line_total = 0;
+     for (keys %projects){
 	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
 	$form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
+	$line_total += $form->{I}{$accno}{$_};
      }
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
      print qq|</tr>|;
   }
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %projects){ print qq|<td><hr noshade size=1></td>|; }
+  for ( 0 .. (keys %projects)){ print qq|<td><hr noshade size=1></td>|; }
   print qq|</tr>|;
 
+  $line_total = 0;
   print qq|<tr><td colspan=2 align=right><b>TOTAL INCOME</b></td>|;
-  for (keys %projects){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|; }
+  for (keys %projects){ 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|;
+	$line_total += $form->{I}{$_}{totalincome};
+  }
+  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %projects){ print qq|<td><hr noshade size=2></td>|; }
+  for ( 0 .. (keys %projects)){ print qq|<td><hr noshade size=2></td>|; }
   print qq|</tr>|;
 
   # Print EXPENSES
@@ -1063,30 +1072,43 @@ sub income_statement_by_project {
      print qq|<tr>|;
      print qq|<td>$form->{E}{$accno}{accno}</td>|;
      print qq|<td>$form->{E}{$accno}{description}</td>|;
+     $line_total = 0;
      for (keys %projects){ 
 	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
 	$form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
+	$line_total += ($form->{E}{$accno}{$_} * -1);
      }
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
      print qq|</tr>|;
   }
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %projects){ print qq|<td><hr noshade size=1></td>|; }
+  for ( 0 .. (keys %projects)){ print qq|<td><hr noshade size=1></td>|; }
   print qq|</tr>|;
 
+  $line_total = 0;
   print qq|<tr><td colspan=2 align=right><b>TOTAL EXPENSES</b></td>|;
-  for (keys %projects){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; }
+  for (keys %projects){ 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; 
+	$line_total += $form->{E}{$_}{totalexpenses}; 
+  }
+  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %projects){ print qq|<td><hr noshade size=2></td>|; }
+  for ( 0 .. (keys %projects)){ print qq|<td><hr noshade size=2></td>|; }
   print qq|</tr>|;
 
+  $line_total = 0;
   print qq|<tr><td colspan=2 align=right><b>INCOME (LOSS)</b></td>|;
-  for (keys %projects){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; }
+  for (keys %projects){
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; 
+	$line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
+  }
+  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|; 
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %projects){ print qq|<td><hr noshade size=2></td>|; }
+  for ( 0 .. (keys %projects)){ print qq|<td><hr noshade size=2></td>|; }
   print qq|</tr>|;
 }
 
@@ -1149,7 +1171,7 @@ sub income_statement_by_department {
   $sth->finish;
 
   print qq|
-<table>
+<table cellpadding="5">
 <tr>
 <th>&nbsp;</th><th>&nbsp;</th>
 |;
@@ -1159,28 +1181,37 @@ sub income_statement_by_department {
 </tr>
 |;
 
+  my $line_total = 0;
   # Print INCOME
   print qq|<tr><td colspan=2><b>INCOME<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
   foreach $accno (sort keys %{ $form->{I} }){
      print qq|<tr>|;
      print qq|<td>$form->{I}{$accno}{accno}</td>|;
      print qq|<td>$form->{I}{$accno}{description}</td>|;
+     $line_total = 0;
      for (keys %departments){ 
 	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
 	$form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
+	$line_total += $form->{I}{$accno}{$_};
      }
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
      print qq|</tr>|;
   }
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %departments){ print qq|<td><hr noshade size=1></td>|; }
+  for (0 .. (keys %departments)){ print qq|<td><hr noshade size=1></td>|; }
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2 align=right><b>TOTAL INCOME</b></td>|;
-  for (keys %departments){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|; }
+  $line_total = 0;
+  for (keys %departments){ 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|; 
+	$line_total += $form->{I}{$_}{totalincome}; 
+  }
+  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %departments){ print qq|<td><hr noshade size=2></td>|; }
+  for (0 .. (keys %departments)){ print qq|<td><hr noshade size=2></td>|; }
   print qq|</tr>|;
 
   # Print EXPENSES
@@ -1189,30 +1220,43 @@ sub income_statement_by_department {
      print qq|<tr>|;
      print qq|<td>$form->{E}{$accno}{accno}</td>|;
      print qq|<td>$form->{E}{$accno}{description}</td>|;
-     for (keys %departments){ 
+     $line_total = 0;
+     for (keys %departments){
 	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
 	$form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
+	$line_total += $form->{E}{$accno}{$_} * -1;
      }
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
      print qq|</tr>|;
   }
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %departments){ print qq|<td><hr noshade size=1></td>|; }
+  for (0 .. (keys %departments)){ print qq|<td><hr noshade size=1></td>|; }
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2 align=right><b>TOTAL EXPENSES</b></td>|;
-  for (keys %departments){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; }
+  $line_total = 0;
+  for (keys %departments){ 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; 
+	$line_total += $form->{E}{$_}{totalexpenses};
+  }
+  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %departments){ print qq|<td><hr noshade size=2></td>|; }
+  for (0 .. (keys %departments)){ print qq|<td><hr noshade size=2></td>|; }
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2 align=right><b>INCOME (LOSS)</b></td>|;
-  for (keys %departments){ print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; }
+  $line_total = 0;
+  for (keys %departments){
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; 
+	$line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
+  }
+  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2>&nbsp;</td>|;
-  for (keys %departments){ print qq|<td><hr noshade size=2></td>|; }
+  for (0 .. (keys %departments)){ print qq|<td><hr noshade size=2></td>|; }
   print qq|</tr>|;
 }
 
