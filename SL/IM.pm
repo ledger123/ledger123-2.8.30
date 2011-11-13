@@ -1616,6 +1616,9 @@ sub gl {
               WHERE accno = ?|;
   my $cth = $dbh->prepare($query) || $form->dberror($query);
  
+  $query = qq|SELECT id FROM department WHERE description = ?|;
+  my $dth = $dbh->prepare($query) || $form->dberror($query);
+
   my @d = split /\n/, $form->{data};
   shift @d if ! $form->{mapfile};
 
@@ -1633,6 +1636,13 @@ sub gl {
 	$form->{"ndx_$i"} = 'Y';
       } else {
 	$form->{"accdescription_$i"} = '*****';
+      }
+      $dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
+      if ($ref = $dth->fetchrow_hashref(NAME_lc)) {
+	$form->{"department_id_$i"} = $ref->{id};
+      } else {
+        $a[$form->{$form->{type}}->{department}{ndx}] = '***';
+	$form->{"department_id_$i"} = 0;
       }
     }
     $form->{rowcount} = $i;

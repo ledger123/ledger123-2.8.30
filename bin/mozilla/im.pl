@@ -2347,7 +2347,7 @@ sub im_gl {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(reference description transdate notes accno accdescription debit credit source memo);
+  @column_index = qw(reference department department_id description transdate notes accno accdescription debit credit source memo);
   @flds = @column_index;
   unshift @column_index, qw(runningnumber ndx);
 
@@ -2360,6 +2360,7 @@ sub im_gl {
 
   $column_data{runningnumber} = "&nbsp;";
   $column_data{reference} = $locale->text('Reference');
+  $column_data{department} = $locale->text('Department');
   $column_data{description} = $locale->text('Description');
   $column_data{transdate} = $locale->text('Date');
   $column_data{notes} = $locale->text('Notes');
@@ -2469,10 +2470,9 @@ sub import_gl {
   $newform = new Form;
   my $reference = 'null';
   my $linenum = 1;
-  
+
   for my $i (1 .. $form->{rowcount}) {
     if ($form->{"ndx_$i"}) {
-
       $m++;
       if ($form->{"reference_$i"} ne $reference){
 	# Post if it is a new transaction or last transaction.
@@ -2491,9 +2491,9 @@ sub import_gl {
 	}
 	$reference = $form->{"reference_$i"};
       }
-      
       $newform->{reference} = $form->{"reference_$i"};
       $newform->{transdate} = $form->{"transdate_$i"};
+      $newform->{department} = qq|$form->{"department_$i"}--$form->{"department_id_$i"}|;
       $newform->{description} = $form->{"description_$i"};
       $newform->{defaultcurrency} = 'GBP';
       $newform->{"accno_$linenum"} = qq|$form->{"accno_$i"}--$form->{"accdescription_$i"}|;
