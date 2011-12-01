@@ -2444,28 +2444,42 @@ sub iactivity_search {
    &print_select('department', $locale->text('Department'));
    &print_select('warehouse', $locale->text('Warehouse'));
   
-   print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
+   print qq|
+	      <tr>
+		<th align=right>|.$locale->text('Include in Report').qq|</th>
+		<td><table>
+|;
 
-   &print_checkbox('l_no', $locale->text('No.'), '', '<br>');
-   &print_checkbox('l_shippingdate', $locale->text('Date'), 'checked', '');
-   &print_checkbox('l_reference', $locale->text('Reference'), 'checked', '');
-   &print_checkbox('l_department', $locale->text('Department'), '', '');
-   &print_checkbox('l_warehouse', $locale->text('Warehouse'), 'checked', '');
-   &print_checkbox('l_warehouse2', $locale->text('Warehouse2'), 'checked', '<br>');
-   &print_checkbox('l_partnumber', $locale->text('Number'), 'checked', '');
-   &print_checkbox('l_description', $locale->text('Description'), '', '');
-   &print_checkbox('l_unit', $locale->text('Unit'), 'checked', '');
-   &print_checkbox('l_in', $locale->text('In'), 'checked', '');
-   &print_checkbox('l_out', $locale->text('Out'), 'checked', '');
-   &print_checkbox('l_onhand', $locale->text('Onhand'), 'checked', '');
-   &print_checkbox('l_cost', $locale->text('Cost'), 'checked', '');
-   &print_checkbox('l_cogs', $locale->text('Total Cost'), 'checked', '');
-   &print_checkbox('l_cogs_balance', $locale->text('Cost Balance'), 'checked', '<br>');
-   &print_checkbox('l_subtotal', $locale->text('Subtotal'), 'checked', '');
-   &print_checkbox('l_csv', $locale->text('CSV'), '', '');
-   #&print_checkbox('l_sql', $locale->text('SQL'), '', '<br>');
+   @a = ();
+   push @a, qq|<input name="l_no" class=checkbox type=checkbox value=Y> |. $locale->text('No.');
+   push @a, qq|<input name="l_shippingdate" class=checkbox type=checkbox value=Y checked> |.$locale->text('Date');
+   push @a, qq|<input name="l_reference" class=checkbox type=checkbox value=Y checked> |.$locale->text('Reference');
+   push @a, qq|<input name="l_department" class=checkbox type=checkbox value=Y> |. $locale->text('Department');
+   push @a, qq|<input name="l_warehouse" class=checkbox type=checkbox value=Y checked> |. $locale->text('Warehouse');
+   push @a, qq|<input name="l_warehouse2" class=checkbox type=checkbox value=Y checked> |.$locale->text('Warehouse2');
+   push @a, qq|<input name="l_partnumber" class=checkbox type=checkbox value=Y checked> |. $locale->text('Number');
+   push @a, qq|<input name="l_description" class=checkbox type=checkbox value=Y> |. $locale->text('Description');
+   push @a, qq|<input name="l_unit" class=checkbox type=checkbox value=Y checked> |. $locale->text('Unit');
+   push @a, qq|<input name="l_in" class=checkbox type=checkbox value=Y checked> |. $locale->text('In');
+   push @a, qq|<input name="l_out" class=checkbox type=checkbox value=Y checked> |. $locale->text('Out');
+   push @a, qq|<input name="l_onhand" class=checkbox type=checkbox value=Y checked> |. $locale->text('Onhand');
+   push @a, qq|<input name="l_cost" class=checkbox type=checkbox value=Y checked> |. $locale->text('Cost');
+   push @a, qq|<input name="l_cogs" class=checkbox type=checkbox value=Y checked> |. $locale->text('Total Cost');
+   push @a, qq|<input name="l_cogs_balance" class=checkbox type=checkbox value=Y checked> |. $locale->text('Cost Balance');
+   push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y checked> |. $locale->text('Subtotal');
+   push @a, qq|<input name="l_csv" class=checkbox type=checkbox value=Y> |. $locale->text('CSV');
+   #push @a, qq|<input name="l_sql class=checkbox type=checkbox value=Y> |. $locale->text('SQL');
 
-   print qq|</td></tr>|;
+   while (@a) {
+     print qq|<tr>\n|;
+     for (1 .. 5) {
+       print qq|<td nowrap>|. shift @a;
+       print qq|</td>\n|;
+     }
+     print qq|</tr>\n|;
+   }
+
+   print qq|</table></td></tr>|;
    &end_table;
    print('<hr size=3 noshade>');
    $form->{nextsub} = 'iactivity_list';
