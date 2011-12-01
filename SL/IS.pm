@@ -2043,10 +2043,6 @@ sub retrieve_item {
     }
   }
 
-  if ($form->{shipped} or $form->{oe_id}){
-     $where .= qq| AND p.inventory_accno_id IS NULL AND p.assembly = '0'|;
-  }
-
   if ($form->{"description_$i"} ne "") {
     $where .= " ORDER BY 3";
   } else {

@@ -1835,10 +1835,6 @@ sub retrieve_item {
     $vwhere .= qq| AND p.partsgroup_id = $var|;
   }
 
-  if ($form->{shipped} or $form->{oe_id}){
-     $where .= qq| AND p.inventory_accno_id IS NULL|;
-  }
- 
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
