@@ -2152,22 +2152,43 @@ sub onhand_search {
    &print_select('department', $locale->text('Department'));
    &print_select('warehouse', $locale->text('Warehouse'));
  
-   print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
+   print qq|
+	      <tr>
+		<th align=right>|.$locale->text('Include in Report').qq|</th>
+		<td><table>
+		<tr>
+		  <td><input name=summary type=radio class=radio value=1 checked> |.$locale->text('Summary').qq|</td>
+		  <td><input name=summary type=radio class=radio value=0> |.$locale->text('Detail').qq|</td>
+	        </tr>
+|;
 
-   &print_radio;
-   &print_checkbox('l_no', $locale->text('No.'), '', '');
-   &print_checkbox('l_warehouse', $locale->text('Warehouse'), 'checked', '');
-   &print_checkbox('l_partnumber', $locale->text('Number'), 'checked', '');
-   &print_checkbox('l_description', $locale->text('Description'), 'checked', '');
-   &print_checkbox('l_partsgroup', $locale->text('Group'), 'checked', '');
-   &print_checkbox('l_unit', $locale->text('Unit'), 'checked', '');
-   &print_checkbox('l_onhand', $locale->text('Onhand'), 'checked', '<br>');
-   &print_checkbox('l_subtotal', $locale->text('Subtotal'), '', '');
-   &print_checkbox('l_csv', $locale->text('CSV'), '', '');
-   #&print_checkbox('l_sql', $locale->text('SQL'), '');
-   print qq|</td></tr>|;
-   &end_table;
-   print('<hr size=3 noshade>');
+   @a = ();
+   push @a, qq|<input name="l_no" class=checkbox type=checkbox value=Y> |.$locale->text('No.');
+   push @a, qq|<input name="l_warehouse" class=checkbox type=checkbox value=Y> |.$locale->text('Warehouse');
+   push @a, qq|<input name="l_partnumber" class=checkbox type=checkbox value=Y checked> |.$locale->text('Number');
+   push @a, qq|<input name="l_description" class=checkbox type=checkbox value=Y checked> |.$locale->text('Description');
+   push @a, qq|<input name="l_partsgroup" class=checkbox type=checkbox value=Y checked> |.$locale->text('Group');
+   push @a, qq|<input name="l_unit" class=checkbox type=checkbox value=Y checked> |.$locale->text('Unit');
+   push @a, qq|<input name="l_onhand" class=checkbox type=checkbox value=Y checked> |.$locale->text('Onhand');
+   push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y> |.$locale->text('Subtotal');
+   push @a, qq|<input name="l_csv" class=checkbox type=checkbox value=Y> |.$locale->text('CSV');
+   #push @a, qq|<input name="l_sql" class=checkbox type=checkbox value=Y>|.$locale->text('SQL');
+
+   while (@a) {
+     print qq|<tr>\n|;
+     for (1 .. 5) {
+       print qq|<td nowrap>|. shift @a;
+       print qq|</td>\n|;
+     }
+     print qq|</tr>\n|;
+   }
+
+   print qq|
+</table></td></tr>
+</table>
+<hr size=3 noshade>
+|;
+
    $form->{nextsub} = 'onhand_list';
    &print_hidden('nextsub');
    &add_button($locale->text('Continue'));
