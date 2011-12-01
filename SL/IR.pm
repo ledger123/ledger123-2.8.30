@@ -680,10 +680,11 @@ sub post_invoice {
                   VALUES ($form->{id})|;
       $dbh->do($query) || $form->dberror($query);
 
-      if ($form->{order_id}){
-         $dbh->do("DELETE FROM inventory WHERE trans_id = $form->{order_id}"); # Delete any 'inventory' transactions saved from order.
-      }
     } 
+  }
+
+  if ($form->{order_id} *= 1){ # order_id is set when invoice is created from order
+     $dbh->do("DELETE FROM inventory WHERE trans_id = $form->{order_id}"); # Delete any 'inventory' transactions saved from order.
   }
 
   my $uid = localtime;
