@@ -2180,7 +2180,7 @@ sub tax_report {
 		
 		  SELECT a.id, '1' AS invoice, $transdate AS transdate,
 		  a.invnumber, n.name, n.${vc}number,
-		  sum(ac.sellprice * ac.qty * (1 - discount)) * $ml AS netamount,
+		  sum(ac.sellprice * ac.qty * (1 - ac.discount)) * $ml AS netamount,
 		  ac.description,
 		  a.till, n.id AS vc_id
 		  FROM invoice ac
