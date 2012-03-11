@@ -191,6 +191,16 @@ sub search {
 
   $form->{title} = $locale->text('General Ledger')." ".$locale->text('Reports');
  
+  # Saved reports processing
+  $form->{reportcode} = "gl_transactions";
+  $form->all_reports(\%myconfig);
+  if (@{ $form->{all_reports} }) {
+     $form->{selectreport} = "\n";
+     for (@{ $form->{all_reports} }) { $form->{selectreport} .= qq|$_->{reportdescription}--$_->{reportid}\n| }
+        $form->{report} = qq|<tr><th align="right">|.$locale->text('Report').qq|</th>
+		<td><select name=report>|.$form->select_option($form->{selectreport}, 0, 1).qq|</select></td></tr>|;
+  }
+
   $form->all_projects(\%myconfig);
   if (@{ $form->{all_project} }) {
     $form->{selectproject} = "<option>\n";
@@ -281,6 +291,7 @@ sub search {
   <tr>
     <td>
       <table width=100%>
+	$form->{report}
 	<tr>
 	  <th align=right>|.$locale->text('Account').qq|</th>
 	  <td><input name=accno size=10 value="$form->{accno}"></td>
@@ -416,6 +427,7 @@ sub search {
 
 sub transactions {
 
+  $form->load_report(\%myconfig) if $form->{report};
   $form->{sort} = "transdate" unless $form->{sort};
 
   GL->transactions(\%myconfig, \%$form);
@@ -809,7 +821,8 @@ sub transactions {
 
   print qq|
 <input name=actionname type=hidden value='transactions'>
-<input name=reportname type=text size=20>
+<input name=reportcode type=hidden value="gl_transactions">
+<input name=reportdescription type=text size=30>
 <input class=submit type=submit name=action value="|.$locale->text('Save Report').qq|">
 |;
 

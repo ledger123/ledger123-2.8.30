@@ -1409,7 +1409,18 @@ sub yes {
 sub search {
 
   $form->create_links($form->{ARAP}, \%myconfig, $form->{vc});
-  
+
+  # Saved reports processing
+  $form->{reportcode} = "$form->{ARAP}_transactions_$form->{outstanding}";
+  $form->all_reports(\%myconfig);
+  if (@{ $form->{all_reports} }) {
+     $form->{selectreport} = "\n";
+     for (@{ $form->{all_reports} }) { $form->{selectreport} .= qq|$_->{reportdescription}--$_->{reportid}\n| }
+        $form->{report} = qq|<tr><th align="right">|.$locale->text('Report').qq|</th>
+		<td><select name=report>|.$form->select_option($form->{selectreport}, 0, 1).qq|</select></td></tr>|;
+  }
+
+ 
   $form->{"select$form->{ARAP}"} = "<option>\n";
   for (@{ $form->{"$form->{ARAP}_links"}{$form->{ARAP}} }) { $form->{"select$form->{ARAP}"} .= "<option>".$form->quote("$_->{accno}--$_->{description}")."\n" }
   
@@ -1653,6 +1664,7 @@ sub search {
         <tr valign=top>
 	  <td>
 	    <table>
+	      $form->{report}
 	      <tr>
 		<th align=right>|.$locale->text('Account').qq|</th>
 		<td colspan=3><select name=$form->{ARAP}>$form->{"select$form->{ARAP}"}</select></td>
@@ -1756,9 +1768,11 @@ sub search {
 sub transactions {
 
   if ($form->{$form->{vc}}) {
-    ($form->{$form->{vc}}, $form->{"$form->{vc}_id"}) = split(/--/, $form->{$form->{vc}});
+     ($form->{$form->{vc}}, $form->{"$form->{vc}_id"}) = split(/--/, $form->{$form->{vc}});
   }
-  
+
+  $form->load_report(\%myconfig) if $form->{report};
+ 
   AA->transactions(\%myconfig, \%$form);
 
   $href = "$form->{script}?action=transactions";
@@ -2207,7 +2221,8 @@ sub transactions {
 
   print qq|
 <input name=actionname type=hidden value='transactions'>
-<input name=reportname type=text size=20>
+<Input name=reportcode type=hidden value="$form->{ARAP}_transactions_$form->{outstanding}">
+<input name=reportdescription type=text size=20>
 <input class=submit type=submit name=action value="|.$locale->text('Save Report').qq|">
 |;
 

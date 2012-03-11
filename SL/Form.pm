@@ -3575,26 +3575,75 @@ sub audittrail {
   
 }
 
-sub save_form {
-  my ($self, $type) = @_;
-  if ($type eq 'report'){
-     if (! -f "$self->{login}_menu.ini"){
-	open FH, ">$self->{login}_menu.ini";
-        print FH qq|[Saved Reports]\n|;
-	close FH;
-     }
-     open FH, ">>$self->{login}_menu.ini";
-     print FH qq|\n[Saved Reports--$self->{reportname}]\n|;
-     print FH qq|module=$self->{script}\n|;
-     print FH qq|action=$self->{actionname}\n|;
-     for (sort keys %$self){
-       if ($self->{$_} and ($_ !~ /^(parts|callback|action|actionname|nextsub|link|precision|filetype|oldsort|dbversion|debug|path|session|sessioncookie|stylesheet|title|titlebar|version|timeout|login|direction|reportname|level|script|GL|TB|transactions|balance|selectwarehouse|selectdepartment)$/)){
-          print FH qq|$_=$self->{$_}\n|;
-       }
-     }
-     close FH;
-     $self->info('Saved');
+
+sub load_report {
+  my ($self, $myconfig) = @_;
+  my $dbh = $self->dbconnect($myconfig);
+  ($null, $self->{reportid}) = split /--/, $self->{report};
+  $self->{reportid} *= 1;
+  my $query = qq|SELECT reportvariable, reportvalue FROM reportvars WHERE reportid = $self->{reportid}|;
+  my $sth = $dbh->prepare($query);
+  $sth->execute || $self->dberror($query);
+  while (my $row = $sth->fetchrow_hashref(NAME_lc)){
+      $self->{$row->{reportvariable}} = $row->{reportvalue};
   }
+  $sth->finish;
+  $dbh->disconnect;
+}
+
+
+sub save_report {
+  my ($self, $myconfig) = @_;
+  my $dbh = $self->dbconnect_noauto($myconfig);
+
+  my $uid = localtime;
+  $uid .= $$;
+
+  my $query = qq|INSERT INTO report (reportcode) values ('$uid')|;
+  $dbh->do($query) || $self->dberror($query);
+ 
+  my $query = qq|SELECT reportid FROM report WHERE reportcode = '$uid'|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $self->dberror($query);
+  ($self->{reportid}) = $sth->fetchrow_array;
+  $sth->finish;
+
+  my $query = qq|UPDATE report SET 
+		reportcode = |.$dbh->quote($self->{reportcode}).qq|,
+		reportdescription = |.$dbh->quote($self->{reportdescription}).qq|
+		WHERE reportid = $self->{reportid}|;
+  $dbh->do($query) || $self->dberror($query);
+
+  my $query = qq|INSERT INTO reportvars (reportid, reportvariable, reportvalue) VALUES (?, ?, ?)|;
+  $sth = $dbh->prepare($query);
+
+  for (sort keys %$self){
+     if ($self->{$_} and ($_ !~ /^(parts|callback|action|actionname|nextsub|link|precision|filetype|oldsort|dbversion|debug|path|session|sessioncookie|stylesheet|title|titlebar|version|timeout|login|direction|reportname|level|script|GL|TB|transactions|balance|selectwarehouse|selectdepartment|reportcode|reportdescription)$/)){
+        $sth->execute($self->{reportid}, $_, $self->{$_}) || $self->dberror($query);
+     }
+  }
+
+  $sth->finish;
+  $dbh->commit;
+  $dbh->disconnect;
+  $self->info('Report saved');
+}
+
+
+sub all_reports {
+  my ($self, $myconfig) = @_;
+  my $dbh = $self->dbconnect($myconfig);
+
+  my $query = qq|SELECT reportid, reportdescription FROM report WHERE reportcode = '$self->{reportcode}' ORDER BY 2|;
+  my $sth = $dbh->prepare($query);
+  $sth->execute || $self->dberror($query);
+
+  @{ $self->{all_reports} } = ();
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $self->{all_reports} }, $ref;
+  }
+  $sth->finish;
+  $dbh->disconnect;
 }
 
 

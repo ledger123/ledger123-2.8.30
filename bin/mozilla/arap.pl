@@ -1074,5 +1074,5 @@ sub new_number {
 }
 
 sub save_report {
-  $form->save_form('report');
+  $form->save_report(\%myconfig);
 }
