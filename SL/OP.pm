@@ -69,6 +69,7 @@ sub overpayment {
 	      amount = 0,
 	      paid = $fxamount,
 	      curr = '$form->{currency}',
+	      exchangerate = $form->{exchangerate},
 	      department_id = $department_id,
 	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno')
 	      WHERE id = $uid|;
