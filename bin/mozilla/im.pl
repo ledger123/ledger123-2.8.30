@@ -2491,11 +2491,14 @@ sub import_gl {
 	}
 	$reference = $form->{"reference_$i"};
       }
+      @curr = split /:/, $form->{currencies};
+      $form->{defaultcurrency} = $curr[0];
+      chomp $form->{defaultcurrency};
+
       $newform->{reference} = $form->{"reference_$i"};
       $newform->{transdate} = $form->{"transdate_$i"};
       $newform->{department} = qq|$form->{"department_$i"}--$form->{"department_id_$i"}|;
       $newform->{description} = $form->{"description_$i"};
-      $newform->{defaultcurrency} = 'GBP';
       $newform->{"accno_$linenum"} = qq|$form->{"accno_$i"}--$form->{"accdescription_$i"}|;
       $newform->{"debit_$linenum"} = $form->{"debit_$i"};
       $newform->{"credit_$linenum"} = $form->{"credit_$i"};
