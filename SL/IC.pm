@@ -1119,12 +1119,13 @@ sub all_parts {
       }
 
       # armaghan 9-apr-2012 multiply by -1 for correct sign
+      # armaghan 9-apr-2012 added transdate for ar/ap invoices
       my $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
                     i.qty * -1 AS onhand, i.unit, p.bin, i.sellprice,
 		    p.listprice, p.lastcost, p.rop, p.weight,
 		    p.avgcost,
 		    p.priceupdate, p.image, p.drawing, p.microfiche,
-		    p.assembly,
+		    p.assembly, a.transdate,
 		    pg.partsgroup, pg.code AS partsgroupcode,
 		    a.invnumber, a.ordnumber, a.quonumber,
 		    i.trans_id, ct.name, e.name AS employee,
@@ -1206,12 +1207,13 @@ sub all_parts {
 	  $ordwhere .= " AND a.id = 0";
 	}
 
+        # armaghan 9-apr-2012 transdate place holder
 	$flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
 		   i.qty AS onhand, i.unit, p.bin, i.sellprice,
 		   p.listprice, p.lastcost, p.rop, p.weight,
 		   p.avgcost,
 		   p.priceupdate, p.image, p.drawing, p.microfiche,
-		   p.assembly,
+		   p.assembly, NULL AS transdate,
 		   pg.partsgroup, pg.code AS partsgroupcode,
 		   '' AS invnumber, a.ordnumber, a.quonumber,
 		   i.trans_id, ct.name, e.name AS employee,
@@ -1240,12 +1242,13 @@ sub all_parts {
 	}
 	
 	if ($form->{onorder}) {
+          # armaghan 9-apr-2012 transdate place holder
 	  $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
 		     i.qty AS onhand, i.unit, p.bin, i.sellprice,
 		     p.listprice, p.lastcost, p.rop, p.weight,
 		     p.avgcost,
 		     p.priceupdate, p.image, p.drawing, p.microfiche,
-		     p.assembly,
+		     p.assembly, NULL AS transdate,
 		     pg.partsgroup, pg.code AS partsgroupcode,
 		     '' AS invnumber, a.ordnumber, a.quonumber,
 		     i.trans_id, ct.name, e.name AS employee,
@@ -1328,12 +1331,13 @@ sub all_parts {
 	}
 	
 	if ($form->{rfq}) {
+          # armaghan 9-apr-2012 transdate place holder
 	  $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
 		     i.qty AS onhand, i.unit, p.bin, i.sellprice,
 		     p.listprice, p.lastcost, p.rop, p.weight,
 		     p.avgcost,
 		     p.priceupdate, p.image, p.drawing, p.microfiche,
-		     p.assembly,
+		     p.assembly, NULL AS transdate,
 		     pg.partsgroup, pg.code AS partsgroupcode,
 		     '' AS invnumber, a.ordnumber, a.quonumber,
 		     i.trans_id, ct.name, e.name AS employee,

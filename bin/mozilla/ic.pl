@@ -1306,6 +1306,8 @@ sub generate_report {
   }
 
   if ($form->{bought} || $form->{sold} || $form->{onorder} || $form->{ordered} || $form->{rfq} || $form->{quoted}) {
+    # armaghan 9-apr-2012 transdate is always shown
+    $form->{l_transdate} = 'Y';
     
     # warehouse stuff is meaningless
     $form->{warehouse} = "";
@@ -1402,7 +1404,8 @@ sub generate_report {
     $form->{l_avgcostmarkup} = "Y" if $form->{l_avgcost};
   }
 
-  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup partsgroupcode make model bin onhand perassembly rop unit cost linetotalcost sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber ordnumber quonumber name employee serialnumber warehouse countryorigin tariff_hscode));
+  # armaghan 9-apr-2012 added transdate to ar/ap invoices list
+  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup partsgroupcode make model bin onhand perassembly rop unit cost linetotalcost sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber transdate ordnumber quonumber name employee serialnumber warehouse countryorigin tariff_hscode));
   unshift @columns, "runningnumber";
 
   if ($form->{l_linetotal}) {
@@ -1551,7 +1554,11 @@ sub generate_report {
   $column_data{ordnumber} = qq|<th nowrap><a class=listheading href=$href&sort=ordnumber>$hdr{ordnumber}{label}</a></th>|;
   $hdr{quonumber} = { label => $locale->text('Quotation'), align => l };
   $column_data{quonumber} = qq|<th nowrap><a class=listheading href=$href&sort=quonumber>$hdr{quonumber}{label}</a></th>|;
-  
+
+  # armaghan 9-apr-2012 added transdate
+  $hdr{transdate} = { label => $locale->text('Date'), align => l };
+  $column_data{transdate} = qq|<th nowrap><a class=listheading href=$href&sort=transdate>$hdr{transdate}{label}</a></th>|;
+   
   $hdr{name} = { label => $locale->text('Name'), align => l };
   $column_data{name} = qq|<th nowrap><a class=listheading href=$href&sort=name>$hdr{name}{label}</a></th>|;
   
@@ -1846,6 +1853,8 @@ sub generate_report {
     $column_data{ordnumber} = ($ref->{module} eq 'oe') ? "<td><a href=$ref->{module}.pl?action=edit&type=$ref->{type}&id=$ref->{trans_id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{ordnumber}&nbsp;</a></td>" : "<td>$ref->{ordnumber}&nbsp;</td>";
     $column_data{quonumber} = ($ref->{module} eq 'oe' && !$ref->{ordnumber}) ? "<td><a href=$ref->{module}.pl?action=edit&type=$ref->{type}&id=$ref->{trans_id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{quonumber}&nbsp;</a></td>" : "<td>$ref->{quonumber}&nbsp;</td>";
 
+    # armaghan 9-apr-2012 added transdate
+    $column_data{transdate} = "<td>$ref->{transdate}&nbsp;</td>";
     $column_data{name} = "<td>$ref->{name}&nbsp;</td>";
 
     if ($ref->{vc_id}) {
