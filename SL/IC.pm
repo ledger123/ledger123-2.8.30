@@ -1118,8 +1118,9 @@ sub all_parts {
 	$invwhere .= " AND a.id = 0";
       }
 
+      # armaghan 9-apr-2012 multiply by -1 for correct sign
       my $flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
-                    i.qty AS onhand, i.unit, p.bin, i.sellprice,
+                    i.qty * -1 AS onhand, i.unit, p.bin, i.sellprice,
 		    p.listprice, p.lastcost, p.rop, p.weight,
 		    p.avgcost,
 		    p.priceupdate, p.image, p.drawing, p.microfiche,
@@ -1141,7 +1142,8 @@ sub all_parts {
 	  $rflds =~ s/i.sellprice/p.sellprice/;
 	  $rflds =~ s/i.qty AS onhand/(i.qty + i.allocated) * -1 AS onhand/;
 	} else {
-	  $rflds =~ s/i.qty AS onhand/i.qty * -1 AS onhand/;
+          # armaghan 9-apr-2012 disabled sign change
+	  # $rflds =~ s/i.qty AS onhand/i.qty * -1 AS onhand/;
 	}
 
 	$query = qq|
