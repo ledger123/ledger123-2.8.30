@@ -42,6 +42,7 @@ sub get_employee {
   }
 
   if ($form->{id}) {
+    # armaghan 11-apr-2012 added department/warehouse
     $query = qq|SELECT e.*,
                 ad.id AS addressid, ad.address1, ad.address2, ad.city,
 		ad.state, ad.zipcode, ad.country,
@@ -57,7 +58,9 @@ sub get_employee {
 		c2.accno AS payment, c2.description AS payment_description,
 		tr2.description AS payment_translation,
 		pm.description AS paymentmethod,
-		r.description AS acsrole
+		r.description AS acsrole,
+		d.description AS department,
+		w.description AS warehouse
                 FROM employee e
 		JOIN address ad ON (e.id = ad.trans_id)
 		LEFT JOIN acsrole r ON (r.id = e.acsrole_id)
@@ -68,6 +71,8 @@ sub get_employee {
 		LEFT JOIN translation tr1 ON (tr1.trans_id = c1.id AND tr1.language_code = '$myconfig->{countrycode}')
 		LEFT JOIN translation tr2 ON (tr2.trans_id = c2.id AND tr2.language_code = '$myconfig->{countrycode}')
 		LEFT JOIN paymentmethod pm ON (pm.id = e.paymentmethod_id)
+		LEFT JOIN department d ON (d.id = e.department_id)
+		LEFT JOIN warehouse w ON (w.id = e.warehouse_id)
                 WHERE e.id = $form->{id}|;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
@@ -326,7 +331,13 @@ sub save_employee {
   $form->remove_locks($myconfig, $dbh, 'hr');
 
   my $bank_address_id;
-  
+ 
+  # armaghan 11-apr-2012 added department/warehouse
+  for (qw(department warehouse)) {
+    ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
+    $form->{"${_}_id"} *= 1;
+  }
+
   if ($form->{id}) {
     $query = qq|SELECT login
 		FROM employee
@@ -393,6 +404,7 @@ sub save_employee {
   
   my $employeelogin = ($form->{employeelogin}) ? $dbh->quote($form->{employeelogin}) : 'NULL';
 	      
+  # armaghan 11-apr-2012 added department/warehouse
   $query = qq|UPDATE employee SET
               employeenumber = |.$dbh->quote($form->{employeenumber}).qq|,
 	      name = |.$dbh->quote($form->{name}).qq|,
@@ -414,6 +426,8 @@ sub save_employee {
 	      paymentid = (SELECT id FROM chart WHERE accno = '$form->{payment}'),
 	      paymentmethod_id = |.$dbh->quote($form->{paymentmethod_id}).qq|,
 	      acsrole_id = $form->{acsrole_id},
+	      department_id = $form->{department_id},
+	      warehouse_id = $form->{warehouse_id},
 	      acs = '$form->{acs}'
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
@@ -693,15 +707,20 @@ sub employees {
     $where .= qq| AND e.enddate <= current_date|;
   }
 
+  # armaghan 11-apr-2012 added department/warehouse
   my $query = qq|SELECT e.*, 
                  ad.address1, ad.address2, ad.city, ad.state,
 		 ad.zipcode, ad.country,
 		 bk.iban, bk.bic,
-		 r.description AS acsrole
+		 r.description AS acsrole,
+		 d.description AS department,
+		 w.description AS warehouse
                  FROM employee e
 		 LEFT JOIN address ad ON (ad.trans_id = e.id)
 		 LEFT JOIN bank bk ON (bk.id = e.id)
 		 LEFT JOIN acsrole r ON (r.id = e.acsrole_id)
+		 LEFT JOIN department d ON (d.id = e.department_id)
+		 LEFT JOIN warehouse w ON (w.id = e.warehouse_id)
                  WHERE $where
 		 ORDER BY $sortorder|;
 

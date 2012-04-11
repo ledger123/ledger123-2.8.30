@@ -74,6 +74,9 @@ sub search_employee {
   push @f, qq|<input name="l_iban" type=checkbox class=checkbox value=Y> |.$locale->text('IBAN');
   push @f, qq|<input name="l_bic" type=checkbox class=checkbox value=Y> |.$locale->text('BIC');
   push @f, qq|<input name="l_notes" type=checkbox class=checkbox value=Y> |.$locale->text('Notes');
+  # armaghan 11-apr-2012 added department/warehouse
+  push @f, qq|<input name="l_department" type=checkbox class=checkbox value=Y> |.$locale->text('Department');
+  push @f, qq|<input name="l_warehouse" type=checkbox class=checkbox value=Y> |.$locale->text('Warehouse');
  
 
   $form->header;
@@ -178,7 +181,8 @@ sub list_employees {
   $callback = "$form->{script}?action=list_employees";
   for (qw(direction oldsort db path login status)) { $callback .= "&$_=$form->{$_}" }
   
-  @columns = $form->sort_columns(qw(id employeenumber name address city state zipcode country workphone workfax workmobile homephone homemobile email startdate enddate ssn dob iban bic sales acsrole login notes));
+  # armaghan 11-apr-2012 added department/warehouse
+  @columns = $form->sort_columns(qw(id employeenumber name address city state zipcode country workphone workfax workmobile homephone homemobile email startdate enddate ssn dob iban bic sales acsrole login notes department warehouse));
   unshift @columns, "ndx";
 
   for (@columns) {
@@ -283,6 +287,9 @@ sub list_employees {
   $column_header{dob} = qq|<th><a class=listheading href=$href&sort=dob>|.$locale->text('DOB').qq|</a></th>|;
   $column_header{iban} = qq|<th><a class=listheading href=$href&sort=iban>|.$locale->text('IBAN').qq|</a></th>|;
   $column_header{bic} = qq|<th><a class=listheading href=$href&sort=bic>|.$locale->text('BIC').qq|</a></th>|;
+  # armaghan 11-apr-2012 added department/warehouse
+  $column_header{department} = qq|<th><a class=listheading href=$href&sort=bic>|.$locale->text('Department').qq|</a></th>|;
+  $column_header{warehouse} = qq|<th><a class=listheading href=$href&sort=bic>|.$locale->text('Warehouse').qq|</a></th>|;
   
   $form->{title} = $locale->text('Employees') . " / $form->{company}";
 
@@ -417,6 +424,26 @@ sub prepare_employee {
 
   HR->get_employee(\%myconfig, \%$form);
 
+  # armaghan 11-apr-2012 added department/warehouse
+  # departments
+  $form->all_departments(\%myconfig);
+  if (@{ $form->{all_department} }) {
+    $form->{selectdepartment} = "\n";
+    $form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
+
+    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+  }
+
+  # warehouses
+  $form->all_warehouses(\%myconfig);
+  if (@{ $form->{all_warehouse} }) {
+    $form->{selectwarehouse} = "\n"; 
+    $form->{warehouse} = "$form->{warehouse}--$form->{warehouse_id}" if $form->{warehouse_id};
+
+    for (@{ $form->{all_warehouse} }) { $form->{selectwarehouse} .= qq|$_->{description}--$_->{id}\n| }
+  }
+
+
   for (keys %$form) { $form->{$_} = $form->quote($form->{$_}) }
   
   for $key (qw(wage deduction acsrole paymentmethod)) {
@@ -523,8 +550,9 @@ sub employee_header {
 <form method=post action=$form->{script}>
 |;
 
+  # armaghan 11-apr-2012 added department/warehouse
   $form->hide_form(qw(acs payrate_rows wage_rows deduction_rows reference_rows referenceurl status title helpref oldemployeelogin oldemployeepassword company));
-  $form->hide_form(map { "select$_" } qw(paymentmethod payment ap wage deduction acsrole));
+  $form->hide_form(map { "select$_" } qw(paymentmethod payment ap wage deduction acsrole department warehouse));
   
   if ($form->{admin}) {
     $sales = ($form->{sales}) ? "checked" : "";
@@ -575,6 +603,27 @@ sub employee_header {
 
     $form->hide_form(qw(acsrole employeelogin sales employeepassword));
   }
+
+  # armaghan 11-apr-2012 added department/warehouse
+  $department = qq|
+              <tr>
+	        <th align="right" nowrap>|.$locale->text('Department').qq|</th>
+		<td><select name=department>|
+		.$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+		.qq|</select>
+		</td>
+	      </tr>
+| if $form->{selectdepartment};
+
+  $warehouse = qq|
+              <tr>
+	        <th align="right" nowrap>|.$locale->text('Warehouse').qq|</th>
+		<td><select name=warehouse>|
+		.$form->select_option($form->{selectwarehouse}, $form->{warehouse}, 1).qq|
+		</select>
+		</td>
+	      </tr>
+| if $form->{selectwarehouse};
 
   print qq|
 
@@ -725,6 +774,8 @@ sub employee_header {
 	        <th align=right nowrap>|.$locale->text('Clearing No.').qq|</th>
 		<td><input name=clearingnumber size=20 value="$form->{clearingnumber}"></td>
 	      </tr>
+	      $department
+	      $warehouse
 	    </table>
 	  </td>
 	</tr>
