@@ -174,10 +174,16 @@ sub create_links {
   }
 
   # departments
+  # armaghan 12-apr-2012 restrict user to his department
   if (@{ $form->{all_department} }) {
-    $form->{department} = "$form->{department}--$form->{department_id}";
-    $form->{selectdepartment} = "\n";
-    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{selectdepartment} = "\n";
+    	$form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
+    
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
   }
 
   # reference
@@ -204,10 +210,16 @@ sub search {
   $form->all_departments(\%myconfig);
 
   # departments
+  # armaghan 12-apr-2012 restrict user to his department
   if (@{ $form->{all_department} }) {
-    $form->{selectdepartment} = "\n";
-    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
-
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{selectdepartment} = "\n";
+    	$form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
+    
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
     $l_department = 1;
 
     $department = qq|
@@ -1420,6 +1432,8 @@ sub yes {
 
 sub post {
 
+  # armaghan 12-apr-2012
+  $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
   $form->isblank("transdate", $locale->text('Transaction Date missing!'));
 
   $transdate = $form->datetonum(\%myconfig, $form->{transdate});

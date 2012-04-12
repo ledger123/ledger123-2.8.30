@@ -2133,6 +2133,9 @@ sub sales_invoice { &invoice };
 
 sub invoice {
 
+  # armaghan 12-apr-2012 Do not allow blank warehouse when creating invoices from orders AND warehouses are defined.
+  $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
+
   if ($form->{type} =~ /_order$/) {
     $form->isblank("ordnumber", $locale->text('Order Number missing!'));
     $form->isblank("transdate", $locale->text('Order Date missing!'));

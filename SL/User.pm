@@ -623,11 +623,14 @@ sub create_config {
   my $login = $self->{login};
   $login =~ s/@.*//;
   
-  $query = qq|SELECT e.acs, a.acs
+  # armaghan 12-apr-2012 added config file variables
+  $query = qq|SELECT e.acs, a.acs, a.description AS role, e.department_id, d.description AS department, e.warehouse_id, w.description AS warehouse
 	      FROM employee e
 	      LEFT JOIN acsrole a ON (e.acsrole_id = a.id)
+	      LEFT JOIN department d ON (d.id = e.department_id)
+	      LEFT JOIN warehouse w ON (w.id = e.warehouse_id)
 	      WHERE login = '$login'|;
-  ($acs{acs}, $acs{role}) = $dbh->selectrow_array($query);
+  ($acs{acs}, $acs{role}, $self->{role}, $self->{department_id}, $self->{department}, $self->{warehouse_id}, $self->{warehouse}) = $dbh->selectrow_array($query);
 
   $dbh->disconnect;
 
@@ -808,11 +811,13 @@ sub delete_login {
 
 sub config_vars {
 
+  # armaghan 12-apr-2012 added config file variables
   my @conf = qw(acs company countrycode dateformat
              dbconnect dbdriver dbhost dbname dboptions dbpasswd
 	     dbport dbuser menuwidth name email numberformat password
 	     outputformat printer sessionkey sid
-	     signature stylesheet timeout vclimit);
+	     signature stylesheet timeout vclimit
+	     role department_id warehouse_id department warehouse);
 
   @conf;
 

@@ -227,13 +227,18 @@ sub create_links {
   }
   
   # departments
+  # armaghan 12-apr-2012 restrict user to his department
   if (@{ $form->{all_department} }) {
-    $form->{selectdepartment} = "\n";
-    $form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{selectdepartment} = "\n";
+    	$form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
     
-    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
   }
-  
+ 
   $form->{employee} = "$form->{employee}--$form->{employee_id}";
   # sales staff
   if (@{ $form->{all_employee} }) {
@@ -1353,7 +1358,9 @@ sub post {
   # check if there is an invoice number, invoice and due date
   $form->isblank("transdate", $locale->text('Invoice Date missing!'));
   $form->isblank($form->{vc}, $label);
-  
+  # armaghan 12-apr-2012
+  $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
+ 
   $transdate = $form->datetonum(\%myconfig, $form->{transdate});
 
   $form->error($locale->text('Cannot post transaction for a closed period!')) if ($transdate <= $form->{closedto});
@@ -1568,9 +1575,14 @@ sub search {
 
   # departments 
   if (@{ $form->{all_department} }) {
-    $form->{selectdepartment} = "\n";
-
-    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{selectdepartment} = "\n";
+    	$form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
+    
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
 
     $l_department = qq|<input name="l_department" class=checkbox type=checkbox value=Y> |.$locale->text('Department');
    
