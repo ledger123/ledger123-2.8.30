@@ -566,7 +566,7 @@ sub transactions {
 		 ac.memo, '0' AS name_id, '' AS db,
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
-		 '' AS zipcode, '' AS country
+		 '' AS zipcode, '' AS country, c.description AS accdescription
                  FROM gl g
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -580,7 +580,7 @@ sub transactions {
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
-		 ad.zipcode, ad.country
+		 ad.zipcode, ad.country, c.description AS accdescription
 		 FROM ar a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -597,7 +597,7 @@ sub transactions {
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
-		 ad.zipcode, ad.country
+		 ad.zipcode, ad.country, c.description AS accdescription
 		 FROM ap a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin

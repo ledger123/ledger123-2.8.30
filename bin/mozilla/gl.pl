@@ -297,6 +297,7 @@ sub search {
   $includeinreport{memo} = { ndx => $i++, sort => memo, checkbox => 1, html => qq|<input name="l_memo" class=checkbox type=checkbox value=Y $form->{l_memo}>|, label => $locale->text('Memo') };
   $includeinreport{lineitem} = { ndx => $i++, sort => lineitem, checkbox => 1, html => qq|<input name="l_lineitem" class=checkbox type=checkbox value=Y $form->{l_lineitem}>|, label => $locale->text('Line Item') };
   $includeinreport{accno} = { ndx => $i++, sort => accno, checkbox => 1, html => qq|<input name="l_accno" class=checkbox type=checkbox value=Y $form->{l_accno}>|, label => $locale->text('Account') };
+  $includeinreport{accdescription} = { ndx => $i++, sort => accdescription, checkbox => 1, html => qq|<input name="l_accdescription" class=checkbox type=checkbox value=Y $form->{l_accdescription}>|, label => $locale->text('Account Description') };
   $includeinreport{gifi_accno} = { ndx => $i++, sort => gifi_accno, checkbox => 1, html => qq|<input name="l_gifi_accno" class=checkbox type=checkbox value=Y $form->{l_gifi_accno}>|, label => $locale->text('GIFI') };
   $includeinreport{contra} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_contra" class=checkbox type=checkbox value=Y $form->{l_contra}>|, label => $locale->text('Contra') };
 
@@ -864,6 +865,7 @@ sub transactions {
     $column_data{credit} = "<td align=right>$ref->{credit}</td>";
     
     $column_data{accno} = "<td><a href=$href&accno=$ref->{accno}&callback=$callback>$ref->{accno}</a></td>";
+    $column_data{accdescription} = "<td>$ref->{accdescription}</td>";
     $column_data{contra} = "<td>";
     for (split / /, $ref->{contra}) {
       $column_data{contra} .= qq|<a href=$href&accno=$_&callback=$callback>$_</a>&nbsp;|
