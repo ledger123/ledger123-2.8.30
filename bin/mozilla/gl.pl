@@ -334,6 +334,10 @@ sub search {
       <table width=100%>
         $reportform
 	<tr>
+	  <th align=right>|.$locale->text('Account').qq|</th>
+	  <td><input name=accno size=10 value="$form->{accno}"></td>
+	</tr>
+	<tr>
 	  <th align=right>|.$locale->text('Reference').qq| / |.$locale->text('Invoice Number').qq|</th>
 	  <td><input name=reference size=20></td>
 	</tr>
