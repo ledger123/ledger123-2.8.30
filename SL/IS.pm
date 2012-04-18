@@ -844,6 +844,13 @@ sub post_invoice {
   my $ptt = $dbh->prepare($query) || $form->dberror($query);
  
   if ($form->{id}) {
+    # armaghan Delete any 'inventory' transactions saved from order. For existing invoices.
+    $query = qq|SELECT id FROM oe WHERE aa_id = $form->{id}|;
+    $form->{oe_id} = $dbh->selectrow_array($query);
+    if ($form->{oe_id}){
+       $dbh->do("DELETE FROM inventory WHERE trans_id = $form->{oe_id}");
+    }
+
     $keepcleared = 1;
     $query = qq|SELECT id FROM ar
                 WHERE id = $form->{id}|;
@@ -857,7 +864,13 @@ sub post_invoice {
     }
     
   }
-  
+
+  # armaghan Delete any 'inventory' transactions saved from order.
+  # order_id is set when invoice is created from order
+  if ($form->{order_id} *= 1){ 
+     $dbh->do("DELETE FROM inventory WHERE trans_id = $form->{order_id}");
+  }
+ 
   my $uid = localtime;
   $uid .= $$;
  
@@ -1078,14 +1091,43 @@ sub post_invoice {
 		  discount = $form->{"discount_$i"},
 		  allocated = $allocated,
 		  unit = |.$dbh->quote($form->{"unit_$i"}).qq|,
+		  transdate = |.$form->dbquote($form->{"transdate"}, SQL_DATE).qq|,
 		  deliverydate = |.$form->dbquote($form->{"deliverydate_$i"}, SQL_DATE).qq|,
 		  project_id = $project_id,
+		  warehouse_id = $form->{warehouse_id},
 		  serialnumber = |.$dbh->quote($form->{"serialnumber_$i"}).qq|,
 		  ordernumber = |.$dbh->quote($form->{"ordernumber_$i"}).qq|,
 		  ponumber = |.$dbh->quote($form->{"customerponumber_$i"}).qq|,
 		  itemnotes = |.$dbh->quote($form->{"itemnotes_$i"}).qq|,
 		  lineitemdetail = '$lineitemdetail'
 		  WHERE id = $id|;
+      $dbh->do($query) || $form->dberror($query);
+
+      # armaghan - per line tax amount for each tax
+      for (@taxaccounts){
+	my $taxamount = 0;
+	$taxamount = $linetotal * $form->{"${_}_rate"} if $form->{"${_}_rate"} != 0; 
+        if ($taxamount != 0){
+	  my $query = qq|INSERT INTO invoicetax (trans_id, invoice_id, chart_id, taxamount)
+			VALUES ($form->{id}, $id, (SELECT id FROM chart WHERE accno='$_'), $taxamount)|;
+	  $dbh->do($query) || $form->dberror($query);
+	}
+      }
+
+      # armaghan - update inventory at warehouses
+      $query = qq|INSERT INTO inventory (
+                        warehouse_id, parts_id, trans_id,
+                        orderitems_id, qty,
+                        shippingdate,
+                        employee_id, department_id, serialnumber, 
+			itemnotes, description, invoice_id)
+                VALUES ($form->{warehouse_id}, $form->{"id_$i"}, $form->{id},
+                        1, 0 - ($form->{"qty_$i"}), | .
+                        $form->dbquote($form->{"transdate"}, SQL_DATE) .
+                        qq|, $form->{employee_id}, $form->{department_id}, | .
+                        $dbh->quote($form->{"serialnumber_$i"}) . qq|, | .
+                        $dbh->quote($form->{"itemnotes_$i"}) . qq|, | .
+			$dbh->quote($form->{"description_$i"}) . qq|, $id)|;
       $dbh->do($query) || $form->dberror($query);
 
       # add id
@@ -1890,7 +1932,7 @@ sub reverse_invoice {
   $sth->finish;
   
   
-  for (qw(acc_trans dpt_trans invoice inventory shipto vr payment reference)) {
+  for (qw(acc_trans dpt_trans invoice invoicetax inventory shipto vr payment reference)) {
     $query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
   }

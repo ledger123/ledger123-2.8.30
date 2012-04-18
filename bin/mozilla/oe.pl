@@ -2161,6 +2161,8 @@ sub invoice {
   }
   if ($form->round_amount($totalship, 1) == 0) {
     for $i (1 .. $form->{rowcount}) { $form->{"ship_$i"} = $form->{"qty_$i"} }
+    # armaghan flag to add rows to inventory table in OE.pm
+    $form->{add_shipping} = 1  if ($form->{type} =~ /_order$/);
   }
 
   OE->save(\%myconfig, \%$form);

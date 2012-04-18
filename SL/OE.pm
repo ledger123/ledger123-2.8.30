@@ -350,7 +350,12 @@ sub save {
 
   my $uid = localtime;
   $uid .= $$;
-
+  
+  for (qw(department warehouse)) { 
+    ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
+    $form->{"${_}_id"} *= 1;
+  }
+ 
   for $i (1 .. $form->{rowcount}) {
 
     for (qw(qty ship)) { $form->{"${_}_$i"} = $form->parse_amount($myconfig, $form->{"${_}_$i"}) }
@@ -458,6 +463,17 @@ sub save {
 		  AND trans_id = $form->{id}|;
       $dbh->do($query) || $form->dberror($query);
 
+      # armaghan When invoice is created from a not-shipped-received-order, whole order is considered to be shipped.
+      if ($form->{add_shipping}) {
+         $query = qq|INSERT INTO inventory (parts_id, warehouse_id, department_id,
+                  qty, trans_id, orderitems_id, shippingdate, employee_id)
+                  VALUES ($form->{"id_$i"}, $form->{warehouse_id}, $form->{department_id},
+		  $form->{"ship_$i"} * $sw * -1, $form->{id},
+		  $form->{"orderitems_id_$i"}, '$form->{transdate}',
+		  $form->{employee_id})|;
+         $dbh->do($query) || $form->dberror($query);
+      }
+
       $form->{"sellprice_$i"} = $fxsellprice;
 
       # add package
@@ -516,12 +532,7 @@ sub save {
   }
 
   $form->{$ordnumber} = $form->update_defaults($myconfig, $numberfld, $dbh) unless $form->{$ordnumber}; 
-  
-  for (qw(department warehouse)) { 
-    ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
-    $form->{"${_}_id"} *= 1;
-  }
-  
+ 
   $form->{terms} *= 1;
 
   # save OE record
