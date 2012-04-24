@@ -1436,6 +1436,9 @@ sub print_form {
   if ($form->{formname} eq 'credit_invoice') {
     $form->{label} = $locale->text('Credit Invoice');
   }
+  if ($form->{formname} eq 'transfer') {
+    $form->{label} = $locale->text('Inventory Transfer');
+  }
   if ($form->{formname} eq 'sales_order') {
     $inv = "ord";
     $due = "req";
@@ -1518,6 +1521,17 @@ sub print_form {
     $order = 1;
   }
 
+  if ($form->{formname} eq 'transfer') {
+    $inv = "trf";
+    $due = "req";
+    $form->{label} = $locale->text('Transfer');
+    $numberfld = "trfnumber";
+    # followings are stubs for company_details
+    $form->{vc} = "customer";
+    $form->{customer_id} = 0;
+  }
+
+
   $form->{"${inv}date"} = $form->{transdate};
 
   $form->isblank("email", "$form->{$form->{vc}} : ".$locale->text('E-mail address missing!')) if ($form->{media} eq 'email');
@@ -1571,6 +1585,9 @@ sub print_form {
   $duedate = $form->{"${due}date"};
 
   # create the form variables
+  if ($form->{formname} eq 'transfer'){
+     Trf->transfer_details(\%myconfig, \%$form);
+  } else {
   if ($order) {
     OE->order_details(\%myconfig, \%$form);
   } else {
@@ -1579,6 +1596,7 @@ sub print_form {
     } else {
       IR->invoice_details(\%myconfig, \%$form);
     }
+  }
   }
 
   if ($form->{formname} eq 'remittance_voucher') {
