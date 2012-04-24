@@ -1971,7 +1971,7 @@ sub get_inventory {
   
   while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
     $ref->{qty} = $ref->{onhand} - $ref->{qty};
-    push @{ $form->{all_inventory} }, $ref if $ref->{qty} > 0;
+    push @{ $form->{all_inventory} }, $ref;
   }
   $sth->finish;
 
