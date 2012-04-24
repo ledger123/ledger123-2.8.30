@@ -1209,7 +1209,7 @@ sub all_parts {
 
         # armaghan 9-apr-2012 transdate place holder
 	$flds = qq|p.id, p.partnumber, i.description, i.serialnumber,
-		   i.qty AS onhand, i.unit, p.bin, i.sellprice,
+		   0 - i.qty AS onhand, i.unit, p.bin, i.sellprice,
 		   p.listprice, p.lastcost, p.rop, p.weight,
 		   p.avgcost,
 		   p.priceupdate, p.image, p.drawing, p.microfiche,
