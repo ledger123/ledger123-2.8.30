@@ -108,10 +108,10 @@ sub transactions {
   
   # build query if type eq (ship|receive)_order
   if ($form->{type} =~ /(ship|receive)_order/) {
-    
+    #bp 2010-03-11 changed AND oi.qty > oi.ship
     $query .= qq|
 	         AND o.quotation = '0'
-		 AND oi.qty > oi.ship
+		 AND oi.qty <> oi.ship
 		 AND o.id NOT IN (SELECT id FROM semaphore)|;
 		 
   }
