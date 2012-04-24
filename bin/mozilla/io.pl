@@ -558,6 +558,10 @@ sub item_selected {
 
       for (qw(id partnumber sku description sell sellprice listprice lastcost bin unit partsgroupcode weight assembly taxaccounts pricematrix onhand itemnotes inventory_accno_id income_accno_id expense_accno_id)) {
 	$form->{"${_}_$i"} = $form->{"new_${_}_$j"};
+        # armaghan following two assignments are for trf.pl
+        $form->{"parts_id_$i"} = $form->{"id_$i"};
+        $form->{"cost_$i"} = $form->{"lastcost_$i"};
+
       }
 
       $form->{"netweight_$i"} = $form->{"weight_$i"};
