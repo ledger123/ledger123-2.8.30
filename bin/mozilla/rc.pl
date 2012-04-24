@@ -81,9 +81,8 @@ sub reconciliation {
 |;
   }
 
-
   $form->helpref("reconciliation", $myconfig{countrycode});
-  
+
   $form->header;
 
   print qq|
@@ -135,6 +134,17 @@ sub reconciliation {
 <input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">
 
 </form>
+|;
+
+  print "<h3>".$locale->text('Usage Notes').":</h3>";
+  print qq|
+<ol>
+<li>|.$locale->text('Leave from/to dates blank to get all un-reconciled transactions.').qq|</li>
+<li>|.$locale->text('Specify from/to dates to display both reconciled and un-reconciled transactions for that period.').qq|</li>
+<li>|.$locale->text('You can also un-check already reconciled transactions by specifying from/to dates.').qq|</li>
+<li>|.$locale->text('Summary report groups and totals transactions with same date+source. Detail report shows all individual transactions.').qq|</li>
+<li>|.$locale->text(qq|Check 'Ignore Difference' box to ignore statement balance difference and save reconciled transactions.|).qq|</li>
+</ol>
 |;
 
   if ($form->{menubar}) {
@@ -204,7 +214,7 @@ sub display_form {
   $form->{title} = "$form->{accno}--$form->{account} / $form->{company}";
   
   $form->helpref("rec_list", $myconfig{countrycode});
-  
+
   $form->header;
 
   print qq|
@@ -306,7 +316,8 @@ function CheckAll() {
     for (@{ $temp{name} }) { $column_data{name} .= "$_<br>" }
     $column_data{name} .= "</td>";
     $column_data{source} = qq|<td>$temp{source}&nbsp;</td>
-    <input type=hidden name="id_$i" value="$ref->{id}">|;
+    <input type=hidden name="id_$i" value="$ref->{id}">
+    <input type=hidden name="payment_id_$i" value="$ref->{payment_id}">|;
     
     $column_data{debit} = "<td>&nbsp;</td>";
     $column_data{credit} = "<td>&nbsp;</td>";
@@ -439,6 +450,11 @@ function CheckAll() {
 		<td align=right><input name=null class="inputright" size=11 value=$difference></td>
 		<input type=hidden name=difference value=$difference>
 	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Ignore Difference').qq|</th>
+		<td width=10%></td>
+		<td align="left"><input type=checkbox name=ignorediff value="1"></td>
+	      </tr>
 	    </table>
 	  </td>
 	</tr>
@@ -530,7 +546,9 @@ sub done {
 
   $form->{callback} = "$form->{script}?path=$form->{path}&action=reconciliation&login=$form->{login}";
 
-  $form->error($locale->text('Out of balance!')) if ($form->{difference} *= 1);
+  if (!$form->{ignorediff}){
+     $form->error($locale->text('Out of balance!')) if ($form->{difference} *= 1);
+  }
 
   RC->reconcile(\%myconfig, \%$form);
   $form->redirect;
