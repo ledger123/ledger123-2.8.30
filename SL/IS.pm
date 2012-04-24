@@ -1161,15 +1161,6 @@ sub post_invoice {
     }
   }
 
-  $form->{paid} = 0;
-  for $i (1 .. $form->{paidaccounts}) {
-    if ($form->{"paid_$i"}) {
-      $form->{"paid_$i"} = $form->parse_amount($myconfig, $form->{"paid_$i"}) * $sw;
-      $form->{paid} += $form->{"paid_$i"};
-      $form->{datepaid} = $form->{"datepaid_$i"};
-    }
-  }
-
   # add lineitems + tax
   $amount = 0;
   $grossamount = 0;
@@ -1200,6 +1191,20 @@ sub post_invoice {
   $invamount += $fxdiff;
 
   $fxtax = $form->round_amount($fxtax, $form->{precision});
+
+  # armaghan - markpaid is set in im.pl import module
+  $form->{paid_1} = $invamount if $form->{markpaid};
+
+  # armaghan - code block moved to prevent formatting issue 
+  $form->{paid} = 0;
+  for $i (1 .. $form->{paidaccounts}) {
+    if ($form->{"paid_$i"}) {
+      $form->{"paid_$i"} = $form->parse_amount($myconfig, $form->{"paid_$i"}) * $sw;
+      $form->{paid} += $form->{"paid_$i"};
+      $form->{datepaid} = $form->{"datepaid_$i"};
+    }
+  }
+
 
   if ($form->round_amount($form->{paid} - ($fxamount + $fxtax), $form->{precision}) == 0) {
     $form->{paid} = $invamount;
