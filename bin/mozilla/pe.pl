@@ -2696,7 +2696,7 @@ sub generate_sales_orders {
     foreach $ref (@ {$form->{order}{$_} }) {
       $i++;
       
-      for (keys %$ref) { $order->{"${_}_$i"} = $ref->{$_} }
+      for (keys %$ref) { $order->{"${_}_$i"} = $ref->{$_}; $order->{"discount_$i"} = $order->{discount} * 100; }
       
       $taxaccounts = "";
       for (split / /, $order->{taxaccounts}) { $taxaccounts .= qq|$_ | if ($_ =~ /$order->{"taxaccounts_$i"}/) }
