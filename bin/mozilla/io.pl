@@ -180,6 +180,7 @@ function CheckAll(v) {
     
     if ($form->{type} =~ /_order/) {
       if ($form->{"ship_$i"} != $form->{"oldship_$i"} || $form->{"qty_$i"} != $form->{"oldqty_$i"}) {
+	$form->{"grossweight_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"};
 	$form->{"netweight_$i"} = $form->{"weight_$i"} * $form->{"ship_$i"};
       }
     } else {
@@ -187,6 +188,8 @@ function CheckAll(v) {
 	$form->{"netweight_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"};
       }
     }
+    $form->{"grossweight_$i"} = $form->format_amount(\%myconfig, $form->{"grossweight_$i"});
+    $form->{"netweight_$i"} = $form->format_amount(\%myconfig, $form->{"netweight_$i"});
 
     if ($form->{"qty_$i"} != $form->{"oldqty_$i"}) {
       # check pricematrix
@@ -617,6 +620,7 @@ sub item_selected {
 	$form->{"lastcost_$i"} = $form->format_amount(\%myconfig, $form->{"lastcost_$i"}, $decimalplaces2);
       }
       $form->{"discount_$i"} = $form->format_amount(\%myconfig, $form->{"discount_$i"});
+      for (qw(weight netweight grossweight)){ $form->{"${_}_$i"} = $form->format_amount(\%myconfig, $form->{"${_}_$i"}) }
     }
   }
 
