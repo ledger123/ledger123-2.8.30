@@ -1342,6 +1342,7 @@ sub search {
   push @a, qq|<input name="l_curr" class=checkbox type=checkbox value=Y checked> |.$locale->text('Currency');
   push @a, qq|<input name="l_memo" class=checkbox type=checkbox value=Y> |.$locale->text('Line Item');
   push @a, qq|<input name="l_notes" class=checkbox type=checkbox value=Y> |.$locale->text('Notes');
+  push @a, qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y> |.$locale->text('Internal Notes');
 
   $form->helpref("search_$form->{type}", $myconfig{countrycode});
 
@@ -1598,7 +1599,7 @@ sub transactions {
     $option .= $locale->text('Closed');
   }
  
-  @columns = $form->sort_columns("transdate", "reqdate", "id", "$ordnumber", "ponumber", "name", "$form->{vc}number", "description", "memo", "notes", "netamount", "tax", "amount", "curr", "employee", "warehouse", "shippingpoint", "shipvia", "waybill", "open", "closed");
+  @columns = $form->sort_columns("transdate", "reqdate", "id", "$ordnumber", "ponumber", "name", "$form->{vc}number", "description", "memo", "notes", "intnotes", "netamount", "tax", "amount", "curr", "employee", "warehouse", "shippingpoint", "shipvia", "waybill", "open", "closed");
   unshift @columns, "runningnumber";
 
   $form->{l_open} = $form->{l_closed} = "Y" if ($form->{open} && $form->{closed}) ;
@@ -1763,6 +1764,7 @@ function CheckAll() {
   $column_header{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</a></th>|;
   $column_header{memo} = "<th class=listheading>" . $locale->text('Line Item') . "</th>";
   $column_header{notes} = qq|<th class=listheading>|.$locale->text('Notes').qq|</th>|;
+  $column_header{intnotes} = qq|<th class=listheading>|.$locale->text('Internal Notes').qq|</th>|;
   $column_header{open} = qq|<th class=listheading>|.$locale->text('O').qq|</th>|;
   $column_header{closed} = qq|<th class=listheading>|.$locale->text('C').qq|</th>|;
 
@@ -1848,7 +1850,7 @@ function CheckAll() {
     $subtotalnetamount += $ref->{netamount};
     $subtotalamount += $ref->{amount};
 
-    for (qw(notes description memo)) { $ref->{$_} =~ s/\r?\n/<br>/g }
+    for (qw(notes intnotes description memo)) { $ref->{$_} =~ s/\r?\n/<br>/g }
     for (qw(id description memo)) { $column_data{$_} = "<td>$ref->{$_}</td>" }
     $column_data{transdate} = qq|<td nowrap><input type=hidden name="transdate_$i" value="$ref->{transdate}">$ref->{transdate}&nbsp;</td>|;
     $column_data{reqdate} = "<td nowrap>$ref->{reqdate}&nbsp;</td>";
@@ -1862,7 +1864,7 @@ function CheckAll() {
     $column_data{name} = qq|<td><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{"$form->{vc}_id"}&db=$form->{vc}&callback=$callback>$ref->{name}</a></td>|;
     $column_data{"$form->{vc}number"} = qq|<td>$ref->{"$form->{vc}number"}</td>|;
 
-    for (qw(employee warehouse shipvia shippingpoint waybill curr ponumber notes)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
+    for (qw(employee warehouse shipvia shippingpoint waybill curr ponumber notes intnotes)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
 
     if ($ref->{closed}) {
       $column_data{closed} = "<td align=center>*</td>";

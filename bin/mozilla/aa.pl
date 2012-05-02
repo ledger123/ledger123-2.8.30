@@ -1761,6 +1761,7 @@ sub search {
   push @f, qq|<input name="l_due" class=checkbox type=checkbox value=Y> |.$locale->text('Due');
   push @f, qq|<input name="l_memo" class=checkbox type=checkbox value=Y> |.$locale->text('Line Item');
   push @f, qq|<input name="l_notes" class=checkbox type=checkbox value=Y> |.$locale->text('Notes');
+  push @f, qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y> |.$locale->text('Internal Notes');
   push @f, $l_till if $l_till;
   push @f, $l_warehouse if $l_warehouse;
   push @f, qq|<input name="l_shippingpoint" class=checkbox type=checkbox value=Y> |.$locale->text('Shipping Point');
@@ -2055,7 +2056,7 @@ sub transactions {
   }
 
 
-  @columns = $form->sort_columns(qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes till employee warehouse shippingpoint shipvia waybill dcn paymentdiff department));
+  @columns = $form->sort_columns(qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee warehouse shippingpoint shipvia waybill dcn paymentdiff department));
   pop @columns if $form->{department};
   unshift @columns, "runningnumber";
 
@@ -2114,6 +2115,7 @@ sub transactions {
   $column_data{datepaid} = "<th><a class=listheading href=$href&sort=datepaid>" . $locale->text('Date Paid') . "</a></th>";
   $column_data{due} = "<th class=listheading>" . $locale->text('Due') . "</th>";
   $column_data{notes} = "<th class=listheading>".$locale->text('Notes')."</th>";
+  $column_data{intnotes} = "<th class=listheading>".$locale->text('Internal Notes')."</th>";
   $column_data{employee} = "<th><a class=listheading href=$href&sort=employee>$employee</a></th>";
   $column_data{till} = "<th><a class=listheading href=$href&sort=till>".$locale->text('Till')."</a></th>";
   
@@ -2235,9 +2237,9 @@ sub transactions {
 
     $column_data{invnumber} = "<td><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}&nbsp;</a></td>";
     
-    for (qw(notes description memo)) { $ref->{$_} =~ s/\r?\n/<br>/g }
+    for (qw(notes intnotes description memo)) { $ref->{$_} =~ s/\r?\n/<br>/g }
     for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td nowrap>$ref->{$_}&nbsp;</td>" }
-    for (qw(department ordnumber ponumber notes warehouse shippingpoint shipvia waybill employee till source memo description projectnumber address dcn paymentmethod)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
+    for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee till source memo description projectnumber address dcn paymentmethod)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
     $column_data{$namefld} = "<td>$ref->{$namefld}&nbsp;</td>";
     
     if ($ref->{paymentdiff} <= 0) {
