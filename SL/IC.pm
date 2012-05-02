@@ -1455,7 +1455,7 @@ sub all_parts {
 	
 	$ref = $sth->fetchrow_hashref(NAME_lc);
 	if ($ref->{onhand} != 0) {
-	  $_->{onhand} = $ref->{onhand};
+	  $_->{onhand} = $ref->{onhand} if $_->{inventory}; # Don't show any onhand for non-inventory items.
 	  push @li, $_;
 	}
 
