@@ -1065,7 +1065,8 @@ sub post_invoice {
 		  bin = |.$dbh->quote($form->{"bin_$i"});
       if ($form->{"netweight_$i"} * 1) {
 	my $weight = abs($form->{"netweight_$i"} / $form->{"qty_$i"});
-	$query .= qq|, weight = $weight|;
+        # armaghan 2-may-2012 Disabled weight column update in parts table. Not sure why this was required.
+	#$query .= qq|, weight = $weight|;
       }
       $query .= qq|
 		  WHERE id = $form->{"id_$i"}|;
