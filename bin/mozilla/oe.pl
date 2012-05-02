@@ -826,7 +826,8 @@ sub form_footer {
       $f{'Preview'} = 1;
     }
 
-    $f{'Ship all'} = 1 if $form->{type} =~ /(sales|purchase)_order/;
+    # armaghan 'Ship all' button removed for orders enhancements. To ship a complete order you either use shipping form or create an invoice from the order which has not been shipped at all.
+    #$f{'Ship all'} = 1 if $form->{type} =~ /(sales|purchase)_order/;
     
     if ($form->{id}) {
       
