@@ -679,7 +679,37 @@ sub restock_assemblies {
     $dbh = $form->dbconnect_noauto($myconfig);
     $disconnect = 1;
   }
-   
+ 
+  # armaghan Add row to build table 
+  ($form->{employee}, $form->{employee_id}) = $form->get_employee($dbh);
+  for (qw(department warehouse)) {
+     ($null, $form->{"${_}_id"}) = split(/--/, $form->{$_});
+     $form->{"${_}_id"} *= 1;
+  }
+
+  my $uid = localtime;
+  $uid .= $$;
+  if (! $form->{id}) {
+    $query = qq|INSERT INTO build (reference, employee_id)
+                VALUES ('$uid', $form->{employee_id})|;
+    $dbh->do($query) || $form->dberror($query);
+
+    $query = qq|SELECT id FROM build
+                WHERE reference = '$uid'|;
+    $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
+
+    ($form->{id}) = $sth->fetchrow_array;
+    $sth->finish;
+  }
+  $query = qq|UPDATE build SET
+		reference = |.$dbh->quote($form->{reference}).qq|,
+		transdate = |.$form->dbquote($form->{transdate}, SQL_DATE).qq|,
+		department_id = $form->{department_id},
+		warehouse_id = $form->{warehouse_id}
+	      WHERE id = $form->{id}|;
+  $dbh->do($query) or $form->dberror($query); 
+  
   for my $i (1 .. $form->{rowcount}) {
 
     $form->{"qty_$i"} = $form->parse_amount($myconfig, $form->{"qty_$i"});
@@ -712,13 +742,30 @@ sub adjust_inventory {
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
+  $form->{warehouse_id} *= 1;
+  $form->{department_id} *= 1;
+  $form->{employee_id} *= 1;
+
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
 
     # is it a service item then loop
     if (! $ref->{inventory_accno_id}) {
       next if ! $ref->{assembly};              # assembly
     }
-    
+ 
+    # armaghan Add rows to inventory table for parts removed from stock for assembly
+    $query = qq|INSERT INTO inventory (
+			warehouse_id, parts_id,
+			trans_id, qty, 
+			shippingdate, 
+			employee_id, department_id, linetype)
+		VALUES ($form->{warehouse_id}, $ref->{id},
+			$form->{id}, $qty * $ref->{qty} * -1, 
+			|.$form->dbquote($form->{transdate}, SQL_DATE).qq|,
+			$form->{employee_id}, $form->{department_id}, '4'
+		)|;
+    $dbh->do($query) || $form->dberror($query);
+  
     # adjust parts onhand
     $form->update_balance($dbh,
 			  "parts",
@@ -728,6 +775,19 @@ sub adjust_inventory {
   }
 
   $sth->finish;
+
+  # armaghan Add rows to inventory table for newly built assemblies.
+  $query = qq|INSERT INTO inventory (
+			warehouse_id, parts_id,
+			trans_id, qty, 
+			shippingdate, 
+			employee_id, department_id, linetype)
+		VALUES ($form->{warehouse_id}, $id,
+			$form->{id}, $qty,
+			|.$form->dbquote($form->{transdate}, SQL_DATE).qq|,
+			$form->{employee_id}, $form->{department_id}, '5'
+		)|;
+  $dbh->do($query) || $form->dberror($query);
 
   # update assembly
   $form->update_balance($dbh,

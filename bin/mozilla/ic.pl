@@ -3695,6 +3695,46 @@ sub list_assemblies {
   
   $form->header;
   
+  # departments
+  $form->all_departments(\%myconfig);
+  if (@{ $form->{all_department} }) {
+    $form->{selectdepartment} = "\n";
+    $form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
+
+    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    $form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}| if $myconfig{department_id} and $myconfig{role} eq 'user';
+  }
+
+  # warehouses
+  $form->all_warehouses(\%myconfig);
+  if (@{ $form->{all_warehouse} }) {
+    $form->{selectwarehouse} = "\n";
+    $form->{warehouse} = "$form->{warehouse}--$form->{warehouse_id}" if $form->{warehouse_id};
+
+    for (@{ $form->{all_warehouse} }) { $form->{selectwarehouse} .= qq|$_->{description}--$_->{id}\n| }
+    $form->{selectwarehouse} = qq|$myconfig{warehouse}--$myconfig{warehouse_id}| if $myconfig{warehouse_id} and $myconfig{role} eq 'user';
+  }
+
+  $department = qq|
+              <tr>
+	        <th align="right" nowrap>|.$locale->text('Department').qq|</th>
+		<td colspan=3><select name=department>|
+		.$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+		.qq|</select>
+		</td>
+	      </tr>
+| if $form->{selectdepartment};
+
+  $warehouse = qq|
+              <tr>
+	        <th align="right" nowrap>|.$locale->text('Warehouse').qq|</th>
+		<td colspan=3><select name=warehouse>|
+		.$form->select_option($form->{selectwarehouse}, $form->{warehouse}, 1).qq|
+		</select>
+		</td>
+	      </tr>
+| if $form->{selectwarehouse};
+
   print qq|
 <body>
 
@@ -3705,6 +3745,20 @@ sub list_assemblies {
     <th class=listtop>$form->{helpref}$form->{title}</a></th>
   </tr>
   <tr size=5></tr>
+
+  <tr>
+	<table><tr>
+		<th align="right" nowrap>| . $locale->text('Reference') . qq|</th>
+		<td><input name=reference type=text size=20>
+	</tr><tr>
+		<th align="right" nowrap>| . $locale->text('Date') . qq|</th>
+		<td><input name=transdate type=text size=11 title='$myconfig{dateformat}'>
+	</tr>
+	$department
+	$warehouse
+	</table>
+  </tr>
+
   <tr>
     <td>
       <table width=100%>
@@ -3781,6 +3835,10 @@ sub list_assemblies {
 
 sub restock_assemblies {
 
+  # armaghan
+  $form->isblank('reference', $locale->text('Reference missing'));
+  $form->isblank('transdate', $locale->text('Date missing'));
+  $form->isblank('warehouse', $locale->text('Warehouse missing')) if $form->{selectwarehouse};
 
   if ($form->{checkinventory}) {
     for (1 .. $form->{rowcount}) { $form->error($locale->text('Quantity exceeds available units to stock!')) if $form->parse_amount($myconfig, $form->{"qty_$_"}) > $form->{"stock_$_"} }
