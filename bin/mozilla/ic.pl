@@ -3444,6 +3444,7 @@ sub save {
     }
   }
 
+  $form->isblank("partsgroup", $locale->text('Group missing!')) if $form->{selectpartsgroup};
   $olditem = $form->{id};
 
   # save part
