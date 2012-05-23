@@ -1741,5 +1741,244 @@ sub reconcile_payments {
 }
 
 
+sub partscustomer {
+  my ($self, $myconfig, $form) = @_;
+
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+
+  my $ref;
+  
+  my %defaults = $form->get_defaults($dbh, \@{['precision']});
+  $form->{precision} = $defaults{precision};
+
+  my $pquery = qq|SELECT id, description FROM parts WHERE LOWER(partnumber) = ?|; 
+  my $psth = $dbh->prepare($pquery) || $form->dberror($pquery);
+
+  my $cquery = qq|SELECT id, name FROM customer WHERE LOWER(customernumber) = ?|; 
+  my $csth = $dbh->prepare($cquery) || $form->dberror($cquery);
+
+  my $pgquery = qq|SELECT id FROM pricegroup WHERE LOWER(pricegroup) = ?|; 
+  my $pgsth = $dbh->prepare($pgquery) || $form->dberror($pgquery);
+
+  my @d = split /\n/, $form->{data};
+  shift @d if ! $form->{mapfile};
+
+  for (@d) {
+    @a = &ndxline($form);
+    if (@a) {
+      $i++;
+      for (keys %{$form->{$form->{type}}}) {
+	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
+	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
+      }
+      $psth->execute(lc "$a[$form->{$form->{type}}->{partnumber}{ndx}]");
+      if ($ref = $psth->fetchrow_hashref(NAME_lc)) {
+	$form->{"parts_id_$i"} = $ref->{id};
+	$form->{"description_$i"} = $ref->{description};
+      }
+      $psth->finish;
+      $csth->execute(lc "$a[$form->{$form->{type}}->{customernumber}{ndx}]");
+      if ($ref = $csth->fetchrow_hashref(NAME_lc)) {
+	$form->{"customer_id_$i"} = $ref->{id};
+	$form->{"name_$i"} = $ref->{name};
+      }
+      $csth->finish;
+      $pgsth->execute(lc "$a[$form->{$form->{type}}->{pricegroup}{ndx}]");
+      if ($ref = $pgsth->fetchrow_hashref(NAME_lc)) {
+	$form->{"pricegroup_id_$i"} = $ref->{id};
+      }
+      $pgsth->finish;
+      $form->{"pricegroup_id_$i"} *= 1;
+    }
+    $form->{rowcount} = $i;
+  }
+
+  $dbh->disconnect;
+  chop $form->{ndx};
+}
+
+
+sub partsvendor {
+  my ($self, $myconfig, $form) = @_;
+
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+
+  my $ref;
+  
+  my %defaults = $form->get_defaults($dbh, \@{['precision']});
+  $form->{precision} = $defaults{precision};
+
+  my $pquery = qq|SELECT id, description FROM parts WHERE LOWER(partnumber) = ?|; 
+  my $psth = $dbh->prepare($pquery) || $form->dberror($pquery);
+
+  my $vquery = qq|SELECT id, name FROM vendor WHERE LOWER(vendornumber) = ?|; 
+  my $vsth = $dbh->prepare($vquery) || $form->dberror($vquery);
+
+  my @d = split /\n/, $form->{data};
+  shift @d if ! $form->{mapfile};
+
+  for (@d) {
+    @a = &ndxline($form);
+    if (@a) {
+      $i++;
+      for (keys %{$form->{$form->{type}}}) {
+	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
+	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
+      }
+      $psth->execute(lc "$a[$form->{$form->{type}}->{partnumber}{ndx}]");
+      if ($ref = $psth->fetchrow_hashref(NAME_lc)) {
+	$form->{"parts_id_$i"} = $ref->{id};
+	$form->{"description_$i"} = $ref->{description};
+      }
+      $psth->finish;
+      $vsth->execute(lc "$a[$form->{$form->{type}}->{vendornumber}{ndx}]");
+      if ($ref = $vsth->fetchrow_hashref(NAME_lc)) {
+	$form->{"vendor_id_$i"} = $ref->{id};
+	$form->{"name_$i"} = $ref->{name};
+      }
+      $vsth->finish;
+    }
+    $form->{rowcount} = $i;
+  }
+
+  $dbh->disconnect;
+  chop $form->{ndx};
+}
+
+
+sub transactions {
+  my ($self, $myconfig, $form) = @_;
+
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+
+  my $query;
+  my $ref;
+  
+  my %defaults = $form->get_defaults($dbh, \@{['precision']});
+  $form->{precision} = $defaults{precision};
+
+  # customer/vendor
+  $query = qq|SELECT vc.id, vc.name, vc.$form->{vc}number, vc.terms,
+              e.id AS employee_id, e.name AS employee,
+              c.accno AS taxaccount, a.accno AS arap_accno,
+              ad.city
+              FROM $form->{vc} vc
+              JOIN address ad ON (ad.trans_id = vc.id)
+              LEFT JOIN employee e ON (e.id = vc.employee_id)
+              LEFT JOIN $form->{vc}tax ct ON (vc.id = ct.$form->{vc}_id)
+              LEFT JOIN chart c ON (c.id = ct.chart_id)
+              LEFT JOIN chart a ON (a.id = vc.arap_accno_id)
+              WHERE $form->{vc}number = ?|;
+  my $cth = $dbh->prepare($query) || $form->dberror($query);
+
+  $query = qq|SELECT description FROM chart WHERE accno = ?|;
+  my $ath = $dbh->prepare($query) || $form->dberror($query);
+
+  my @d = split /\n/, $form->{data};
+  shift @d if ! $form->{mapfile};
+
+  for (@d) {
+    @a = &ndxline($form);
+    if (@a) {
+      $i++;
+      for (keys %{$form->{$form->{type}}}) {
+	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
+	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
+      }
+
+      $ath->execute("$a[$form->{$form->{type}}->{account}{ndx}]");
+      my $ref = $ath->fetchrow_hashref(NAME_lc);
+      $form->{"account_description_$i"} = $ref->{description};
+
+      if ($form->{vc} eq 'customer'){
+         $cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
+      } else {
+         $cth->execute("$a[$form->{$form->{type}}->{vendornumber}{ndx}]");
+      }
+      while ($ref = $cth->fetchrow_hashref(NAME_lc)) {
+          $arap_accno = $ref->{arap_accno};
+          $terms = $ref->{terms};
+          $form->{"$form->{vc}_id_$i"} = $ref->{id};
+          $form->{"name_$i"} = $ref->{name};
+          $form->{"city_$i"} = $ref->{city};
+          $form->{"employee_$i"} = $ref->{employee};
+          $form->{"employee_id_$i"} = $ref->{employee_id};
+          $customertax{$ref->{accno}} = 1;
+      }
+      $cth->finish;
+
+    }
+    $form->{rowcount} = $i;
+  }
+
+  $cth->finish;
+  $ath->finish;
+
+  $dbh->disconnect;
+  chop $form->{ndx};
+}
+
+
+sub gl {
+  my ($self, $myconfig, $form) = @_;
+
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+
+  my $query;
+  my $ref;
+  
+  my %defaults = $form->get_defaults($dbh, \@{['precision']});
+  $form->{precision} = $defaults{precision};
+
+  $query = qq|SELECT curr FROM curr ORDER BY rn|;
+  ($form->{defaultcurrency}) = $dbh->selectrow_array($query);
+  $form->{curr} ||= $form->{defaultcurrency};
+  $form->{currency} = $form->{curr};
+
+  $query = qq|SELECT c.id, c.description
+              FROM chart c
+              WHERE accno = ?|;
+  my $cth = $dbh->prepare($query) || $form->dberror($query);
+ 
+  $query = qq|SELECT id FROM department WHERE description = ?|;
+  my $dth = $dbh->prepare($query) || $form->dberror($query);
+
+  my @d = split /\n/, $form->{data};
+  shift @d if ! $form->{mapfile};
+
+  for (@d) {
+    @a = &ndxline($form);
+    if (@a) {
+      $i++;
+      for (keys %{$form->{$form->{type}}}) {
+	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
+	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
+      }
+      $cth->execute("$a[$form->{$form->{type}}->{accno}{ndx}]");
+      if ($ref = $cth->fetchrow_hashref(NAME_lc)) {
+	$form->{"accdescription_$i"} = $ref->{description};
+	$form->{"ndx_$i"} = 'Y';
+      } else {
+	$form->{"accdescription_$i"} = '*****';
+      }
+      $dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
+      if ($ref = $dth->fetchrow_hashref(NAME_lc)) {
+	$form->{"department_id_$i"} = $ref->{id};
+      } else {
+        $a[$form->{$form->{type}}->{department}{ndx}] = '***';
+	$form->{"department_id_$i"} = 0;
+      }
+    }
+    $form->{rowcount} = $i;
+  }
+  $cth->finish;
+  $dbh->disconnect;
+}
+
+
 1;
 
