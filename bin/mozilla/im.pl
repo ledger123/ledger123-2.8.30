@@ -15,6 +15,7 @@
 use SL::IM;
 use SL::CP;
 use SL::JS;
+use SL::GL;
 
 require "$form->{path}/sr.pl";
 
@@ -2821,7 +2822,7 @@ sub yes__reconcile_payments {
 #=========================================
 sub im_partscustomer {
 
-  $form->error($locale->text('Import File missing!')) if ! $form->{data};
+  &import_file;
   @column_index = qw(partnumber description customernumber name pricegroup pricebreak sellprice validfrom validto curr);
   @flds = @column_index;
   push @flds, qw(parts_id customer_id pricegroup_id);
@@ -2935,7 +2936,122 @@ sub import_parts_customers {
 #=========================================
 sub im_partsvendor {
 
-  $form->error($locale->text('Import File missing!')) if ! $form->{data};
+  &import_file;
+
+  @column_index = qw(partnumber description customernumber name pricegroup pricebreak sellprice validfrom validto curr);
+  @flds = @column_index;
+  push @flds, qw(parts_id customer_id pricegroup_id);
+  unshift @column_index, qw(runningnumber ndx);
+
+  $form->{callback} = "$form->{script}?action=import";
+  for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
+  
+  &xrefhdr;
+  
+  IM->partscustomer(\%myconfig, \%$form);
+
+  $column_data{runningnumber} = "&nbsp;";
+  $column_data{partnumber} = $locale->text('Part Number');
+  $column_data{description} = $locale->text('Description');
+  $column_data{customernumber} = $locale->text('Customer Number');
+  $column_data{name} = $locale->text('Customer Name');
+  $column_data{pricegroup} = $locale->text('Price Group');
+  $column_data{pricebreak} = $locale->text('Price Break');
+  $column_data{sellprice} = $locale->text('Price');
+  $column_data{validfrom} = $locale->text('From');
+  $column_data{validto} = $locale->text('To');
+  $column_data{curr} = $locale->text('Curr');
+
+  $form->header;
+ 
+  print qq|<body><form method=post action=$form->{script}>|;
+  print qq|<table width=100%>|;
+  print qq|<tr><th class=listtop>$form->{title}</th></tr>|;
+  print qq|<tr height="5"></tr><tr><td><table width=100%><tr class=listheading>|;
+  for (@column_index) { print "\n<th>$column_data{$_}</th>" }
+  print qq|</tr>|;
+
+  for $i (1 .. $form->{rowcount}) {
+    
+    $j++; $j %= 2;
+ 
+    print qq|<tr class=listrow$j>|;
+    for (@column_index) { $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>| }
+
+    $column_data{runningnumber} = qq|<td align=right>$i</td>|;
+    if ($form->{"parts_id_$i"}){ # and ($form->{"customer_id_$i"} or $form->{"pricegroup_id_$i"})){
+       $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='1' checked></td>|;
+    } else {
+       $column_data{ndx} = qq|<td>&nbsp;</td>|;
+    }
+
+    for (@column_index) { print $column_data{$_} }
+
+    print qq|</tr>|;
+    $form->hide_form(map { "${_}_$i" } @flds);
+  }
+
+  # print total
+  for (@column_index) { $column_data{$_} = qq|<td>&nbsp;</td>| }
+  print qq|<tr class=listtotal>|;
+  for (@column_index) { print "\n$column_data{$_}" }
+  print qq|</tr></table></td></tr><tr><td><hr size=3 noshade></td></tr></table>|;
+  $form->hide_form(qw(precision rowcount type login path callback));
+
+  print qq|<input name=action class=submit type=submit value="|.
+	$locale->text('Import Parts Customers').qq|">
+	</form></body></html>
+  |;
+
+}
+
+#=========================================
+sub import_parts_customers {
+  my $m = 0;
+  my $dbh = $form->dbconnect(\%myconfig);
+  for my $i (1 .. $form->{rowcount}) {
+    if ($form->{"ndx_$i"}) {
+      $m++;
+
+      if ($form->{"validfrom_$i"}){
+	$form->{"validfrom_$i"} = qq|'$form->{"validfrom_$i"}'|;
+      } else {
+        $form->{"validfrom_$i"} = 'NULL'; 
+      }
+      if ($form->{"validto_$i"}){
+	$form->{"validto_$i"} = qq|'$form->{"validto_$i"}'|;
+      } else {
+        $form->{"validto_$i"} = 'NULL'; 
+      }
+
+      $form->{"customer_id_$i"} *= 1;
+      $form->{"pricegroup_id_$i"} *= 1;
+      $form->{"pricebreak_$i"} *= 1;
+      $form->{"sellprice_$i"} *= 1;
+ 
+      $query = qq|INSERT INTO partscustomer(
+			parts_id, customer_id, 
+			pricegroup_id, pricebreak, 
+			sellprice, validfrom, 
+			validto, curr) 
+		VALUES ($form->{"parts_id_$i"}, $form->{"customer_id_$i"},
+			$form->{"pricegroup_id_$i"}, $form->{"pricebreak_$i"},
+			$form->{"sellprice_$i"}, $form->{"validfrom_$i"},
+			$form->{"validto_$i"}, '$form->{"curr_$i"}'
+		)|;
+      $dbh->do($query) || $form->dberror($query);
+      $form->info("${m}. ".$locale->text('Add part ...'));
+      $form->info(qq| $form->{"partnumber_$i"}, $form->{"description_$i"}|);
+      $form->info(" ... ".$locale->text('ok')."\n");
+    }
+  }
+  $form->info('Parts customers imported');
+}
+
+#=========================================
+sub im_partsvendor {
+
+  $form->error($locale->text('
   @column_index = qw(partnumber description vendornumber name vendorpartnumber lastcost curr leadtime);
   @flds = @column_index;
   push @flds, qw(parts_id vendor_id);
@@ -3033,7 +3149,7 @@ sub import_parts_vendors {
 
 sub im_transactions {
 
-  $form->error($locale->text('Import File missing!')) if ! $form->{data};
+  &import_file;
 
   if ($form->{vc} eq 'customer'){
     @column_index = qw(ndx invnumber customernumber name transdate account account_description amount description notes source memo);
@@ -3177,7 +3293,7 @@ sub import_transactions {
 
          if ($form->{ARAP} eq 'AR'){
            $newform->{$form->{ARAP}}= $form->{"araccount_$i"};
-	 } else
+	 } else {
            $newform->{$form->{ARAP}}= $form->{"apaccount_$i"};
          }
          $newform->{currency} = $form->{currency};
@@ -3195,7 +3311,7 @@ sub import_transactions {
       $newform->{"description_$linenum"} = $form->{"description_$i"};
       if ($form->{ARAP} eq 'AR'){
         $newform->{"$form->{ARAP}_amount_$linenum"} = $form->{"incomeaccount_$i"};
-      }
+      } else {
         $newform->{"$form->{ARAP}_amount_$linenum"} = $form->{"expenseaccount_$i"};
       }
       $newform->{oldinvtotal} = $form->{"amount_$i"};
@@ -3215,7 +3331,7 @@ sub import_transactions {
 
 sub im_gl {
 
-  $form->error($locale->text('Import File missing!')) if ! $form->{data};
+  &import_file;
 
   @column_index = qw(reference department department_id description transdate notes accno accdescription debit credit source memo);
   @flds = @column_index;

@@ -1765,7 +1765,7 @@ sub partscustomer {
   shift @d if ! $form->{mapfile};
 
   for (@d) {
-    @a = &ndxline($form);
+    @a = &dataline($form);
     if (@a) {
       $i++;
       for (keys %{$form->{$form->{type}}}) {
@@ -1820,7 +1820,7 @@ sub partsvendor {
   shift @d if ! $form->{mapfile};
 
   for (@d) {
-    @a = &ndxline($form);
+    @a = &dataline($form);
     if (@a) {
       $i++;
       for (keys %{$form->{$form->{type}}}) {
@@ -1881,7 +1881,7 @@ sub transactions {
   shift @d if ! $form->{mapfile};
 
   for (@d) {
-    @a = &ndxline($form);
+    @a = &dataline($form);
     if (@a) {
       $i++;
       for (keys %{$form->{$form->{type}}}) {
@@ -1951,7 +1951,7 @@ sub gl {
   shift @d if ! $form->{mapfile};
 
   for (@d) {
-    @a = &ndxline($form);
+    @a = &dataline($form);
     if (@a) {
       $i++;
       for (keys %{$form->{$form->{type}}}) {
