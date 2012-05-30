@@ -2767,6 +2767,7 @@ sub iactivity_list {
 	   }
 	} elsif ($ref->{build_reference}){
 	   $reftype = 'assembly';
+	   $module = 'reports.pl?action=stock_assembly_view';
         }
 
         if ($module){ $module .= "&path=$form->{path}&login=$form->{login}" }
@@ -2836,6 +2837,70 @@ sub iactivity_list {
    $sth->finish;
    $dbh->disconnect;
 }
+
+sub stock_assembly_view {
+   $form->{title} = 'View Stock Assembly Tranaction';
+   $form->header;
+   my $dbh = $form->dbconnect(\%myconfig);
+   $form->{id} *= 1;
+   my $query = qq|SELECT b.reference, b.transdate, d.description department, w.description warehouse
+			FROM build b
+			LEFT JOIN department d ON (b.department_id = d.id)
+			LEFT JOIN warehouse w ON (b.warehouse_id = w.id)
+			WHERE b.id = $form->{id}
+		|;
+
+   my ($reference, $transdate, $department, $warehouse) = $dbh->selectrow_array($query);
+
+   print qq|
+<body>
+<table width="100%"><tr><th>$form->{title}</th></tr></table>
+<br/>
+<br/>
+<table>
+<tr><th align="right">Reference</th><td>$reference</td></tr>
+<tr><th align="right">Date</th><td>$transdate</td></tr>
+<tr><th align="right">Department</th><td>$department</td></tr>
+<tr><th align="right">Warehouse</th><td>$warehouse</td></tr>
+</table>
+
+<table width="100%">
+<tr class="listheading">
+<th>Number</th>
+<th>Description</th>
+<th>Qty</th>
+</tr>
+|;
+
+   $query = qq|SELECT p.partnumber, p.description, i.qty
+		FROM inventory i
+		JOIN parts p ON (i.parts_id = p.id)
+		WHERE trans_id = $form->{id}
+		ORDER BY i.linetype DESC, p.partnumber
+	|;
+
+   my $sth = $dbh->prepare($query) or $form->error($query);
+   $sth->execute or $form->error($query);
+   my $i = 0;
+   while (my $row = $sth->fetchrow_hashref(NAME_lc)){
+      $i += 1; $i %= 2;
+      print qq|
+<tr class="listrow$i">
+<td>$row->{partnumber}</td>
+<td>$row->{description}</td>
+<td align="right">$row->{qty}</td>
+</tr>|;
+   }
+
+print qq|
+</table>
+</body>
+</html>
+|;
+
+}
+
+
 
 #===================================
 #
