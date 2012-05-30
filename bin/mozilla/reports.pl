@@ -2539,7 +2539,7 @@ sub iactivity_list {
       $callback .= "&warehouse=".$form->escape($form->{warehouse});
    }
 
-   @columns = qw(partnumber description id shippingdate reference department warehouse warehouse2 in out onhand cost cogs cogs_balance);
+   @columns = qw(partnumber description id trans_id shippingdate reference reftype department warehouse warehouse2 in out onhand cost cogs cogs_balance);
    # if this is first time we are running this report.
    $form->{sort} = 'partnumber' if !$form->{sort};
    $form->{oldsort} = 'none' if !$form->{oldsort};
@@ -2565,6 +2565,10 @@ sub iactivity_list {
 
    # No. columns should always come first
    splice @columns, 0, 0, 'no';
+
+   $form->{l_reftype} = 'Y';
+   $form->{l_id} = 'Y';
+   $form->{l_trans_id} = 'Y';
 
    # Select columns selected for report display
    foreach $item (@columns) {
@@ -2595,7 +2599,13 @@ sub iactivity_list {
 		w2.description AS warehouse2,
 		trf.trfnumber AS reference,
 		ap.invnumber AS ap_reference,
-		ar.invnumber AS ar_reference
+		ar.invnumber AS ar_reference,
+		oe.ordnumber AS oe_reference,
+		build.reference AS build_reference,
+		i.id,
+		i.trans_id,
+		oe.customer_id,
+		oe.vendor_id
 	      FROM inventory i
 		JOIN parts p ON (p.id = i.parts_id)
 		LEFT JOIN department d ON (i.department_id = d.id)
@@ -2604,6 +2614,8 @@ sub iactivity_list {
 		LEFT JOIN trf ON (i.trans_id = trf.id)
 		LEFT JOIN ap ON (i.trans_id = ap.id)
 		LEFT JOIN ar ON (i.trans_id = ar.id)
+		LEFT JOIN oe ON (i.trans_id = oe.id)
+		LEFT JOIN build ON (i.trans_id = build.id)
 		WHERE $where
 		ORDER BY p.partnumber, i.shippingdate/;
 		#ORDER BY $form->{sort} $form->{direction}|;
@@ -2614,6 +2626,9 @@ sub iactivity_list {
    $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
    $column_header{shippingdate} 	= rpt_hdr('shippingdate', $locale->text('Date'), $href);
    $column_header{reference} 		= rpt_hdr('reference', $locale->text('Reference'), $href);
+   $column_header{id} 			= rpt_hdr('id', $locale->text('ID'), $href);
+   $column_header{trans_id} 		= rpt_hdr('trans_id', $locale->text('Trans ID'), $href);
+   $column_header{reftype} 		= rpt_hdr('reftype', $locale->text('Type'));
    $column_header{department} 		= rpt_hdr('department', $locale->text('Department'), $href);
    $column_header{warehouse} 		= rpt_hdr('warehouse', $locale->text('Warehouse'), $href);
    $column_header{warehouse2} 		= rpt_hdr('warehouse2', $locale->text('Warehouse2'), $href);
@@ -2674,6 +2689,9 @@ sub iactivity_list {
    		$column_data{no}   		= rpt_txt('&nbsp;');
    		$column_data{shippingdate} 	= rpt_txt('&nbsp;');
    		$column_data{reference} 	= rpt_txt('&nbsp;');
+   		$column_data{id} 		= rpt_txt('&nbsp;');
+   		$column_data{trans_id} 		= rpt_txt('&nbsp;');
+   		$column_data{reftype} 		= rpt_txt('&nbsp;');
    		$column_data{department} 	= rpt_txt('&nbsp;');
    		$column_data{warehouse} 	= rpt_txt('&nbsp;');
    		$column_data{warehouse2} 	= rpt_txt('&nbsp;');
@@ -2728,9 +2746,37 @@ sub iactivity_list {
         $onhand += ($in - $out);
 	$cogs_balance += $ref->{cogs};
 
+        my $reftype;
+        my $module;
+        if ($ref->{reference}){
+	   $reftype = 'transfer';
+	   $module = 'trf.pl?action=edit';
+        } elsif ($ref->{ap_reference}){
+	   $reftype = 'ap';
+	   $module = 'ir.pl?action=edit';
+        } elsif ($ref->{ar_reference}){
+	   $reftype = 'ar';
+	   $module = 'is.pl?action=edit';
+        } elsif ($ref->{oe_reference}){
+	   if ($ref->{customer_id}){
+	      $reftype = 'so';
+	      $module = 'oe.pl?action=edit&vc=customer&type=sales_order';
+	   } else {
+	      $reftype = 'po';
+	      $module = 'oe.pl?action=edit&vc=vendor&type=purchase_order';
+	   }
+	} elsif ($ref->{build_reference}){
+	   $reftype = 'assembly';
+        }
+
+        if ($module){ $module .= "&path=$form->{path}&login=$form->{login}" }
+
 	$column_data{no}   		= rpt_txt($no);
    	$column_data{shippingdate}    	= rpt_txt($ref->{shippingdate});
-   	$column_data{reference}    	= rpt_txt($ref->{reference} . $ref->{ap_reference} . $ref->{ar_reference});
+   	$column_data{reference}    	= rpt_txt($ref->{reference} . $ref->{ap_reference} . $ref->{ar_reference} . $ref->{oe_reference} . $ref->{build_reference}, "$module&id=$ref->{trans_id}&callback=$form->{callback}");
+   	$column_data{id}    		= rpt_txt($ref->{id});
+   	$column_data{trans_id}    	= rpt_txt($ref->{trans_id});
+   	$column_data{reftype}    	= rpt_txt($reftype);
    	$column_data{department}    	= rpt_txt($ref->{department});
    	$column_data{warehouse}    	= rpt_txt($ref->{warehouse});
    	$column_data{warehouse2}    	= rpt_txt($ref->{warehouse2});
@@ -2754,6 +2800,9 @@ sub iactivity_list {
    $column_data{no}   		= rpt_txt('&nbsp;');
    $column_data{shippingdate} 	= rpt_txt('&nbsp;');
    $column_data{reference} 	= rpt_txt('&nbsp;');
+   $column_data{id} 		= rpt_txt('&nbsp;');
+   $column_data{trans_id} 	= rpt_txt('&nbsp;');
+   $column_data{reftype} 	= rpt_txt('&nbsp;');
    $column_data{department} 	= rpt_txt('&nbsp;');
    $column_data{warehouse} 	= rpt_txt('&nbsp;');
    $column_data{warehouse2} 	= rpt_txt('&nbsp;');
