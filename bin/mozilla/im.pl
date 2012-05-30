@@ -2499,6 +2499,7 @@ sub import_gl {
       $newform->{transdate} = $form->{"transdate_$i"};
       $newform->{department} = qq|$form->{"department_$i"}--$form->{"department_id_$i"}|;
       $newform->{description} = $form->{"description_$i"};
+      $newform->{notes} = $form->{"notes_$i"};
       $newform->{"accno_$linenum"} = qq|$form->{"accno_$i"}--$form->{"accdescription_$i"}|;
       $newform->{"debit_$linenum"} = $form->{"debit_$i"};
       $newform->{"credit_$linenum"} = $form->{"credit_$i"};
