@@ -887,9 +887,19 @@ sub form_footer {
   }
 
   $form->hide_form(qw(rowcount callback path login));
+
+  my $invoice_link;
+  if ($form->{type} eq 'sales_order' and $form->{id} and $form->{aa_id}){
+     $invoice_link = "is.pl?action=edit&id=$form->{aa_id}&path=$form->{path}&login=$form->{login}";
+     $invoice_link = qq|<a href="$invoice_link">View invoice</a>|;
+  } else {
+     $invoice_link = 'No invoice';
+  }
   
   print qq| 
 </form>
+
+$invoice_link
 
 </body>
 </html>
