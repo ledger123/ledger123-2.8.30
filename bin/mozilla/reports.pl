@@ -2617,6 +2617,7 @@ sub iactivity_list {
 		LEFT JOIN oe ON (i.trans_id = oe.id)
 		LEFT JOIN build ON (i.trans_id = build.id)
 		WHERE $where
+		AND p.inventory_accno_id IS NOT NULL
 		ORDER BY p.partnumber, i.shippingdate/;
 		#ORDER BY $form->{sort} $form->{direction}|;
 
