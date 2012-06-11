@@ -2264,9 +2264,12 @@ sub im_account {
 
     for (@column_index) { $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>| }
 
-    $form->{"ndx_$i"} = '1';
     $column_data{runningnumber} = qq|<td align=right>$i</td>|;
-    $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='Y' checked></td>|;
+    if ($form->{"ndx_$i"}){
+       $column_data{ndx} = qq|<td>&nbsp;</td>|;
+    } else {
+       $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='Y' checked></td>|;
+    }
 
     for (@column_index) { print $column_data{$_} }
 

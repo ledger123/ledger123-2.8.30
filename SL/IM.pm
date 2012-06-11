@@ -1511,6 +1511,7 @@ sub accounts {
 	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
       }
     }
+    ($form->{"ndx_$i"}) = $dbh->selectrow_array(qq|SELECT 1 FROM chart WHERE accno = '$form->{"accno_$i"}'|);
     $form->{rowcount} = $i;
   }
 
