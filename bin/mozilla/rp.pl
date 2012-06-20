@@ -2868,11 +2868,15 @@ if ($form->{alltaxes} and !$header){
   # Print taxes summary for all taxes report.
   my ($null, $department_id) = split /--/, $form->{department};
   my $where = "a.approved = '1'";
-  my $cashwhere = "";
+  my $cashwhere;
+
   $where .= qq| AND a.department_id = $department_id| if $department_id;
 
   my $transdate = "a.transdate";
-  $transdate = "a.datepaid" if $form->{method} eq 'cash';
+  if ($form->{method} eq 'cash'){
+     $transdate = "a.datepaid";
+     $cashwhere = qq| AND a.amount = a.paid|;
+  }
 
   if ($form->{fromdate} || $form->{todate}) {
     if ($form->{fromdate}) {
@@ -2888,7 +2892,7 @@ if ($form->{alltaxes} and !$header){
 	FROM acc_trans ac
 	JOIN ar a ON (a.id = ac.trans_id)
 	JOIN chart ch ON (ch.id = ac.chart_id)
-	WHERE $where
+	WHERE $where $cashwhere
 	AND ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AR_tax%')
 	GROUP BY seq, ch.accno, ch.description
 
@@ -2908,7 +2912,7 @@ if ($form->{alltaxes} and !$header){
 
 	SELECT 2 as seq, 'N', 'Non-taxable', SUM(a.netamount), SUM(0)
 	FROM ar a 
-	WHERE $where
+	WHERE $where $cashwhere
 	AND a.netamount = a.amount
 	GROUP BY 1, 2, 3
 
@@ -2918,7 +2922,7 @@ if ($form->{alltaxes} and !$header){
 	FROM acc_trans ac
 	JOIN ap a ON (a.id = ac.trans_id)
 	JOIN chart ch ON (ch.id = ac.chart_id)
-	WHERE $where
+	WHERE $where $cashwhere
 	AND ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AP_tax%')
 	GROUP BY seq, ch.accno, ch.description
 
@@ -2938,7 +2942,7 @@ if ($form->{alltaxes} and !$header){
 
 	SELECT 4 as seq, 'N', 'Non-taxable', SUM(a.netamount), SUM(0)
 	FROM ap a
-	WHERE $where
+	WHERE $where $cashwhere
 	AND a.netamount = a.amount
 	GROUP BY 1, 2, 3
 
