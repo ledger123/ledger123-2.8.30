@@ -136,7 +136,11 @@ sub all_transactions {
 		WHERE (c.link LIKE '%AP_paid%' OR c.link LIKE '%AR_paid')
 		AND ac.approved = '1'
 		$subwhere
-		AND ac.trans_id IN (SELECT id FROM ar WHERE amount = paid $subwhere2)
+		AND ac.trans_id IN (
+			SELECT id FROM ar WHERE amount = paid $subwhere2
+			UNION
+			SELECT id FROM ap WHERE amount = paid $subwhere2
+		)
   )| if $form->{method} eq 'cash';
 
 
