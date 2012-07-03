@@ -403,9 +403,18 @@ sub form_header {
 |;
 
   if ($form->{"select$form->{vc}"}) {
+
+    # Add customer link
+    $addvc = "ct.pl?action=add&db=customer&path=$form->{path}&login=$form->{login}&addvc=1";
+    $addvc .= "&callback=" . $form->escape($form->{callback},2);
+    $addvc = qq|<a href=$addvc>| . $locale->text('Add Customer') . qq|</a>|;
+
+    # Do not display add link if acs does not allow
+    $addvc = '' if $myconfig{acs} =~ /Customers--Add Customer/;
+
     $vc .= qq|
                 <td nowrap><select name="$form->{vc}" onChange="javascript:document.forms[0].submit()">|.$form->select_option($form->{"select$form->{vc}"}, $form->{$form->{vc}}, 1).qq|</select>
-		$vcref
+		$vcref $addvc
 		</td>
 	      </tr>
 	      <tr>
@@ -416,7 +425,7 @@ sub form_header {
   } else {
     $vc .= qq|
                 <td nowrap><input name="$form->{vc}" value="|.$form->quote($form->{$form->{vc}}).qq|" size="35">
-		$vcref
+		$vcref $addvc
 		</td>
 	      </tr>
 	      <tr>

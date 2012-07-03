@@ -507,9 +507,11 @@ sub form_header {
   if ($form->{vc} eq 'customer') {
     $vclabel = $locale->text('Customer');
     $vcnumber = $locale->text('Customer Number');
+    $addlabel = $locale->text('Add Customer');
   } else {
     $vclabel = $locale->text('Vendor');
     $vcnumber = $locale->text('Vendor Number');
+    $addlabel = $locale->text('Add Vendor');
   }
   
   $vcref = qq|<a href=ct.pl?action=edit&db=$form->{vc}&id=$form->{"$form->{vc}_id"}&login=$form->{login}&path=$form->{path} target=_blank>?</a>|;
@@ -520,9 +522,22 @@ sub form_header {
 |;
 
   if ($form->{"select$form->{vc}"}) {
+    # Add customer/vendor link
+    $addvc = "ct.pl?action=add&db=$form->{vc}&path=$form->{path}&login=$form->{login}&addvc=1";
+    $addvc .= "&callback=" . $form->escape($form->{callback},2);
+    $addvc = qq|<a href=$addvc>$addlabel</a>|;
+
+    # Do not display add link if acs does not allow
+    if ($form->{vc} eq 'customer'){
+      $addvc = '' if $myconfig{acs} =~ /Customers--Add Customer/;
+    }
+    if ($form->{vc} eq 'vendor'){
+      $addvc = '' if $myconfig{acs} =~ /Vendors--Add Vendor/;
+    }
+
     $vc .= qq|
                 <td><select name="$form->{vc}" onChange="javascript:document.forms[0].submit()">|.$form->select_option($form->{"select$form->{vc}"}, $form->{$form->{vc}}, 1).qq|</select>
-		$vcref
+		$vcref $addvc
                 </td>
               </tr>
 	      <tr>
@@ -533,7 +548,7 @@ sub form_header {
   } else {
     $vc .= qq|
                 <td><input name="$form->{vc}" value="$form->{$form->{vc}}" size=35>
-	        $vcref
+	        $vcref $addvc
 	        </td>
 	      </tr>
 	      <tr>
