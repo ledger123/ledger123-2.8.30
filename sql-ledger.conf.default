@@ -33,5 +33,8 @@ $language = "";
 # if the server can't find gzip or latex add the path
 #$ENV{PATH} .= ":/usr/local/bin";
 
+# Folders with read and write access
+@accessfolders = qw|templates css|;
+
 1;
 

@@ -1848,7 +1848,7 @@ sub display_form {
   $file = pop @f;
   $basedir = join '/', @f;
 
-  AM->load_template(\%$form);
+  AM->load_template(\%$form, \@accessfolders, $locale->text('Access Denied!'));
 
   $form->{title} = $form->{file};
 
@@ -1937,7 +1937,7 @@ $form->{body}
 
 sub edit_template {
 
-  AM->load_template(\%$form);
+  AM->load_template(\%$form, \@accessfolders, $locale->text('Access Denied!'));
 
   $form->{title} = $form->{file};
   # convert &nbsp to &amp;nbsp;
@@ -1994,7 +1994,7 @@ $form->{body}</textarea>
 
 sub save_template {
 
-  AM->save_template(\%$form);
+  AM->save_template(\%$form, \@accessfolders, $locale->text('Access Denied!'));
   $form->redirect($locale->text('Template saved!'));
   
 }
