@@ -269,6 +269,13 @@ sub import_sales_invoice {
   $form->{curr} ||= $form->{defaultcurrency};
   $form->{currency} = $form->{curr};
 
+  if ($form->{currency} ne $form->{defaultcurrency}){
+     $query = qq|SELECT sell FROM exchangerate
+	      WHERE curr = '$form->{currency}'
+	      AND transdate = '$form->{transdate}'|;
+     ($form->{exchangerate}) = $dbh->selectrow_array($query);
+  }
+
   my $language_code;
   $query = qq|SELECT c.customernumber, c.language_code, a.city
               FROM customer c
