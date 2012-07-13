@@ -356,7 +356,13 @@ sub transactions {
     $arwhere .= " AND a.department_id = $var";
     $apwhere .= " AND a.department_id = $var";
   }
-  
+  if ($form->{projectnumber}) {
+    ($null, $var) = split /--/, $form->{projectnumber};
+    $glwhere .= " AND ac.project_id = $var";
+    $arwhere .= " AND ac.project_id = $var";
+    $apwhere .= " AND ac.project_id = $var";
+  }
+
   my $gdescription = "''";
   my $invoicejoin;
   my $lineitem = "''";

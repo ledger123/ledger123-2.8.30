@@ -173,6 +173,7 @@ sub create_links {
     for (@{ $form->{all_project} }) { $form->{selectprojectnumber} .= qq|$_->{projectnumber}--$_->{id}\n| }
   }
 
+
   # departments
   # armaghan 12-apr-2012 restrict user to his department
   if (@{ $form->{all_department} }) {
@@ -231,6 +232,19 @@ sub search {
 	  </select></td>
 	</tr>
 |;
+  }
+
+  $form->all_projects(\%myconfig);
+  if (@{ $form->{all_project} }) {
+    $form->{selectproject} = "<option>\n";
+    for (@{ $form->{all_project} }) { $form->{selectproject} .= qq|<option value="|.$form->quote($_->{projectnumber}).qq|--$_->{id}">$_->{projectnumber}\n| }
+
+    $project = qq|
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Project').qq|</th>
+	  <td colspan=3><select name=projectnumber>$form->{selectproject}</select></td>
+	</tr>|;
+
   }
 
   if (@{ $form->{all_years} }) {
@@ -355,6 +369,7 @@ sub search {
 	</tr>
 
       	$department
+	$project
 	
 	<tr>
 	  <th align=right>|.$locale->text('Line Item').qq|</th>
@@ -542,6 +557,13 @@ sub transactions {
     ($department) = split /--/, $form->{department};
     $option .= "\n<br>" if $option;
     $option .= $locale->text('Department')." : $department";
+  }
+  if ($form->{projectnumber}) {
+    $href .= "&projectnumber=".$form->escape($form->{projectnumber});
+    $callback .= "&projectnumber=".$form->escape($form->{projectnumber},1);
+    ($projectnumber) = split /--/, $form->{projectnumber};
+    $option .= "\n<br>" if $option;
+    $option .= $locale->text('Project')." : $projectnumber";
   }
   if ($form->{notes}) {
     $href .= "&notes=".$form->escape($form->{notes});
