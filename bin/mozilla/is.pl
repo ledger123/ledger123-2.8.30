@@ -1206,7 +1206,7 @@ sub update {
 
     if ($form->{rebuildpartsgroup}) {
      ######### pos
-     $form->{lookup} = $locale->text('Main Groups');
+     $form->{lookup} = "";
       for (@{ $form->{all_partsgroup} }) {
 	if ($_->{pos}) {
 	  $form->{lookup} .= "\n$_->{partsgroup}--$_->{translation}--$_->{image}";
