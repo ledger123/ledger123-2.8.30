@@ -723,6 +723,7 @@ sub transaction {
               FROM chart c
 	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 	      WHERE c.charttype = 'A'
+	      AND c.allow_gl = '1'
               ORDER by c.accno|;
   $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);

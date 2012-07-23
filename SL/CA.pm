@@ -53,7 +53,7 @@ sub all_accounts {
   $sth->finish;
 
   $query = qq|SELECT c.id, c.accno, c.description, c.charttype, c.gifi_accno,
-              c.category, c.link,
+              c.category, c.link, allow_gl,
 	      l.description AS translation
               FROM chart c
 	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')

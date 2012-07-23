@@ -128,4 +128,5 @@ CREATE TABLE partsattr (
     hotnew VARCHAR(3)
 );
 
+ALTER TABLE chart ADD allow_gl BOOLEAN DEFAULT true;
 

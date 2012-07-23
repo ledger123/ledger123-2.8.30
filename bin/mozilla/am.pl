@@ -74,6 +74,7 @@ sub account_header {
   my %checked;
   $checked{$form->{charttype}} = "checked";
   $checked{contra} = "checked" if $form->{contra};
+  $checked{allow_gl} = "checked" if $form->{allow_gl};
   $checked{"$form->{category}_"} = "checked";
   
   for (qw(accno description)) { $form->{$_} = $form->quote($form->{$_}) }
@@ -150,6 +151,10 @@ if ($form->{charttype} eq "A") {
 	      </tr>
 	    </table>
 	  </td>
+	</tr>
+	<tr>
+		<th>|.$locale->text('Allow GL Transaction').qq|</th>
+		<td><input name=allow_gl class=checkbox type=checkbox value=1 $checked{allow_gl}></td>
 	</tr>
 	<tr>
 	  <th colspan=2>|.$locale->text('Include in drop-down menus').qq|</th>
@@ -282,7 +287,7 @@ sub list_account {
   # construct callback
   my $callback = "$form->{script}?action=list_account&path=$form->{path}&login=$form->{login}";
 
-  my @column_index = qw(accno gifi_accno description debit credit link);
+  my @column_index = qw(accno gifi_accno description debit credit link allow_gl);
 
   my %column_data;
   
@@ -292,6 +297,7 @@ sub list_account {
   $column_data{debit} = qq|<th class=listtop>|.$locale->text('Debit').qq|</a></th>|;
   $column_data{credit} = qq|<th class=listtop>|.$locale->text('Credit').qq|</a></th>|;
   $column_data{link} = qq|<th class=listtop>|.$locale->text('Link').qq|</a></th>|;
+  $column_data{allow_gl} = qq|<th class=listtop>|.$locale->text('GL').qq|</a></th>|;
 
 
   $form->header;
@@ -343,6 +349,7 @@ sub list_account {
       $column_data{debit} = qq|<th>&nbsp;</th>|;
       $column_data{credit} = qq| <th>&nbsp;</th>|;
       $column_data{link} = qq|<th>&nbsp;</th>|;
+      $column_data{allow_gl} = qq|<th>&nbsp;</th>|;
 
     } else {
       $i++; $i %= 2;
@@ -354,6 +361,7 @@ sub list_account {
       $column_data{debit} = qq|<td align=right>$ref->{debit}</td>|;
       $column_data{credit} = qq|<td align=right>$ref->{credit}</td>|;
       $column_data{link} = qq|<td>$ref->{link}&nbsp;</td>|;
+      $column_data{allow_gl} = qq|<td align="center">$ref->{allow_gl}&nbsp;</td>|;
       
     }
 
