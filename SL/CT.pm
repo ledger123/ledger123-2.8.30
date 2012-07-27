@@ -34,6 +34,7 @@ sub create_links {
                 e.name || '--' || e.id AS employee,
 		g.pricegroup || '--' || g.id AS pricegroup,
 		m.description || '--' || m.id AS paymentmethod,
+		d.description || '--' || d.id AS department,
 		bk.name AS bankname,
 		ad1.address1 AS bankaddress1,
 		ad1.address2 AS bankaddress2,
@@ -51,6 +52,7 @@ sub create_links {
 		LEFT JOIN paymentmethod m ON (m.id = ct.paymentmethod_id)
 		LEFT JOIN bank bk ON (bk.id = ct.id)
 		LEFT JOIN address ad1 ON (bk.address_id = ad1.id)
+		LEFT JOIN department d ON (ct.department_id = d.id)
                 WHERE ct.id = $form->{id}/;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
@@ -208,6 +210,16 @@ sub create_links {
   }
   $sth->finish;
  
+  # get departments
+  $query = qq|SELECT id, description FROM department ORDER BY description|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{all_department} }, $ref;
+  }
+  $sth->finish;
+
   # get currencies
   $form->{currencies} = $form->get_currencies($dbh, $myconfig);
 
@@ -383,7 +395,7 @@ sub save {
   $form->{"$form->{db}number"} = $form->update_defaults($myconfig, "$form->{db}number", $dbh) if ! $form->{"$form->{db}number"};
  
   my %rec;
-  for (qw(employee pricegroup business paymentmethod)) {
+  for (qw(employee pricegroup business paymentmethod department)) {
     ($null, $rec{"${_}_id"}) = split /--/, $form->{$_};
     $rec{"${_}_id"} *= 1;
   }
@@ -430,6 +442,7 @@ sub save {
 	      threshold = $form->{threshold},
 	      discountterms = $form->{discountterms},
 	      paymentmethod_id = $rec{paymentmethod_id},
+	      department_id = $rec{department_id},
 	      remittancevoucher = '$form->{remittancevoucher}'
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
@@ -620,6 +633,11 @@ sub search {
     $form->{l_invnumber} = $form->{l_ordnumber} = $form->{l_quonumber} = "";
   }
   
+  if ($form->{department}){
+      my ($department, $department_id) = split /--/, $form->{department};
+      $department_id *= 1;
+      $where .= qq| AND c.department_id = $department_id|;
+  }
 
   my $query = qq|SELECT c.*, b.description AS business,
                  e.name AS employee, g.pricegroup, l.description AS language,

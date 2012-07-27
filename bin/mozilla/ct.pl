@@ -113,6 +113,13 @@ sub create_links {
     $form->{selectemployee} = $form->escape($form->{selectemployee},1);
   }
 
+  if (@{ $form->{all_department} }) {
+    $form->{selectdepartment} = qq|\n|;
+    for (@{ $form->{all_department} }) {
+      $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n|;
+    }
+    $form->{selectdepartment} = $form->escape($form->{selectdepartment},1);
+  }
 }
 
  
@@ -475,6 +482,24 @@ sub search_name {
 |;
   }
  
+  $form->all_departments(\%myconfig);
+  if (@{ $form->{all_department} }) {
+    $form->{selectdepartment} = qq|\n|;
+    for (@{ $form->{all_department} }) {
+      $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n|;
+    }
+    $form->{selectdepartment} = $form->escape($form->{selectdepartment},1);
+    
+    $department = qq|
+ 	  <tr><th align=right>|.$locale->text('Department').qq|</th>
+	  <td><select name=department>|
+	  .$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+	  .qq|</select>
+	  </td></tr>
+|;
+  }
+ 
+
   $focus = "name";
 
   $form->header;
@@ -518,6 +543,7 @@ sub search_name {
 		<th align=right nowrap>|.$locale->text('Notes').qq|</th>
 		<td colspan=3><textarea name=notes rows=3 cols=32></textarea></td>
 	      </tr>
+	      $department
 	    </table>
 	  </td>
 
@@ -755,6 +781,14 @@ sub list_names {
       $option .= $locale->text('Employee');
     }
     $option .= " : $form->{employee}";
+  }
+  if ($form->{department}) {
+    my ($department, $department_id) = split(/--/, $form->{department});
+    $callback .= "&department=".$form->escape($form->{department},1);
+    $href .= "&department=".$form->escape($form->{department});
+    $option .= "\n<br>";
+    $option .= $locale->text('Department');
+    $option .= " : $department";
   }
 
   $fromdate = "";
@@ -1672,6 +1706,17 @@ sub form_header {
 |;
   }
 
+  if ($form->{selectdepartment}) {
+    
+    $department = qq|
+ 	  <th align=right>|.$locale->text('Department').qq|</th>
+	  <td><select name=department>|
+	  .$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+	  .qq|</select>
+	  </td>
+|;
+  }
+ 
 
 # $locale->text('Add Customer')
 # $locale->text('Add Vendor')
@@ -1904,7 +1949,11 @@ sub form_header {
 	  $currency
 	</tr>
 	<tr valign=top>
+	  <td colspan=2><table><tr>
 	  $employee
+	  </tr><tr>
+	  $department
+	  </tr></table></td>
 	  <td colspan=4>
 	    <table>
 	      <tr valign=top>
@@ -1975,7 +2024,7 @@ sub form_header {
 
 
   $form->hide_form(map { "tax_${_}_description" } (split / /, $form->{taxaccounts})) if $form->{taxaccounts};
-  $form->hide_form(map { "select$_" } qw(currency arap discount payment business pricegroup language employee paymentmethod));
+  $form->hide_form(map { "select$_" } qw(currency arap discount payment business pricegroup language employee paymentmethod department));
   $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
 
 }

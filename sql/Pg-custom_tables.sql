@@ -130,3 +130,6 @@ CREATE TABLE partsattr (
 
 ALTER TABLE chart ADD allow_gl BOOLEAN DEFAULT true;
 
+ALTER TABLE customer ADD department_id INTEGER;
+ALTER TABLE vendor ADD department_id INTEGER;
+
