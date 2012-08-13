@@ -270,7 +270,7 @@ sub import_sales_invoice {
   $form->{currency} = $form->{curr};
 
   if ($form->{currency} ne $form->{defaultcurrency}){
-     $query = qq|SELECT sell FROM exchangerate
+     $query = qq|SELECT buy FROM exchangerate
 	      WHERE curr = '$form->{currency}'
 	      AND transdate = '$form->{transdate}'|;
      ($form->{exchangerate}) = $dbh->selectrow_array($query);
