@@ -36,6 +36,7 @@ sub import {
 	     account => 'Accounts',
 	     transactions => "$form->{ARAP} Transactions",
 	     parts => 'Parts',
+	     service => 'Services',
 	     partscustomer => 'Parts Customers',
 	     partsvendor => 'Parts Vendors',
 	   );
@@ -45,6 +46,8 @@ sub import {
 # $locale->text('Import General Ledger')
 # $locale->text('Import AR Transactions')
 # $locale->text('Import AP Transactions')
+# $locale->text('Import Parts')
+# $locale->text('Import Services')
 
   $msg = "Import $title{$form->{type}}";
   $form->{title} = $locale->text($msg);
@@ -122,7 +125,7 @@ sub import {
 	 </tr>| if $form->{ARAP} eq 'AP';
       }
     }
-  } elsif ($form->{type} eq 'parts') {
+  } elsif ($form->{type} =~ /(parts|service)/) {
 	IC->create_links("IC", \%myconfig, \%$form);
   	$form->{taxaccounts} = "";
 
@@ -166,6 +169,7 @@ sub import {
       		<br>|.$form->hide_form("IC_tax_${item}_description");
   	}
 
+        if ($form->{type} eq 'parts'){
         $itemaccounts = qq|
          <tr>
 	  <th align=right>|.$locale->text('Inventory').qq|</th>
@@ -184,10 +188,30 @@ sub import {
          <tr>
 	  <th align=right>|.$locale->text('COGS').qq|</th>
 	  <td>
-	    <select name=IC_expense>|.$form->select_option($form->{"selectIC_cogs"})
+	    <select name=IC_expense>|.$form->select_option($form->{"selectIC_expense"})
+	    .qq|</select>
+	  </td>
+	</tr>|;
+       } elsif ($form->{type} eq 'service') {
+        $itemaccounts = qq|
+	</tr>
+         <tr>
+	  <th align=right>|.$locale->text('Income').qq|</th>
+	  <td>
+	    <select name=IC_income>|.$form->select_option($form->{"selectIC_income"})
 	    .qq|</select>
 	  </td>
 	</tr>
+         <tr>
+	  <th align=right>|.$locale->text('Expense').qq|</th>
+	  <td>
+	    <select name=IC_expense>|.$form->select_option($form->{"selectIC_expense"})
+	    .qq|</select>
+	  </td>
+	</tr>
+       |;
+       }
+        $itemaccounts .= qq|
 	<tr>
 	   <th></th>
 	   <td>$tax</td>
@@ -1070,6 +1094,9 @@ sub import_sales_invoices {
 	for (qw(description unit deliverydate serialnumber itemnotes projectnumber)) { $newform->{"${_}_$j"} = $form->{"${_}_$i"} }
 	$newform->{"sellprice_$j"} = $form->format_amount($myconfig, $form->{"sellprice_$i"});
 
+        $test = sprintf('%s', $newform->{"description_$j"});
+	$form->info($test);
+
 	$j++; 
       }
 
@@ -1649,6 +1676,10 @@ sub continue { &{ $form->{nextsub} } };
 #=========================================
 
 #=========================================
+sub im_service {
+   &im_parts;
+}
+
 sub im_parts {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
@@ -1814,7 +1845,11 @@ sub import_parts {
       $newform->{"taxaccounts"} = $form->{"taxaccounts"};
       for (split / /, $form->{taxaccounts}) { $newform->{"IC_tax_$_"} = $form->{"IC_tax_$_"} }
       
-      $form->info("${m}. ".$locale->text('Add part ...'));
+      if ($form->{type} eq 'parts'){
+         $form->info("${m}. ".$locale->text('Add part ...'));
+      } elsif ($form->{type} eq 'service') {
+         $form->info("${m}. ".$locale->text('Add service ...'));
+      }
 
       if (IC->save(\%myconfig, \%$newform)) {
 	$form->info(qq| $form->{"partnumber_$i"}, $form->{"description_$i"}|);
@@ -1824,7 +1859,11 @@ sub import_parts {
       }
     }
   }
-  $form->info('Parts imported');
+  if ($form->{type} eq 'parts'){
+     $form->info('Parts imported');
+  } elsif ($form->{type} eq 'service') {
+     $form->info('Services imported');
+  }
 }
 
 #=========================================
