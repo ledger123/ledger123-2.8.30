@@ -418,8 +418,14 @@ sub gl_list {
    $glwhere .= qq| AND ac.transdate >= '$form->{fromdate}'| if $form->{fromdate};
    $glwhere .= qq| AND ac.transdate <= '$form->{todate}'| if $form->{todate};
    $glwhere .= qq| AND ac.amount <> 0|;
+
+
    my $arwhere = $glwhere;
    my $apwhere = $glwhere;
+
+   my $where = qq| (1 = 1)|;
+   $where .= qq| AND ac.transdate >= '$form->{fromdate}'| if $form->{fromdate};
+   $where .= qq| AND ac.transdate <= '$form->{todate}'| if $form->{todate};
 
    for (qw(fromaccount toaccount fromdate todate)){ $callback .= "&$_=".$form->escape($form->{$_},1) }
 
@@ -460,6 +466,7 @@ sub gl_list {
    $form->{callback} = $form->escape($callback,1);
 
    my $query;
+
    if ($form->{l_group}){
      $query = qq|SELECT c.accno, c.description AS accdescription, '' AS name,
 		 ac.transdate, g.reference, g.id AS id, 'gl' AS module,
@@ -587,9 +594,39 @@ sub gl_list {
 
    # Subtotal and total variables
    my $debit_total, $credit_total, $debit_subtotal, $credit_subtotal, $balance;
+   my $i = 1; my $no = 1;
+
+   my $inactivequery = qq|
+		SELECT accno, description
+		FROM chart
+		WHERE id NOT IN (
+			SELECT DISTINCT chart_id
+			FROM acc_trans ac
+			WHERE $where
+		)
+		AND charttype = 'A'
+		ORDER BY accno
+   |;
+   my $inactivesth = $dbh->prepare($inactivequery);
+   $inactivesth->execute;
+   print qq|
+<table>
+<tr><th colspan="2" class="listheading">|.$locale->text('Inactive Accounts').qq|</th></tr>
+<tr>
+<th class="listheading">|.$locale->text('Account').qq|</th>
+<th class="listheading">|.$locale->text('Description').qq|</th>
+</tr>
+|;
+   while (my $ref = $inactivesth->fetchrow_hashref(NAME_lc)){
+	$i++; $i %= 2; $no++;
+	print qq|<tr class="listrow$i"><td>$ref->{accno}</td><td>$ref->{description}</td></tr>|;
+   }
+
+   print qq|
+</table>
+   |;
 
    # print data
-   my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    print qq|<table width=100%>|;
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
