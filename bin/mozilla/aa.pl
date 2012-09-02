@@ -18,6 +18,7 @@ if (-f "$form->{path}/custom_aa.pl") {
 if (-f "$form->{path}/$form->{login}_aa.pl") {
       eval { require "$form->{path}/$form->{login}_aa.pl"; };
 }
+require "$form->{path}/js.pl";
 
 use SL::VR;
 
@@ -1576,12 +1577,12 @@ sub search {
     $vc = qq|
               <tr>
 	        <th align=right nowrap>$vclabel</th>
-	        <td colspan=3><input name=$form->{vc} size=35>
+	        <td colspan=3><input id="vc" name=$form->{vc} size=35>
 		</td>
 	      </tr>
 	      <tr>
 	        <th align=right nowrap>$vcnumber</th>
-		<td colspan=3><input name="$form->{vc}number" size=35>
+		<td colspan=3><input id="vc_number" name="$form->{vc}number" size=35>
 		</td>
 	      </tr>
 |;
@@ -1788,6 +1789,11 @@ sub search {
   
   print qq|
 <body>
+|;
+
+  &vc_autocomplete;
+
+  print qq|
 
 <form method=post action=$form->{script}>
 

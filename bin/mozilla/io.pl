@@ -19,6 +19,7 @@ if (-f "$form->{path}/$form->{login}_io.pl") {
   eval { require "$form->{path}/$form->{login}_io.pl"; };
 }
 
+require "$form->{path}/js.pl";
 
 1;
 # end of main
@@ -55,6 +56,8 @@ if (-f "$form->{path}/$form->{login}_io.pl") {
 
 sub display_row {
   my $numrows = shift;
+
+  &partnumber_partdescription_autocomplete;
 
   @column_index = qw(runningnumber partnumber description lineitemdetail qty);
 
@@ -210,13 +213,17 @@ function CheckAll(v) {
     $discount = $form->round_amount($form->{"sellprice_$i"} * $form->{"discount_$i"}/100, $decimalplaces);
     $linetotal = $form->round_amount($form->{"sellprice_$i"} - $discount, $decimalplaces);
     $linetotal = $form->round_amount($linetotal * $form->{"qty_$i"}, $form->{precision});
-    
+
+    # jquery autocomplete for new items on invoices / orders / quotes etc.
+    my $partnumber_css_id = 'id="partnumber"' if !$form->{"partnumber_$i"};
+    my $partdescription_css_id = 'id="partdescription"' if !$form->{"partnumber_$i"};
+
     if (($rows = $form->numtextrows($form->{"description_$i"}, 46, 6)) < 2) {
       $rows = 1;
     }
     
     $form->{"description_$i"} = $form->quote($form->{"description_$i"});
-    $column_data{description} = qq|<td><textarea name="description_$i" rows=$rows cols=46 wrap=soft>$form->{"description_$i"}</textarea></td>|;
+    $column_data{description} = qq|<td><textarea $partdescription_css_id name="description_$i" rows=$rows cols=46 wrap=soft>$form->{"description_$i"}</textarea></td>|;
 
     $skunumber = qq|
                 <br><b>$sku</b> $form->{"sku_$i"}| if ($form->{vc} eq 'vendor' && $form->{"sku_$i"});
@@ -250,7 +257,7 @@ function CheckAll(v) {
     }
 
     $column_data{runningnumber} = qq|<td><input name="runningnumber_$i" class="inputright" size="3" value="$i"></td>|;
-    $column_data{partnumber} = qq|<td nowrap><input name="partnumber_$i" size="15" value="|.$form->quote($form->{"partnumber_$i"}).qq|" accesskey="$i" title="[$i]">$skunumber$itemhref</td>|;
+    $column_data{partnumber} = qq|<td nowrap><input $partnumber_css_id name="partnumber_$i" size="15" value="|.$form->quote($form->{"partnumber_$i"}).qq|" accesskey="$i" title="[$i]">$skunumber$itemhref</td>|;
     $column_data{qty} = qq|<td><input name="qty_$i" class="inputright" title="$form->{"onhand_$i"}" size="5" value="|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|"></td>|;
     $column_data{ship} = qq|<td><input name="ship_$i" class="inputright" size="5" value="|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|" READONLY></td>|;
     $column_data{unit} = qq|<td><input name="unit_$i" size="5" maxlength="5" value="|.$form->quote($form->{"unit_$i"}).qq|"></td>|;
