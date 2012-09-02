@@ -440,6 +440,29 @@ sub header {
   |;
     }
 
+    $jquery_header = q|
+<link href="css/start/jquery-ui-1.8.23.custom.css" type="text/css" rel="Stylesheet" />
+<script src="js/jquery-1.7.2.min.js"></script>
+<script src="js/jquery-ui-1.8.23.custom.min.js"></script>
+| if 1;
+
+    $jquery_dateformat = q|
+<script>
+$(function() {
+   $(".date").datepicker({ 
+	dateFormat: '|.$myconfig->{dateformat}.q|',
+	showOn: "button",
+	buttonImage: "images/calendar.gif",
+	buttonImageOnly: true,
+	showOtherMonths: true,
+	selectOtherMonths: true,
+	changeMonth: true,
+	changeYear: true
+   });
+});
+</script>
+|;
+
     if ($self->{charset}) {
       $charset = qq|<META HTTP-EQUIV="Content-Type" CONTENT="text/plain; charset=$self->{charset}">
   |;
@@ -456,6 +479,8 @@ sub header {
   <META NAME="robots" CONTENT="noindex,nofollow" />
   $favicon
   $stylesheet
+  $jquery_header
+  $jquery_dateformat
   $charset
 </head>
 
