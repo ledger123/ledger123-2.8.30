@@ -7,6 +7,8 @@
 #
 #======================================================================
 
+use DBIx::Simple;
+
 package Form;
 
 
@@ -122,6 +124,11 @@ sub new {
   
 }
 
+sub db_init {
+   my ($self, $myconfig) = @_;
+   $self->{dbh} = $self->dbconnect_noauto($myconfig);
+   $self->{dbs} = DBIx::Simple->connect($self->{dbh});
+}
 
 sub debug {
   my ($self, $file) = @_;
@@ -450,7 +457,7 @@ sub header {
 <script>
 $(function() {
    $(".date").datepicker({ 
-	dateFormat: '|.$myconfig->{dateformat}.q|',
+	dateFormat: '|.$self->{dateformat}.q|',
 	showOn: "button",
 	buttonImage: "images/calendar.gif",
 	buttonImageOnly: true,
