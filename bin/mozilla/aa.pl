@@ -548,13 +548,13 @@ sub form_header {
 | . $form->hide_form("$form->{vc}number");
   } else {
     $vc .= qq|
-                <td><input name="$form->{vc}" value="$form->{$form->{vc}}" size=35>
+                <td><input id="vc" name="$form->{vc}" value="$form->{$form->{vc}}" size=35>
 	        $vcref $addvc
 	        </td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>$vcnumber</th>
-		<td><input name="$form->{vc}number" value="$form->{"$form->{vc}number"}" size=35></td>
+		<td><input id="vcnumber" name="$form->{vc}number" value="$form->{"$form->{vc}number"}" size=35></td>
 	      </tr>
 |;
   }
@@ -650,7 +650,11 @@ sub form_header {
   
   print qq|
 <body onload="document.forms[0].${focus}.focus()" />
+|;
 
+  &vc_autocomplete;
+
+  print qq|
 <form method=post action=$form->{script}>
 
 <input type=hidden name=title value="|.$form->quote($form->{title}).qq|">

@@ -7,7 +7,6 @@ sub vc_autocomplete {
   print q|
 <script>
 $(function() {
-   $("#vcnumber").val("");
    $("#vc").autocomplete({
 	source: "js.pl?action=vc_data&|.qq|db=$form->{db}&vc=$form->{vc}&path=$form->{path}&login=$form->{login}|.q|",
 	minLength: 2,
