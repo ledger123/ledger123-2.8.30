@@ -17,6 +17,7 @@ use SL::PE;
 use SL::VR;
 
 require "$form->{path}/arap.pl";
+require "$form->{path}/js.pl";
 
 1;
 # end of main
@@ -335,7 +336,9 @@ sub search {
   
   print qq|
 <body>
-
+|;
+  &vc_autocomplete;
+  print qq|
 <form method=post action=$form->{script}>
 
 <table width=100%>
@@ -361,11 +364,11 @@ sub search {
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Company Name').qq|</th>
-	  <td><input name=name size=35></td>
+	  <td><input id="vc" name=name size=35></td>
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Company Number').qq|</th>
-	  <td><input name=vcnumber size=35></td>
+	  <td><input id="vcnumber" name=vcnumber size=35></td>
 	</tr>
 
       	$department

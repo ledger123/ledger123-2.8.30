@@ -40,8 +40,14 @@ sub vc_data {
    }
    my $data = qq|Content-Type: text/html\n\n
    [|;
-   for my $ref ($form->{dbs}->query($query, $term)->hashes){
-      $data .= qq|{ "id": "$ref->{id}", "value": "$ref->{name}", "vcnumber": "$ref->{number}" },|;
+   if ($form->{db}){
+      for my $ref ($form->{dbs}->query($query, $term)->hashes){
+         $data .= qq|{ "id": "$ref->{id}", "value": "$ref->{name}", "vcnumber": "$ref->{number}" },|;
+      }
+   } else {
+      for my $ref ($form->{dbs}->query($query, $term, $term)->hashes){
+         $data .= qq|{ "id": "$ref->{id}", "value": "$ref->{name}", "vcnumber": "$ref->{number}" },|;
+      }
    }
    chop $data;
    $data .= ']';
