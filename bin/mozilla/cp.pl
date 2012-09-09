@@ -18,6 +18,7 @@ use SL::AA;
 use SL::VR;
 
 require "$form->{path}/arap.pl";
+require "$form->{path}/js.pl";
 
 1;
 # end of main
@@ -1347,11 +1348,11 @@ sub payment_header {
 		</tr>
   |;
     } else {
-      $vc .= qq|<td><input name="$form->{vc}" size=35 value="|.$form->quote($form->{$form->{vc}}).qq|"></td>
+      $vc .= qq|<td><input id="vc" name="$form->{vc}" size=35 value="|.$form->quote($form->{$form->{vc}}).qq|"></td>
 		</tr>
 		<tr>
 		<th align=right>|.$locale->text($vc{$form->{vc}}{number}).qq|</th>
-		<td><input name="$form->{vc}number" size=35 value="|.$form->quote($form->{"$form->{vc}number"}).qq|"></td>
+		<td><input id="vcnumber" name="$form->{vc}number" size=35 value="|.$form->quote($form->{"$form->{vc}number"}).qq|"></td>
 		</tr>
   |;
     }
@@ -1414,6 +1415,8 @@ sub payment_header {
 
 
   $form->header;
+
+  &vc_autocomplete;
 
   print qq|
 <script language="javascript">

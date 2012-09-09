@@ -13,6 +13,8 @@
 
 use SL::CT;
 
+require "$form->{path}/js.pl";
+
 1;
 # end of main
 
@@ -503,6 +505,8 @@ sub search_name {
 
   $form->header;
   
+  &vc_autocomplete;
+
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
 
@@ -521,7 +525,7 @@ sub search_name {
 	    <table>
 	      <tr>
 		<th align=right nowrap>$vcname</th>
-		<td><input name=name size=32></td>
+		<td><input id="vc" name=name size=32></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Contact').qq|</th>
@@ -549,7 +553,7 @@ sub search_name {
 	    <table>
 	      <tr>
 		<th align=right nowrap>$vcnumber</th>
-		<td><input name=$form->{db}number size=32></td>
+		<td><input id="vcnumber" name=$form->{db}number size=32></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Address').qq|</th>

@@ -163,13 +163,13 @@ sub form_header {
     $customer = qq|
               <tr>
 	        <th align=right nowrap>|.$locale->text('Customer').qq| <font color=red>*</font></th>
-		<td><input name=customer value="|.$form->quote($form->{customer}).qq|" size=35>
+		<td><input id="vc" name=customer value="|.$form->quote($form->{customer}).qq|" size=35>
 		$vcref $addvc
 		</td>
 	      </tr>
 	      <tr>
 	        <th align=right nowrap>|.$locale->text('Customer Number').qq|</th>
-		<td><input name=customernumber value="|.$form->quote($form->{customernumber}).qq|" size=35>
+		<td><input id="vcnumber" name=customernumber value="|.$form->quote($form->{customernumber}).qq|" size=35>
 		</td>
 	      </tr>
 |;
@@ -277,6 +277,8 @@ sub form_header {
 
   $form->header;
  
+  &vc_autocomplete;
+
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
 
