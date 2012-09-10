@@ -80,7 +80,6 @@ $(function() {
 sub gl_data {
    my $term = $form->like(lc $form->{term});
    my $query = "SELECT id, accno, description FROM chart WHERE charttype = 'A' AND lower(description) LIKE ? ORDER BY description";
-   $sth->execute;
    my $data = qq|Content-Type: text/html\n\n
    [|;
    for my $ref ($form->{dbs}->query($query, $term)){
@@ -99,7 +98,6 @@ sub partnumber_partdescription_autocomplete {
   print q|
 <script>
 $(function() {
-    $('#partnumber').val("");
     $("#partdescription").autocomplete({
 	source: "js.pl?action=partdescription_data&|.qq|path=$form->{path}&login=$form->{login}|.q|",
         minLength: 2,
@@ -111,13 +109,12 @@ $(function() {
 });
 
 $(function() {
-    $('#partdescription').val("");
     $("#partnumber").autocomplete({
     	source: "js.pl?action=partnumber_data&|.qq|path=$form->{path}&login=$form->{login}|.q|",
 	minLength: 2,
 	select: function(event, ui) {
                     $('#parts_id').val(ui.item.id);
-                    $('#parts_description').val(ui.item.parts_description);
+                    $('#partdescription').val(ui.item.partdescription);
        }
     });
 });
@@ -137,8 +134,8 @@ sub partnumber_data {
 		ORDER BY partnumber";
    my $data = qq|Content-Type: text/html\n\n
    [|;
-   for my $ref ($form->{dbs}->query($query, $term)){
-      $data .= qq|{ "id": "$ref->{id}", "value": "$ref->{partnumber}", "parts_description": "$ref->{description}" },|;
+   for my $ref ($form->{dbs}->query($query, $term)->hashes){
+      $data .= qq|{ "id": "$ref->{id}", "value": "$ref->{partnumber}", "partdescription": "$ref->{description}" },|;
    }
    chop $data;
    $data .= ']';
@@ -154,7 +151,7 @@ sub partdescription_data {
 		ORDER BY description";
    my $data = qq|Content-Type: text/html\n\n
    [|;
-   for my $ref ($form->{dbs}->query($query, $term)){
+   for my $ref ($form->{dbs}->query($query, $term)->hashes){
       $data .= qq|{ "id": "$ref->{id}", "value": "$ref->{description}", "partnumber": "$ref->{partnumber}" },|;
    }
    chop $data;
