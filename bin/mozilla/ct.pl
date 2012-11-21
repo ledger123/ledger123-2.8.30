@@ -498,7 +498,27 @@ sub search_name {
 	  </td></tr>
 |;
   }
+
+  CT->create_links(\%myconfig, \%$form);
  
+  if (@{ $form->{all_business} }) {
+    $form->{selectbusiness} = qq|\n|;
+    for (@{ $form->{all_business} }) { $form->{selectbusiness} .= qq|$_->{description}--$_->{id}\n| }
+    $form->{selectbusiness} = $form->escape($form->{selectbusiness},1);
+  }
+ 
+  if ($form->{selectbusiness}) {
+
+    $typeofbusiness = qq|
+ 	  <th align=right>|.$locale->text('Type of Business').qq|</th>
+	  <td><select name=business>|
+	  .$form->select_option($form->{selectbusiness}, $form->{business}, 1)
+	  .qq|</select>
+	  </td>
+|;
+
+  }
+
 
   $focus = "name";
 
@@ -544,6 +564,7 @@ sub search_name {
 		<td colspan=3><textarea name=notes rows=3 cols=32></textarea></td>
 	      </tr>
 	      $department
+	      $typeofbusiness
 	    </table>
 	  </td>
 
@@ -789,6 +810,14 @@ sub list_names {
     $option .= "\n<br>";
     $option .= $locale->text('Department');
     $option .= " : $department";
+  }
+  if ($form->{business}) {
+    my ($business, $business_id) = split(/--/, $form->{business});
+    $callback .= "&business=".$form->escape($form->{business},1);
+    $href .= "&business=".$form->escape($form->{business});
+    $option .= "\n<br>";
+    $option .= $locale->text('Type of Business');
+    $option .= " : $business";
   }
 
   $fromdate = "";
@@ -1234,7 +1263,6 @@ sub list_history {
     $vcname = $locale->text('Vendor');
     $vcnumber = $locale->text('Vendor Number');
   }
-  
   if ($form->{history} eq 'summary') {
     @columns = $form->sort_columns(partnumber, description, qty, unit, sellprice, total, discount);
   }
@@ -1304,7 +1332,14 @@ sub list_history {
     $option .= "\n<br>" if ($option);
     $option .= $locale->text('Closed');
   }
-
+  if ($form->{business}) {
+    my ($business, $business_id) = split(/--/, $form->{business});
+    $callback .= "&business=".$form->escape($form->{business},1);
+    $href .= "&business=".$form->escape($form->{business});
+    $option .= "\n<br>";
+    $option .= $locale->text('Type of Business');
+    $option .= " : $business";
+  }
 
   $form->{callback} = "$callback&sort=$form->{sort}";
   $callback = $form->escape($form->{callback});

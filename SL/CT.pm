@@ -638,6 +638,11 @@ sub search {
       $department_id *= 1;
       $where .= qq| AND c.department_id = $department_id|;
   }
+  if ($form->{business}){
+      my ($business, $business_id) = split /--/, $form->{business};
+      $business_id *= 1;
+      $where .= qq| AND c.business_id = $business_id|;
+  }
 
   my $query = qq|SELECT c.*, b.description AS business,
                  e.name AS employee, g.pricegroup, l.description AS language,
@@ -907,6 +912,11 @@ sub get_history {
   if ($form->{"$form->{db}number"} ne "") {
     $var = $form->like(lc $form->{"$form->{db}number"});
     $where .= " AND lower(ct.$form->{db}number) LIKE '$var'";
+  }
+  if ($form->{business}){
+      my ($business, $business_id) = split /--/, $form->{business};
+      $business_id *= 1;
+      $where .= qq| AND ct.business_id = $business_id|;
   }
   if ($form->{address} ne "") {
     $var = $form->like(lc $form->{address});
