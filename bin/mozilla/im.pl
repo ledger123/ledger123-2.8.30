@@ -1746,11 +1746,7 @@ sub im_parts {
     for (@column_index) { $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>| }
 
     $column_data{runningnumber} = qq|<td align=right>$i</td>|;
-    if ($form->{"parts_id_$i"}){
-       $column_data{ndx} = qq|<td>&nbsp;</td>|;
-    } else {
-       $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='1' checked></td>|;
-    }
+    $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='1' checked></td>|;
 
     for (@column_index) { print $column_data{$_} }
 
@@ -1798,6 +1794,7 @@ sub im_parts {
 sub import_parts {
 
   my $m = 0;
+  my $query;
 
   $newform = new Form;
   
@@ -1811,7 +1808,7 @@ sub import_parts {
       if (!$form->{"partsgroup_id_$i"}){
       	  for (keys %$newform) { delete $newform->{$_} };
 	  #Lookup partsgroup id if it is already added by this procedure.
-	  my $query = qq|SELECT id FROM partsgroup WHERE partsgroup='$form->{"partsgroup_$i"}'|;
+	  $query = qq|SELECT id FROM partsgroup WHERE partsgroup='$form->{"partsgroup_$i"}'|;
 	  ($form->{"partsgroup_id_$i"}) = $dbh->selectrow_array($query);
 	  if (!$form->{"partsgroup_id_$i"}){
 	     $newform->{partsgroup} = $form->{"partsgroup_$i"};
@@ -1822,7 +1819,29 @@ sub import_parts {
 
       for (keys %$newform) { delete $newform->{$_} };
 
+      if ($form->{"parts_id_$i"}){
+         # Load existing part / service information
+	 $query = qq|
+		SELECT parts.*, 
+		c1.accno AS inventory_accno, 
+		c2.accno AS income_accno,
+		c3.accno AS expense_accno
+		FROM parts 
+		LEFT JOIN chart c1 ON (c1.id = parts.inventory_accno_id)
+		LEFT JOIN chart c2 ON (c2.id = parts.income_accno_id)
+		LEFT JOIN chart c3 ON (c3.id = parts.expense_accno_id)
+		WHERE parts.id = $form->{"parts_id_$i"}|;
+         $sth = $dbh->prepare($query) or $form->dberror($query);
+         $sth->execute;
+         my $row = $sth->fetchrow_hashref(NAME_lc);
+         for (keys %$row) { $newform->{$_} = $row->{$_} }
+	 $newform->{IC_inventory} = "$newform->{inventory_accno}--null";
+	 $newform->{IC_income} = "$newform->{income_accno}--null";
+	 $newform->{IC_expense} = "$newform->{expense_accno}--null";
+      }
+
       $newform->{item} = 'part';
+      $newform->{"id"} = $form->{"parts_id_$i"};
       $newform->{"partnumber"} = $form->{"partnumber_$i"};
       $newform->{"description"} = $form->{"description_$i"};
       $newform->{"unit"} = $form->{"unit_$i"};
@@ -1839,12 +1858,15 @@ sub import_parts {
       $newform->{"tarrif_hscode"} = $form->{"tarrif_hscode_$i"};
       $newform->{"countryorigin"} = $form->{"countryorigin_$i"};
       $newform->{"toolnumber"} = $form->{"toolnumber_$i"};
-      $newform->{"IC_inventory"} = $form->{"IC_inventory"};
-      $newform->{"IC_income"} = $form->{"IC_income"};
-      $newform->{"IC_expense"} = $form->{"IC_expense"};
-      $newform->{"taxaccounts"} = $form->{"taxaccounts"};
-      for (split / /, $form->{taxaccounts}) { $newform->{"IC_tax_$_"} = $form->{"IC_tax_$_"} }
-      
+      if (!$form->{"parts_id_$i"}){
+	 # Update for new parts / services only
+         $newform->{"IC_inventory"} = $form->{"IC_inventory"};
+         $newform->{"IC_income"} = $form->{"IC_income"};
+         $newform->{"IC_expense"} = $form->{"IC_expense"};
+     }
+     $newform->{"taxaccounts"} = $form->{"taxaccounts"};
+     for (split / /, $form->{taxaccounts}) { $newform->{"IC_tax_$_"} = $form->{"IC_tax_$_"} }
+ 
       if ($form->{type} eq 'parts'){
          $form->info("${m}. ".$locale->text('Add part ...'));
       } elsif ($form->{type} eq 'service') {
@@ -2489,7 +2511,7 @@ sub im_gl {
   
   $form->hide_form(qw(precision rowcount type login path callback));
 
-  if ($debit_total == $credit_total){
+  if ($form->round_amount($debit_total, 2) == $form->round_amount($credit_total, 2)){
     print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import GL').qq|">|;
   } else {
