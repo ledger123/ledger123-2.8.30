@@ -2411,7 +2411,7 @@ sub im_gl {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(reference department department_id description transdate notes accno accdescription debit credit source memo);
+  @column_index = qw(reference department department_id description transdate notes accno accdescription debit credit source memo projectnumber project_id);
   @flds = @column_index;
   unshift @column_index, qw(runningnumber ndx);
 
@@ -2434,6 +2434,7 @@ sub im_gl {
   $column_data{credit} = $locale->text('Credit');
   $column_data{source} = $locale->text('Source');
   $column_data{memo} = $locale->text('Memo');
+  $column_data{projectnumber} = $locale->text('Project');
 
   $form->header;
  
@@ -2468,6 +2469,10 @@ sub im_gl {
 |;
 
     for (@column_index) { $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>| }
+
+    $form->{"debit_$i"} = $form->round_amount($form->{"debit_$i"}, $form->{precision});
+    $form->{"credit_$i"} = $form->round_amount($form->{"credit_$i"}, $form->{precision});
+
     $column_data{debit} = qq|<td>|. $form->format_amount(\%myconfig, $form->{"debit_$i"}, $form->{precision}) . qq|</td>|;
     $column_data{credit} = qq|<td>| . $form->format_amount(\%myconfig, $form->{"credit_$i"}, $form->{precision}) . qq|</td>|;
 
@@ -2565,10 +2570,11 @@ sub import_gl {
       $newform->{description} = $form->{"description_$i"};
       $newform->{notes} = $form->{"notes_$i"};
       $newform->{"accno_$linenum"} = qq|$form->{"accno_$i"}--$form->{"accdescription_$i"}|;
-      $newform->{"debit_$linenum"} = $form->{"debit_$i"};
-      $newform->{"credit_$linenum"} = $form->{"credit_$i"};
+      $newform->{"debit_$linenum"} = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
+      $newform->{"credit_$linenum"} = $form->parse_amount(\%myconfig, $form->{"credit_$i"});
       $newform->{"source_$linenum"} = $form->{"source_$i"};
       $newform->{"memo_$linenum"} = $form->{"memo_$i"};
+      $newform->{"projectnumber_$linenum"} = qq|$form->{"projectnumber_$i"}--$form->{"project_id_$i"}|;
       $linenum++;
     }
   }
