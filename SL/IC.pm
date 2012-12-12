@@ -95,12 +95,26 @@ sub get_part {
 
       $sth = $dbh->prepare($query);
       $sth->execute || $form->dberror($query);
-      
+
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
 	push @{ $form->{makemodels} }, $ref;
       }
       $sth->finish;
     }
+
+    # get alternate parts
+    $query = qq|SELECT a.alt_parts_id, p.partnumber alt_number, p.description alt_description
+                  FROM parts_alt a
+		  JOIN parts p ON (p.id = a.alt_parts_id)
+                  WHERE a.parts_id = $form->{id}|;
+
+    $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
+      
+    while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+	push @{ $form->{alternate_parts} }, $ref;
+    }
+    $sth->finish;
   }
 
   # now get accno for taxes
@@ -285,6 +299,12 @@ sub save {
 	$query = qq|DELETE FROM makemodel
 		    WHERE parts_id = $form->{id}|;
 	$dbh->do($query) || $form->dberror($query);
+
+	# delete alternate parts
+	$query = qq|DELETE FROM parts_alt
+		    WHERE parts_id = $form->{id}|;
+	$dbh->do($query) || $form->dberror($query);
+
       }
 
       if ($form->{item} eq 'assembly') {
@@ -404,6 +424,13 @@ sub save {
 		    VALUES ($form->{id},|
 		    .$dbh->quote($form->{"make_$i"}).qq|, |
 		    .$dbh->quote($form->{"model_$i"}).qq|)|;
+	$dbh->do($query) || $form->dberror($query);
+      }
+    }
+    for $i (1 .. $form->{alternate_part_rows}) {
+      if ($form->{"alt_parts_id_$i"}) {
+	$query = qq|INSERT INTO parts_alt (parts_id, alt_parts_id)
+		    VALUES ($form->{id}, $form->{"alt_parts_id_$i"})|;
 	$dbh->do($query) || $form->dberror($query);
       }
     }

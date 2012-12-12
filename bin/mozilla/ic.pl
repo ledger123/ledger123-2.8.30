@@ -16,6 +16,7 @@ use SL::IC;
 
 require "$form->{path}/io.pl";
 require "$form->{path}/rd.pl";
+require "$form->{path}/js.pl";
 
 1;
 # end of main
@@ -82,7 +83,6 @@ sub edit {
   &display_form;
 
 }
-
 
 
 sub link_part {
@@ -201,6 +201,15 @@ sub link_part {
     }
     
   }
+
+  # setup alternate items
+  $i = 1;
+  foreach $ref (@{ $form->{alternate_parts} }) {
+    for (qw(alt_parts_id alt_number alt_description)) { $form->{"${_}_$i"} = $ref->{$_} }
+    $i++;
+  }
+  $form->{alternate_part_rows} = $i - 1;
+  delete $form->{alternate_parts};
   
   # setup make and models
   $i = 1;
@@ -739,7 +748,7 @@ sub form_footer {
   $form->hide_form(qw(customer_rows));
 
   if ($form->{item} =~ /(part|assembly)/) {
-    $form->hide_form(qw(makemodel_rows));
+    $form->hide_form(qw(makemodel_rows alternate_part_rows));
   }
   
   if ($form->{item} =~ /(part|service)/) {
@@ -2781,7 +2790,7 @@ sub so_requirements_report {
 sub makemodel_row {
   my ($numrows) = @_;
 
-  for (qw(make model)) { $form->{"${_}_$i"} = $form->quote($form->{"${_}_$i"}) }
+  for (qw(make model)) { $form->{"${_}_$i"} = $form->quote($form->{"${_}_$i"}) } #TODO Redundent?
 
   print qq|
   <tr>
@@ -2798,6 +2807,49 @@ sub makemodel_row {
 	<tr>
 	  <td><input name="make_$i" size=30 value="|.$form->quote($form->{"make_$i"}).qq|"></td>
 	  <td><input name="model_$i" size=30 value="|.$form->quote($form->{"model_$i"}).qq|"></td>
+	</tr>
+|;
+  }
+
+  print qq|
+      </table>
+    </td>
+  </tr>
+|;
+
+}
+
+
+sub alternate_part_row {
+  my ($numrows) = @_;
+
+  for (qw(alt_number alt_description)) { $form->{"${_}_$i"} = $form->quote($form->{"${_}_$i"}) } #TODO Redundent?
+
+  print qq|
+  <tr>
+    <td>
+      <table width=100%>
+	<tr>
+	  <th class="listheading">|.$locale->text('Alternate Part Number').qq|</th>
+	  <th class="listheading">|.$locale->text('Description').qq|</th>
+	</tr>
+|;
+
+  for $i (1 .. $numrows) {
+    $form->{"alt_parts_id_$i"} *= 1;
+    $alt_number_css = '';
+    $alt_description_css = '';
+    $alt_parts_id_css = '';
+    if ($i == $numrows){
+      $alt_number_css = 'partnumber' if $i == $numrows;
+      $alt_description_css = 'partdescription';
+      $alt_parts_id_css = 'parts_id' if $i == $numrows;
+    }
+    print qq|
+	<input name="alt_parts_id_$i" id="$alt_parts_id_css" type=hidden value="|.$form->{"alt_parts_id_$i"}.qq|">
+	<tr>
+	  <td><input name="alt_number_$i" id="$alt_number_css" size=20 value="|.$form->quote($form->{"alt_number_$i"}).qq|"></td>
+	  <td><input name="alt_description_$i" id="$alt_description_css" size=40 value="|.$form->quote($form->{"alt_description_$i"}).qq|"></td>
 	</tr>
 |;
   }
@@ -3148,6 +3200,7 @@ sub update {
 	
 	if ($rows > 1) {
 	  $form->{makemodel_rows}--;
+	  $form->{alternate_part_rows}--;
 	  $form->{customer_rows}--;
 	  &select_item;
 	  exit;
@@ -3555,6 +3608,7 @@ sub save {
     delete $form->{oldcallback};
 
     $form->{makemodel_rows}--;
+    $form->{alternate_part_rows}--;
 
     # put callback together
     foreach $key (keys %$form) {

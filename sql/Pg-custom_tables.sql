@@ -135,4 +135,11 @@ CREATE TABLE partsattr (
 ALTER TABLE employee ADD COLUMN department_id integer;
 ALTER TABLE employee ADD COLUMN warehouse_id integer;
 
+--
+-- Changes to allow product options in LedgerCart
+--
+CREATE TABLE parts_alt (parts_id integer, alt_parts_id integer);
+
+
+
 -- EOF

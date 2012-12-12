@@ -721,7 +721,10 @@ sub display_form {
     exit;
   }
 
+
   &form_header;
+
+  &partnumber_partdescription_autocomplete;
 
   $numrows = ++$form->{rowcount};
   $subroutine = "display_row";
@@ -729,6 +732,8 @@ sub display_form {
   if ($form->{item} eq 'part') {
     # create makemodel rows
     &makemodel_row(++$form->{makemodel_rows});
+
+    &alternate_part_row(++$form->{alternate_part_rows});
 
     &vendor_row(++$form->{vendor_rows});
     
@@ -738,6 +743,8 @@ sub display_form {
   if ($form->{item} eq 'assembly') {
     # create makemodel rows
     &makemodel_row(++$form->{makemodel_rows});
+
+    &alternate_part_row(++$form->{alternate_part_rows});
     
     $numrows = ++$form->{customer_rows};
     $subroutine = "customer_row";
@@ -789,6 +796,24 @@ sub check_form {
 
     $form->redo_rows(\@flds, \@f, $count, $form->{makemodel_rows});
     $form->{makemodel_rows} = $count;
+
+    # remove any alternate item rows
+    @flds = qw(alt_number alt_description);
+    $count = 0;
+    @f = ();
+
+    for $i (1 .. $form->{alternate_part_rows}) {
+      if (($form->{"alt_number_$i"} ne "") || ($form->{"alt_description_$i"} ne "")) {
+	push @f, {};
+	$j = $#f;
+
+	for (@flds) { $f[$j]->{$_} = $form->{"${_}_$i"} }
+	$count++;
+      }
+    }
+
+    $form->redo_rows(\@flds, \@f, $count, $form->{alternate_part_rows});
+    $form->{alternate_part_rows} = $count;
 
     &check_vendor;
     &check_customer;
@@ -863,6 +888,24 @@ sub check_form {
 
     $form->redo_rows(\@flds, \@f, $count, $form->{makemodel_rows});
     $form->{makemodel_rows} = $count;
+
+    # remove any alternate item rows
+    @flds = qw(alt_number alt_description);
+    $count = 0;
+    @f = ();
+
+    for $i (1 .. $form->{alternate_part_rows}) {
+      if (($form->{"alt_number_$i"} ne "") || ($form->{"alt_description_$i"} ne "")) {
+	push @f, {};
+	$j = $#f;
+
+	for (@flds) { $f[$j]->{$_} = $form->{"${_}_$i"} }
+	$count++;
+      }
+    }
+
+    $form->redo_rows(\@flds, \@f, $count, $form->{alternate_part_rows});
+    $form->{alternate_part_rows} = $count;
 
     &check_customer;
   
