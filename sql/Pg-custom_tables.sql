@@ -140,6 +140,10 @@ ALTER TABLE employee ADD COLUMN warehouse_id integer;
 --
 CREATE TABLE parts_alt (parts_id integer, alt_parts_id integer);
 
+--
+-- Enable/disable individual items for display in LedgerCart
+--
+ALTER TABLE parts ADD pos BOOLEAN DEFAULT true;
 
 
 -- EOF

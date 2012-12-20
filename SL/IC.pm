@@ -379,6 +379,7 @@ sub save {
   my $partsgroup_id;
   ($null, $partsgroup_id) = split /--/, $form->{partsgroup};
   $partsgroup_id *= 1;
+  $form->{pos} *= 1;
 
   $form->{partnumber} = $form->update_defaults($myconfig, "partnumber", $dbh) if ! $form->{partnumber};
 
@@ -411,7 +412,8 @@ sub save {
 	      toolnumber = '$form->{toolnumber}',
 	      countryorigin = '$form->{countryorigin}',
 	      tariff_hscode = '$form->{tariff_hscode}',
-	      barcode = '$form->{barcode}'
+	      barcode = '$form->{barcode}',
+	      pos = '$form->{pos}'
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 

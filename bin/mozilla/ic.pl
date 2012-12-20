@@ -321,6 +321,8 @@ sub form_header {
     }
   }
 
+  $form->{pos} = ($form->{pos}) ? "checked" : "";
+
   if ($form->{selectpartsgroup}) {
     $selectpartsgroup = qq|<select name=partsgroup onChange="javascript:document.forms[0].submit()">|.$form->select_option($form->{selectpartsgroup}, $form->{partsgroup}, 1).qq|</select>
     <br><input name=partsgroupcode size=10 value="$form->{partsgroupcode}">|;
@@ -417,6 +419,8 @@ sub form_header {
 	<tr>
 	  <th align=right nowrap>|.$locale->text('Tool Number').qq|</th>
 	  <td><input name=toolnumber size=20 value="$form->{toolnumber}"></td>
+	  <th align=right nowrap>|.$locale->text('POS Button').qq|</th>
+          <td><input name=pos class=checkbox type=checkbox value=1 $form->{pos}></td>
 	</tr>
       </table>
     </td>
