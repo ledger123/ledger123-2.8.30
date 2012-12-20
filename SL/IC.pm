@@ -305,6 +305,10 @@ sub save {
 		    WHERE parts_id = $form->{id}|;
 	$dbh->do($query) || $form->dberror($query);
 
+	# delete this item from alternates parts' alternate parts
+        $query = qq|DELETE FROM parts_alt WHERE alt_parts_id = $form->{id}|;
+	$dbh->do($query) || $form->dberror($query);
+
       }
 
       if ($form->{item} eq 'assembly') {
@@ -433,6 +437,9 @@ sub save {
       if ($form->{"alt_parts_id_$i"}) {
 	$query = qq|INSERT INTO parts_alt (parts_id, alt_parts_id)
 		    VALUES ($form->{id}, $form->{"alt_parts_id_$i"})|;
+	$dbh->do($query) || $form->dberror($query);
+	$query = qq|INSERT INTO parts_alt (parts_id, alt_parts_id)
+		    VALUES ($form->{"alt_parts_id_$i"}, $form->{id})|;
 	$dbh->do($query) || $form->dberror($query);
       }
     }
