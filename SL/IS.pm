@@ -1239,14 +1239,13 @@ sub post_invoice {
   foreach my $trans_id (keys %{$form->{acc_trans}}) {
     foreach $accno (keys %{$form->{acc_trans}{$trans_id}}) {
       $amount = $form->round_amount($form->{acc_trans}{$trans_id}{$accno}{amount}, $form->{precision});
-      if ($amount) {
+      # armaghan removed if block to allow for 0 tax to be inserted.
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		    transdate)
 		    VALUES ($trans_id, (SELECT id FROM chart
 					WHERE accno = '$accno'),
 		    $amount, '$form->{transdate}')|;
 	$dbh->do($query) || $form->dberror($query);
-      }
     }
   }
 

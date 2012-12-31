@@ -2218,7 +2218,7 @@ sub tax_report {
     if ($form->{report} =~ /nontaxable/) {
       push @{ $form->{TR} }, $ref if $ref->{netamount};
     } else {
-      push @{ $form->{TR} }, $ref if $ref->{tax};
+      push @{ $form->{TR} }, $ref; # Removed if $ref->{tax} to show 0 taxes
     }
   }
 
