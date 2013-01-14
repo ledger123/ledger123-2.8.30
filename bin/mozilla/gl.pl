@@ -263,14 +263,15 @@ sub search {
   push @a, (qq|<input name="l_vcnumber" class=checkbox type=checkbox value=Y>|, $locale->text('Company Number'));
   push @a, (qq|<input name="l_address" class=checkbox type=checkbox value=Y>|, $locale->text('Address'));
   push @a, @l_department if @l_department;
+  push @a, (qq|<input name="l_projectnumber" class=checkbox type=checkbox value=Y>|, $locale->text('Project Number'));
   push @a, (qq|<input name="l_notes" class=checkbox type=checkbox value=Y>|, $locale->text('Notes'));
   push @a, (qq|<input name="l_debit" class=checkbox type=checkbox value=Y checked>|, $locale->text('Debit'));
   push @a, (qq|<input name="l_credit" class=checkbox type=checkbox value=Y checked>|, $locale->text('Credit'));
   push @a, (qq|<input name="l_source" class=checkbox type=checkbox value=Y checked>|, $locale->text('Source'));
   push @a, (qq|<input name="l_memo" class=checkbox type=checkbox value=Y>|, $locale->text('Memo'));
   push @a, (qq|<input name="l_lineitem" class=checkbox type=checkbox value=Y>|, $locale->text('Line Item'));
-  push @a, (qq|<input name="l_accno" class=checkbox type=checkbox value=Y checked>|, $locale->text('Account'));
   push @a, (qq|<input name="l_accdescription" class=checkbox type=checkbox value=Y>|, $locale->text('Account Description'));
+  push @a, (qq|<input name="l_accno" class=checkbox type=checkbox value=Y checked>|, $locale->text('Account'));
   push @a, (qq|<input name="l_gifi_accno" class=checkbox type=checkbox value=Y>|, $locale->text('GIFI'));
 
 
@@ -583,7 +584,7 @@ sub transactions {
   }
 
 
-  @columns = $form->sort_columns(qw(transdate id reference description name vcnumber address notes lineitem source memo debit credit accno accdescription gifi_accno department));
+  @columns = $form->sort_columns(qw(transdate id reference description name vcnumber address notes lineitem source memo debit credit accno accdescription gifi_accno projectnumber department));
   pop @columns if $form->{department};
 
   if ($form->{link} =~ /_paid/) {
@@ -630,6 +631,7 @@ sub transactions {
   $column_header{memo} = "<th><a class=listheading href=$href&sort=memo>".$locale->text('Memo')."</a></th>";
   
   $column_header{department} = "<th><a class=listheading href=$href&sort=department>".$locale->text('Department')."</a></th>";
+  $column_header{projectnumber} = "<th><a class=listheading href=$href&sort=projectnumber>".$locale->text('Project')."</a></th>";
   
   $column_header{notes} = "<th class=listheading>".$locale->text('Notes')."</th>";
   $column_header{debit} = "<th class=listheading>".$locale->text('Debit')."</th>";
@@ -725,7 +727,7 @@ sub transactions {
     $column_data{transdate} = "<td nowrap>$ref->{transdate}</td>";
     $column_data{reference} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</td>";
 
-    for (qw(department name vcnumber address)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
+    for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
     
     for (qw(lineitem description source memo notes)) {
       $ref->{$_} =~ s/\r?\n/<br>/g;

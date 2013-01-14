@@ -525,7 +525,8 @@ sub transactions {
                   source => 7,
                   accno => 9,
 		  department => 15,
-		  memo => 16,
+		  projectnumber => 16,
+		  memo => 17,
 		  lineitem => 19,
 		  name => 20,
 		  vcnumber => 21);
@@ -534,7 +535,7 @@ sub transactions {
   my $sortorder = $form->sort_order(\@a, \%ordinal);
   
   my $query = qq|SELECT g.id, 'gl' AS type, $false AS invoice, g.reference,
-                 g.description, ac.transdate, ac.source,
+                 g.description, ac.transdate, ac.source, p.projectnumber,
 		 ac.amount, c.accno, c.gifi_accno, g.notes, c.link,
 		 '' AS till, ac.cleared, d.description AS department,
 		 ac.memo, '0' AS name_id, '' AS db,
@@ -545,10 +546,11 @@ sub transactions {
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 LEFT JOIN department d ON (d.id = g.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
                  WHERE $glwhere
 	UNION ALL
 	         SELECT a.id, 'ar' AS type, a.invoice, a.invnumber,
-		 a.description, ac.transdate, ac.source,
+		 a.description, ac.transdate, ac.source, p.projectnumber,
 		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
 		 a.till, ac.cleared, d.description AS department,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
@@ -562,10 +564,11 @@ sub transactions {
 		 JOIN customer ct ON (a.customer_id = ct.id)
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $arwhere
 	UNION ALL
 	         SELECT a.id, 'ap' AS type, a.invoice, a.invnumber,
-		 a.description, ac.transdate, ac.source,
+		 a.description, ac.transdate, ac.source, p.projectnumber,
 		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
 		 a.till, ac.cleared, d.description AS department,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
@@ -579,6 +582,7 @@ sub transactions {
 		 JOIN vendor ct ON (a.vendor_id = ct.id)
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $apwhere
 	         ORDER BY $sortorder|;
 
