@@ -287,7 +287,7 @@ sub list_account {
   # construct callback
   my $callback = "$form->{script}?action=list_account&path=$form->{path}&login=$form->{login}";
 
-  my @column_index = qw(accno gifi_accno description debit credit link allow_gl);
+  my @column_index = qw(accno gifi_accno description link allow_gl);
 
   my %column_data;
   
