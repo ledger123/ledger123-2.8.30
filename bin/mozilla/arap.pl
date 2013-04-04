@@ -518,7 +518,7 @@ sub project_selected {
 
 sub post_as_new {
 
-  for (qw(id invnumber printed emailed queued)) { delete $form->{$_} }
+  for (qw(id printed emailed queued)) { delete $form->{$_} }
   for my $i (1 .. $form->{paidaccounts} - 1){ map { delete $form->{"${_}_$i"} } qw(datepaid source memo paid AR_paid) }
   &post;
 
