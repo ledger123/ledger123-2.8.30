@@ -50,7 +50,7 @@ sub chart_of_accounts {
 
   CA->all_accounts(\%myconfig, \%$form);
 
-  @column_index = qw(accno gifi_accno description debit credit);
+  @column_index = qw(accno gifi_accno description);
 
   $column_header{accno} = qq|<th class=listtop>|.$locale->text('Account').qq|</th>\n|;
   $column_header{gifi_accno} = qq|<th class=listtop>|.$locale->text('GIFI').qq|</th>\n|;
