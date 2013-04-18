@@ -18,6 +18,7 @@ use SL::VR;
 
 require "$form->{path}/arap.pl";
 require "$form->{path}/js.pl";
+require "$form->{path}/mylib.pl";
 
 1;
 # end of main
@@ -443,6 +444,7 @@ sub search {
   print qq|
 		    <tr>
 		      <td nowrap><input name="l_subtotal" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|</td>
+		      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
 		    </tr>
 		  </table>
 		</td>
@@ -494,6 +496,12 @@ sub transactions {
   $form->{reportcode} = 'gl';
 
   GL->transactions(\%myconfig, \%$form);
+
+  if ($form->{l_csv} eq 'Y'){
+     my $dbh = $form->dbconnect(\%myconfig);
+     &export_to_csv($dbh, $form->{query}, 'gl');
+     exit;
+  }
 
   $href = "$form->{script}?action=transactions";
   for (qw(direction oldsort path login month year interval reportlogin)) { $href .= "&$_=$form->{$_}" }
