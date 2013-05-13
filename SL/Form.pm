@@ -203,12 +203,14 @@ sub hide_form {
 
 
 sub error {
-  my ($self, $msg) = @_;
+  my ($self, $msg, $dbmsg) = @_;
 
   if ($ENV{HTTP_USER_AGENT}) {
     $self->{msg} = $msg;
+    $self->{dbmsg} = $dbmsg;
     $self->{format} = "html";
     $self->format_string(msg);
+    $self->format_string(dbmsg);
 
     delete $self->{pre};
 
@@ -219,6 +221,10 @@ sub error {
     print qq|<body><h2 class=error>Error!</h2>
     
     <p><b>$self->{msg}</b>|;
+
+    print qq|<h2 class=dberror>DB Error!</h2>
+
+    <p><b class=dberror>$self->{dbmsg}</b>|;
 
     exit;
 
@@ -270,7 +276,7 @@ sub numtextrows {
 sub dberror {
   my ($self, $msg) = @_;
 
-  $self->error("$msg\n".$DBI::errstr);
+  $self->error($DBI::errstr, $msg);
   
 }
 
