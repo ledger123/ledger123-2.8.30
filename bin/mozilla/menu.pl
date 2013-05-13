@@ -181,7 +181,7 @@ sub js_menu {
 	$display = "display: none;" unless $level eq ' ';
 
 	print qq|
-        <div id="menu$i" class="menuOut" onclick="SwitchMenu('sub$i')" onmouseover="ChangeClass('menu$i','menuOver')" onmouseout="ChangeClass('menu$i','menuOut')">$label</div>
+        <div id="menu$i" class="menuOut" onclick="SwitchMenu('sub$i')">$label</div>
 	<div class="submenu" id="sub$i" style="$display">|;
 	
 	# remove same level items
@@ -197,7 +197,7 @@ sub js_menu {
 
       if ($menu->{$item}{module}) {
 	if ($level eq "") {
-	  print qq|<div id="menu$i" class="menuOut" onmouseover="ChangeClass('menu$i','menuOver')" onmouseout="ChangeClass('menu$i','menuOut')"> |. 
+	  print qq|<div id="menu$i" class="menuOut"> |. 
 	  $menu->menuitem(\%myconfig, \%$form, $item, $level).qq|$label</a></div>|;
 
 	  # remove same level items
@@ -216,7 +216,7 @@ sub js_menu {
 	$display = "display: none;" unless $item eq ' ';
 
 	print qq|
-<div id="menu$i" class="menuOut" onclick="SwitchMenu('sub$i')" onmouseover="ChangeClass('menu$i','menuOver')" onmouseout="ChangeClass('menu$i','menuOut')">$label</div>
+<div id="menu$i" class="menuOut" onclick="SwitchMenu('sub$i')">$label</div>
 	<div class="submenu" id="sub$i" style="$display">|;
 	
 	&js_menu($menu, $item);

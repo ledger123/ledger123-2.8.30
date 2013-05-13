@@ -17,18 +17,20 @@ a {
 }
 
 html {
+	background: url(../images/rma/rma-bg-01.jpg) repeat top center;
   color: #444444;
   font-size: 13px;
 }
-body.main {
-	padding: 1px 20px 20px 20px;
-	background: #fff url(../images/rma/rma-bg-01.jpg) repeat-x top left;
+
+body {
 }
-body.main.start, body.login {
-	background: url(../images/rma/rma-bg-01.jpg) repeat top left;
-	margin: none;
-	padding: none;
-	border: none;
+body.main {
+	padding: 0 20px;
+	background: #fff url(../images/rma/rma-bg-01.jpg) no-repeat top center;
+	margin: 0 20px;
+}
+body.main.start {
+	background: none;
 }
 table {
 	border-collapse: collapse;
@@ -100,7 +102,7 @@ center a {
   display: block;
   width: 237px;
   height: 94px;
-  background: url(../images/sql-ledger.png) no-repeat top center;
+  background: url(../images/rma/rma-logo-01.jpg) no-repeat top center;
 }
 center h1, center p {
   width: 200px;
@@ -168,17 +170,12 @@ body.menu {
    border-right: 1px solid #7b8077;
 }
 body.menu img {
-	margin: 6px 0 0 10px;
+	margin: 9px 0 0 10px;
 }
-.menu .ul {
-	padding: 0;
-	margin: 0;
-	border: none;
-	overflow: hidden;
-}
-.menu .nothing {
+body.menu #menu1 {
 	display: none;
 }
+
 .menu .logout {
   padding: 4px 15px;
   background: #c6c9c4;
@@ -261,6 +258,7 @@ body.menu img {
 	border-left: 5px solid #AEB2AA;
 	padding-left: 35px;
 	border-bottom: 1px solid #AEB2AA;
+
 } 
 .submenu .submenu a.active-trail {
 	background: #009fe3 !important;
@@ -315,18 +313,14 @@ body.menu img {
 .menu .submenu .submenu span {
 	display: none;
 }
+
 .menu .hover {
 	background: #a8c285 !important;
 }
 .menu .hover a {
-	/*color: #fff;*/
+	color: #fff;
 	text-shadow: #333 0 1px 0 !important;
 }
-.menu .hover div a {
-	/*color: #fff;*/
-	text-shadow: #fff 0 -1px 0 !important;
-}
-
 .menu .submenu.hover a {
 	color: #3a4850 !important;
 	text-shadow: #fff 0 -1px 0 !important;
@@ -340,19 +334,13 @@ body.menu img {
 .menu .submenu .active.hover {
 	background: #9fa39c !important;
 }
-.menu .submenu .submenu a.active-trail {
-	color: #fff !important;
-}
 .menu .submenu .submenu a.active-trail:hover {
 	background: #008cc8 !important;
 	color: #fff !important;
 }
 .menu .submenu.hover a.active-trail {
-	color: #fff;
+	color: #fff !important;
 	text-shadow: #0681b6 0 -1px 0 !important;
-}
-.layerone .menuOut {
-	padding: 0 !important;
 }
 
 /* Main frame */
@@ -363,43 +351,21 @@ body.menu img {
 
 .listtop { 
   background: url(../images/rma/rma-bg-01.jpg) repeat top center;
-  padding: 30px 20px 0 20px; 
+  padding: 45px 20px 19px 20px; 
   font-size: 20px;
   font-family: Georgia;
-	line-height: 100%;
   font-weight: normal;
   text-shadow: #ebeeea 0 -1px 0;
   color: #30302f;
-	border-bottom: 20px solid #fff;
-	height: 96px;
-	overflow: hidden;
-}
-.listheading .listtop {
-	font-family: Helvetica, Arial, sans-serif;
-	font-weight: bold;
-	font-size: 16px;
-	padding: 0;
-	margin: 0;
-	background: none;
-	height: auto;
 }
 .listheading { 
-  /*margin: 10px;*/
-  padding: 0;
+  margin: 10px;
+  padding: 7px 20px;
   font-weight: bold;
  	border-bottom: 1px solid #ccc;
  	color: #3a4850;
 }
-.listheading .listheading {
-	padding: 5px 2px;
-}
-a.listheading {
-	border: none;
-}
-tbody th.listheading {
-	padding: 5px 5px;
-}
-/*table table .listheading {
+table table .listheading {
   margin: 0;
   padding: 0;
   background: none;
@@ -415,16 +381,19 @@ table table .listheading th {
 }
 table table .listheading a {
 	border-bottom: none;
-}*/
+}
 .listrow1, .listrow0 { 
 	font-size: 11px; 
 	background-color: #fff; 
 	color: black; 
+	-webkit-border-radius: 7px;
+	-moz-border-radius: 7px;
+	border-radius: 7px;
+	border-bottom: 1px solid #ccc;
 	}
 .listrow1 td, .listrow0 td {
 	border-left: 4px solid #fff;
 	 padding: 5px 2px;
-	border-bottom: 1px solid #ccc;
 }
 .listrow1 td a, .listrow0 td a {
 	color: #009fe3;
@@ -481,7 +450,7 @@ select {
   font-size: 11px;
 }
 .buttons {
-  margin: 10px 0 0 0;
+  margin: 10px 0 20px 0;
   overflow: hidden;
 }
 .submit {
@@ -592,36 +561,6 @@ hr {
 	display: none;
 }
 
-/* special pages */
-html body.bill {
-	background: #fff;
-}
-.bill h2 {
-	font-size: 16px;
-	margin: 20px 0;
-	font-weight: bold;
-}
-.bill h2 p {
-	text-transform: uppercase;
-	letter-spacing: 0.1em;
-	margin-top: 10px;
-	font-size: 13px;
-}
-.bill table {
-	margin: 0 auto;
-}
-.bill table th {
-	border-bottom: 2px solid #000;
-	border-right: 4px solid #fff;
-	padding: 20px 2px 5px 2px;
-	font-weight: bold;
-}
-.bill table td {
-	border-bottom: 1px solid #ccc;
-	border-right: 4px solid #fff;
-	padding: 5px 2px;
-}
-
 /* media stuff */
 
 @media screen {
@@ -631,13 +570,7 @@ html body.bill {
 }
 
 @media print {
-	* {
-		background: none;
-	}
   .noprint {   /* items with this class won't print */
     display: none;
   }
-	.buttons {
-		display: none;
-	}
 }

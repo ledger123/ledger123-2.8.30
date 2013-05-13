@@ -299,7 +299,9 @@ sub header {
   if ($ENV{HTTP_USER_AGENT}) {
 
     if ($self->{stylesheet} && (-f "css/$self->{stylesheet}")) {
-      $stylesheet = qq|<LINK REL="stylesheet" HREF="css/$self->{stylesheet}" TYPE="text/css" TITLE="SQL-Ledger stylesheet">
+      $stylesheet = qq|
+<LINK REL="stylesheet" HREF="css/$self->{stylesheet}" TYPE="text/css" TITLE="SQL-Ledger stylesheet">
+<!--[if lte IE 8]><LINK REL="stylesheet" HREF="css/sql-ledger-ie8.css" TYPE="text/css" TITLE="SQL-Ledger stylesheet"><![endif]-->
   |;
     }
 
@@ -327,6 +329,9 @@ sub header {
   $self->{customheader}
   $stylesheet
   $charset
+  <script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
+  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
+  <script src="js/rma.js" type="text/javascript"></script>
 </head>
 
 $self->{pre}
