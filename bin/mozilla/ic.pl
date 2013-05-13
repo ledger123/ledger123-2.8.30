@@ -679,7 +679,7 @@ sub form_header {
 	      $avgcost
 	      <tr>
 		<th align="right" nowrap="true">|.$locale->text('Unit').qq|</th>
-		<td><input name=unit size=5 value="|.$form->quote($form->{unit}).qq|"></td>
+		<td><input name=unit size=5 maxlength=5 value="|.$form->quote($form->{unit}).qq|"></td>
 	      </tr>
 	      $weight
 	      $onhand
