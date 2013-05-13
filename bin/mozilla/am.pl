@@ -253,7 +253,16 @@ sub save_account {
 
   $form->isblank("accno", $locale->text('Account Number missing!'));
   $form->isblank("category", $locale->text('Account Type missing!'));
-  
+
+  # see if gifi accno exists
+  if ($form->{gifi_accno}){
+    my $dbh = $form->dbconnect(\%myconfig);
+    if (!$dbh->selectrow_array("SELECT COUNT(*) FROM gifi WHERE accno = '$form->{gifi_accno}'")){
+       $form->error($locale->text('Invalid gifi account ...'));
+    }
+    $dbh->disconnect;
+  }
+ 
   # check for conflicting accounts
   if ($form->{AR} || $form->{AP} || $form->{IC}) {
     my $a = "";
@@ -584,6 +593,8 @@ sub gifi_footer {
 sub save_gifi {
 
   $form->isblank("accno", $locale->text('GIFI missing!'));
+
+
   AM->save_gifi(\%myconfig, \%$form);
   $form->redirect($locale->text('GIFI saved!'));
 
