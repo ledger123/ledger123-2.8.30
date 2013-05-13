@@ -1802,8 +1802,6 @@ sub display_form {
   print qq|
 <body>
 
-$form->{body}
-
 <form method=post action=$form->{script}>
 |;
 
@@ -1820,8 +1818,11 @@ $form->{body}
   }
 
   print qq|
-  </form>
+</form>|;
 
+  print $form->{body};
+
+  print qq|
 </body>
 </html>
 |;
@@ -1845,15 +1846,15 @@ sub edit_template {
 <body>
 
 <form method=post action=$form->{script}>
+<input type=submit class=submit name=action value="|.$locale->text('Save').qq|">
+<br/>
 
 <input name=file type=hidden value=$form->{file}>
 <input name=type type=hidden value=template>
 
 <textarea name=body rows=25 cols=70>
 $form->{body}</textarea>
-
-<br>
-<input type=submit class=submit name=action value="|.$locale->text('Save').qq|">|;
+|;
 
   $form->hide_form(qw(path login callback));
   
