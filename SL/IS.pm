@@ -287,8 +287,8 @@ sub invoice_details {
 	$taxbase = ($linetotal - $taxamount);
 
 	foreach $item (@taxaccounts) {
-	  if (($form->{"${item}_rate"} * $ml) > 0) {
-	    
+	  # if (($form->{"${item}_rate"} * $ml) >= 0) {
+	  if ($ml > 0){  
 	    push @taxrates, $form->{"${item}_rate"} * 100;
 	    
 	    if ($form->{taxincluded}) {
@@ -378,7 +378,7 @@ sub invoice_details {
   $taxrate = 0;
   
   for (sort keys %taxaccounts) {
-    if ($taxaccounts{$_} = $form->round_amount($taxaccounts{$_}, $form->{precision})) {
+    #if ($taxaccounts{$_} = $form->round_amount($taxaccounts{$_}, $form->{precision})) {
       $tax += $taxaccounts{$_};
 
       $form->{"${_}_taxbaseinclusive"} = $taxbase{$_} + $taxaccounts{$_};
@@ -387,10 +387,11 @@ sub invoice_details {
 
       $taxrate += $form->{"${_}_rate"};
       
-      push(@{ $form->{taxrate} }, $form->format_amount($myconfig, $form->{"${_}_rate"} * 100));
+      push(@{ $form->{taxrate} }, $form->format_amount($myconfig, $form->{"${_}_rate"} * 100, $form->{precision}, '0.00'));
       push(@{ $form->{taxnumber} }, $form->{"${_}_taxnumber"});
-    }
+    #}
   }
+
 
  
   # adjust taxes for lineitems
@@ -407,7 +408,7 @@ sub invoice_details {
   }
   $i = 1;
   for (@{ $form->{lineitems} }) {
-    push(@{ $form->{linetax} }, $form->format_amount($myconfig, $_->{tax}, $form->{precision}, ""));
+    push(@{ $form->{linetax} }, $form->format_amount($myconfig, $_->{tax}, $form->{precision}, '0.00'));
   }
   
   
@@ -434,7 +435,7 @@ sub invoice_details {
   
   for (sort keys %taxaccounts) {
     
-    if ($taxaccounts{$_}) {
+    #if ($taxaccounts{$_}) {
 
       $amount = 0;
 
@@ -445,14 +446,14 @@ sub invoice_details {
       if ($form->{cd_amount}) {
 	$form->{"cd_${_}_taxbase"} = $taxbase{$_} - $amount;
 	
-	push(@{ $form->{cd_taxbase} }, $form->format_amount($myconfig, $form->{"cd_${_}_taxbase"}, $form->{precision}));
+	push(@{ $form->{cd_taxbase} }, $form->format_amount($myconfig, $form->{"cd_${_}_taxbase"}, $form->{precision}, '0.00'));
 
 	$cd_tax += $form->{"cd_${_}_tax"} = $form->round_amount(($taxbase{$_} - $amount) * $form->{"${_}_rate"}, $form->{precision});
 
-	push(@{ $form->{cd_tax} }, $form->format_amount($myconfig, $form->{"cd_${_}_tax"}, $form->{precision}));
+	push(@{ $form->{cd_tax} }, $form->format_amount($myconfig, $form->{"cd_${_}_tax"}, $form->{precision}, '0.00'));
 	
-	$form->{"cd_${_}_taxbase"} = $form->format_amount($myconfig, $form->{"cd_${_}_taxbase"}, $form->{precision});
-	$form->{"cd_${_}_taxbaseinclusive"} = $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"} - $amount, $form->{precision});
+	$form->{"cd_${_}_taxbase"} = $form->format_amount($myconfig, $form->{"cd_${_}_taxbase"}, $form->{precision}, '0.00');
+	$form->{"cd_${_}_taxbaseinclusive"} = $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"} - $amount, $form->{precision}, '0.00');
       }
 
       if ($form->{cdt} && $form->{discount_paid}) {
@@ -462,17 +463,17 @@ sub invoice_details {
       }
       
       # need formatting here
-      push(@{ $form->{taxbaseinclusive} }, $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"}, $form->{precision}));
-      push(@{ $form->{taxbase} }, $form->format_amount($myconfig, $taxbase{$_}, $form->{precision}));
-      push(@{ $form->{tax} }, $form->format_amount($myconfig, $taxaccounts{$_}, $form->{precision}));
+      push(@{ $form->{taxbaseinclusive} }, $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"}, $form->{precision}, '0.00'));
+      push(@{ $form->{taxbase} }, $form->format_amount($myconfig, $taxbase{$_}, $form->{precision}, '0.00'));
+      push(@{ $form->{tax} }, $form->format_amount($myconfig, $taxaccounts{$_}, $form->{precision}, '0.00'));
 
-      $form->{"${_}_taxbaseinclusive"} = $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"}, $form->{precision});
-      $form->{"${_}_taxbase"} = $form->format_amount($myconfig, $taxbase{$_}, $form->{precision});
-      $form->{"${_}_tax"} = $form->format_amount($myconfig, $form->{"${_}_tax"}, $form->{precision});
+      $form->{"${_}_taxbaseinclusive"} = $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"}, $form->{precision}, '0.00');
+      $form->{"${_}_taxbase"} = $form->format_amount($myconfig, $taxbase{$_}, $form->{precision}, '0.00');
+      $form->{"${_}_tax"} = $form->format_amount($myconfig, $form->{"${_}_tax"}, $form->{precision}, '0.00');
       
-      $form->{"${_}_taxrate"} = $form->format_amount($myconfig, $form->{"${_}_rate"} * 100);
+      $form->{"${_}_taxrate"} = $form->format_amount($myconfig, $form->{"${_}_rate"} * 100, $form->{precision}, '0.00');
       
-    }
+    #}
   }
 
   my ($paymentaccno) = split /--/, $form->{"AR_paid_$form->{paidaccounts}"};
