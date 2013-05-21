@@ -50,7 +50,20 @@ sub invoice_details {
   my %taxbase;
  
   my %translations;
-  
+
+  my %taxaccs;
+  # for managing 0% taxes for runmyaccounts
+  for my $tax1 (split / /, $form->{taxaccounts}){
+    for my $i (1 .. $form->{rowcount} - 1) {
+      for my $tax2 (split / /, $form->{"taxaccounts_$i"}){
+   	if ($tax1 eq $tax2){
+	   $taxaccs{$tax2} = 1 if !$taxaccs{$tax2};
+	}
+      }
+    }
+  }
+  @taxaccounts = keys %taxaccs;
+
   $query = qq|SELECT p.description, t.description
               FROM project p
 	      LEFT JOIN translation t ON (t.trans_id = p.id AND t.language_code = '$form->{language_code}')
@@ -270,8 +283,6 @@ sub invoice_details {
       $form->{"linetotal_$i"} = $form->format_amount($myconfig, $linetotal, $form->{precision}, "0");
       push(@{ $form->{linetotal} }, $form->{"linetotal_$i"});
       
-      @taxaccounts = split / /, $form->{"taxaccounts_$i"};
-      
       my $ml = 1;
       my @taxrates = ();
       
@@ -376,7 +387,6 @@ sub invoice_details {
 
   $tax = 0;
   $taxrate = 0;
-  
   for (sort keys %taxaccounts) {
     #if ($taxaccounts{$_} = $form->round_amount($taxaccounts{$_}, $form->{precision})) {
       $tax += $taxaccounts{$_};
