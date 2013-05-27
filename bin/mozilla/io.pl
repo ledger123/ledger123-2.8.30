@@ -58,6 +58,7 @@ sub display_row {
   my $numrows = shift;
 
   &partnumber_partdescription_autocomplete;
+  &pg_autocomplete;
 
   @column_index = qw(runningnumber partnumber description lineitemdetail qty);
 
@@ -331,6 +332,18 @@ function CheckAll(v) {
     
     if ($i == $numrows) {
       $partsgroup = "";
+      if ($features{partsgroup_autocomplete}){
+	$partsgroup = qq|
+	        <tr>
+		  <td colspan=$colspan>
+		    <b>$group</b>
+		    <input name="partsgroup_$i" size=20 id="partsgroup">
+		    <input name="partsgroupcode_$i" size=10 id="partsgroupcode">
+		  </td>
+		</tr>
+|;
+      }
+      else {
       if ($form->{selectpartsgroup}) {
 	$partsgroup = qq|
 	        <tr>
@@ -343,6 +356,7 @@ function CheckAll(v) {
 		  </td>
 		</tr>
 |;
+      }
       }
 
       $serial = "";

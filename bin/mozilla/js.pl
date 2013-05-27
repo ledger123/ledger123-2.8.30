@@ -91,6 +91,39 @@ sub gl_data {
 }
 
 
+# PARTSGROUP AUTO COMPLETE
+sub pg_autocomplete {
+  print q|
+<script>
+$(function() {
+   $('#partsgroupcode').val("");
+   $("#partsgroup").autocomplete({
+	   source: "js.pl?action=pg_data&|.qq|path=$form->{path}&login=$form->{login}|.q|",
+	   minLength: 1,
+	   select: function(event, ui) {
+	      $('#partsgroupcode').val(ui.item.id);
+	      $('#partsgroup').val(ui.item.partsgroup);
+	   }
+   });
+});
+</script>
+|;
+
+}
+
+sub pg_data {
+   my $term = $form->like(lc $form->{term});
+   my $query = "SELECT code, partsgroup FROM partsgroup WHERE lower(partsgroup) like ? ORDER BY partsgroup";
+   my $data = qq|Content-Type: text/html\n\n
+   [|;
+   for my $ref ($form->{dbs}->query($query, $term)->hashes){
+      $data .= qq|{ "id": "$ref->{code}", "value": "$ref->{partsgroup}", "partsgroup": "$ref->{partsgroup}" },|;
+   }
+   chop $data;
+   $data .= ']';
+   print $data;
+}
+
 
 # PARTS NUMBER AND DESCRIPTION AUTO COMPLETE
 
