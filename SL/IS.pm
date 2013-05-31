@@ -528,7 +528,7 @@ sub invoice_details {
   # Now remove all taxes which are not applicable to this invoice from db and from $form.
   $query = qq|SELECT id, accno FROM chart WHERE id IN (SELECT chart_id FROM tax)|;
   $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberrro($query);
+  $sth->execute || $form->dberror($query);
   $form->{id} *= 1;
   while (my $row = $sth->fetchrow_hashref(NAME_lc)){
      if (!$taxaccs{$row->{accno}}){
