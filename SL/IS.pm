@@ -1467,6 +1467,32 @@ sub post_invoice {
              |;
   $dbh->do($query) || $form->dberror($query);
 
+  # Remove incorrect 0 taxes from $form and acc_trans
+  # First find all taxes which are applicable to this invoice.
+  my %taxaccs;
+  for my $tax1 (split / /, $form->{taxaccounts}){
+    for my $i (1 .. $form->{rowcount} - 1) {
+      for my $tax2 (split / /, $form->{"taxaccounts_$i"}){
+       if ($tax1 eq $tax2){
+          $taxaccs{$tax2} = 1 if !$taxaccs{$tax2};
+       }
+      }
+    }
+  }
+
+  # Now remove all taxes which are not applicable to this invoice from db and from $form.
+  $query = qq|SELECT id, accno FROM chart WHERE id IN (SELECT chart_id FROM tax)|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  $form->{id} *= 1;
+  while (my $row = $sth->fetchrow_hashref(NAME_lc)){
+     if (!$taxaccs{$row->{accno}}){
+       map { delete $form->{"$row->{accno}_$_"} } (qw(tax taxbase taxbaseinclusive taxrate description rate taxnumber));
+       $dbh->do("DELETE FROM acc_trans WHERE trans_id = $form->{id} AND chart_id = $row->{id} AND amount = 0");
+     }
+  }
+  $sth->finish;
+
   # add shipto
   $form->{name} = $form->{customer};
   $form->{name} =~ s/--$form->{customer_id}//;
