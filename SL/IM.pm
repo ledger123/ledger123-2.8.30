@@ -1947,6 +1947,9 @@ sub gl {
   $query = qq|SELECT id FROM department WHERE description = ?|;
   my $dth = $dbh->prepare($query) || $form->dberror($query);
 
+  $query = qq|SELECT id FROM project WHERE projectnumber = ?|;
+  my $pth = $dbh->prepare($query) || $form->dberror($query);
+
   my @d = split /\n/, $form->{data};
   shift @d if ! $form->{mapfile};
 
@@ -1972,9 +1975,18 @@ sub gl {
         $a[$form->{$form->{type}}->{department}{ndx}] = '***';
 	$form->{"department_id_$i"} = 0;
       }
+      $pth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
+      if ($ref = $pth->fetchrow_hashref(NAME_lc)) {
+	$form->{"project_id_$i"} = $ref->{id};
+      } else {
+        $a[$form->{$form->{type}}->{projectnumber}{ndx}] = '***';
+	$form->{"project_id_$i"} = 0;
+      }
     }
     $form->{rowcount} = $i;
   }
+  $dth->finish;
+  $pth->finish;
   $cth->finish;
   $dbh->disconnect;
 }
