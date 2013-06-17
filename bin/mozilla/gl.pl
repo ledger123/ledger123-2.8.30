@@ -289,7 +289,7 @@ sub search {
   for (qw(transdate reference description debit credit accno)) { $form->{"l_$_"} = "checked" }
 
   @checked = qw(l_subtotal);
-  @input = qw(reference description name vcnumber lineitem notes source memo datefrom dateto month year accnofrom accnoto amountfrom amountto sort direction reportlogin);
+  @input = qw(reference description name vcnumber lineitem notes source memo datefrom dateto month year accnofrom accnoto amountfrom amountto sort direction reportlogin projectnumber);
   for (qw(department)) {
     push @input, $_ if exists $form->{$_};
   }
@@ -306,6 +306,7 @@ sub search {
   $includeinreport{vcnumber} = { ndx => $i++, sort => vcnumber, checkbox => 1, html => qq|<input name="l_vcnumber" class=checkbox type=checkbox value=Y $form->{l_vcnumber}>|, label => $locale->text('Company Number') };
   $includeinreport{address} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_address" class=checkbox type=checkbox value=Y $form->{l_address}>|, label => $locale->text('Address') };
   $includeinreport{department} = { ndx => $i++, sort => department, checkbox => 1, html => qq|<input name="l_department" class=checkbox type=checkbox value=Y $form->{l_department}>|, label => $locale->text('Department') } if $l_department;
+  $includeinreport{projectnumber} = { ndx => $i++, sort => projectnumber, checkbox => 1, html => qq|<input name="l_projectnumber" class=checkbox type=checkbox value=Y $form->{l_projectnumber}>|, label => $locale->text('Project Number') };
   $includeinreport{notes} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_notes" class=checkbox type=checkbox value=Y $form->{l_notes}>|, label => $locale->text('Notes') };
   $includeinreport{debit} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_debit" class=checkbox type=checkbox value=Y $form->{l_debit}>|, label => $locale->text('Debit') };
   $includeinreport{credit} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_credit" class=checkbox type=checkbox value=Y $form->{l_credit}>|, label => $locale->text('Credit') };
@@ -887,7 +888,7 @@ sub transactions {
     $ref->{reference} ||= "&nbsp;";
     $column_data{reference} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</td>";
 
-    for (qw(department name vcnumber address)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
+    for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
     
     for (qw(lineitem description source memo notes)) {
       $ref->{$_} =~ s/\r?\n/<br>/g;

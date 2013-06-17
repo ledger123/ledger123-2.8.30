@@ -557,7 +557,8 @@ sub transactions {
                   source => 7,
                   accno => 9,
 		  department => 15,
-		  memo => 16,
+		  projectnumber => 16,
+		  memo => 17,
 		  lineitem => 19,
 		  name => 20,
 		  vcnumber => 21);
@@ -568,7 +569,7 @@ sub transactions {
   my $query = qq|SELECT g.id, 'gl' AS type, $false AS invoice, g.reference,
                  g.description, ac.transdate, ac.source,
 		 ac.amount, c.accno, c.gifi_accno, g.notes, c.link,
-		 '' AS till, ac.cleared, d.description AS department,
+		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, '0' AS name_id, '' AS db,
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
@@ -577,12 +578,13 @@ sub transactions {
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 LEFT JOIN department d ON (d.id = g.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
                  WHERE $glwhere
 	UNION ALL
 	         SELECT a.id, 'ar' AS type, a.invoice, a.invnumber,
 		 a.description, ac.transdate, ac.source,
 		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
-		 a.till, ac.cleared, d.description AS department,
+		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
@@ -594,12 +596,13 @@ sub transactions {
 		 JOIN customer ct ON (a.customer_id = ct.id)
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $arwhere
 	UNION ALL
 	         SELECT a.id, 'ap' AS type, a.invoice, a.invnumber,
 		 a.description, ac.transdate, ac.source,
 		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
-		 a.till, ac.cleared, d.description AS department,
+		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
@@ -611,6 +614,7 @@ sub transactions {
 		 JOIN vendor ct ON (a.vendor_id = ct.id)
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $apwhere
 	         ORDER BY $sortorder|;
 
