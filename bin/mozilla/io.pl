@@ -1636,7 +1636,7 @@ sub print_form {
   shift @a;
  
   # some of the stuff could have umlauts so we translate them
-  push @a, qw(contact shippingpoint shipvia notes intnotes employee warehouse paymentmethod);
+  push @a, qw(contact ordnumber shippingpoint shipvia notes intnotes employee warehouse paymentmethod);
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact email phone fax);
   push @a, qw(firstname lastname salutation contacttitle occupation mobile);
 
