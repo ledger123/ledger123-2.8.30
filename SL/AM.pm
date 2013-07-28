@@ -1187,10 +1187,18 @@ sub update_recurring {
 
   my $dbh = $form->dbconnect($myconfig);
 
-  my $query = qq|SELECT repeat, unit
+  my $query = qq|SELECT repeat, unit, howmany
                  FROM recurring
 		 WHERE id = $id|;
-  my ($repeat, $unit) = $dbh->selectrow_array($query);
+  my ($repeat, $unit, $howmany) = $dbh->selectrow_array($query);
+
+  # If repeat days are 0
+  if (!$howmany){
+     $query = qq|UPDATE recurring
+		 SET enddate = enddate + interval '$repeat $unit'
+		 WHERE id = $id|;
+     $dbh->do($query) || $form->dberror($query);
+  }
   
   my %advance = ( 'Pg' => qq|(date '$form->{nextdate}' + interval '$repeat $unit')|,
               'Sybase' => qq|dateadd($myconfig->{dateformat}, $repeat $unit, $form->{nextdate})|,
