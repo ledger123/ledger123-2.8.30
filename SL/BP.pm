@@ -451,6 +451,19 @@ sub get_spoolfiles {
 }
 
 
+sub zip_spool {
+  my ($self, $myconfig, $form, $spool) = @_;
+
+  unlink qq|$spool/download.zip|;
+  foreach my $i (1 .. $form->{rowcount}) {
+      $_ = qq|$spool/$form->{"spoolfile_$i"}|;
+      if ($form->{"ndx_$i"}) {
+	system("zip -q -u $spool/download.zip $_");
+      }
+  }
+}
+
+
 sub delete_spool {
   my ($self, $myconfig, $form, $spool) = @_;
 
