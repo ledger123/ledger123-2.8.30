@@ -1234,7 +1234,7 @@ sub trial_balance {
 		ORDER BY accno|;
     
   } else {
-
+    $where .= " AND c.gifi_accno = '$form->{gifi_accno}'" if $form->{gifi_accno};
     $query = qq|SELECT c.accno, c.description, c.category,
                 SUM(ac.amount) AS amount, c.contra,
 		l.description AS translation

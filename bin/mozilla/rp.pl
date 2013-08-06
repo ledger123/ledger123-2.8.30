@@ -1503,7 +1503,14 @@ sub list_accounts {
 
     if ($ref->{charttype} eq "A") {
       $column_data{accno} = "<td><a href=$href>$ref->{accno}</a></td>";
-      $column_data{description} = "<td>$ref->{description}</td>";
+      if ($form->{accounttype} eq 'gifi'){
+	 my $link = "rp.pl?action=continue&accounttype=standard&gifi_accno=$ref->{accno}";
+	 for (qw(fromdate todate l_heading l_subtotal department title nextsub helpref reportcode reportlogin path login)){ $link .= "&$_=".$form->escape($form->{$_}) }
+         $column_data{description} = "<td><a href=$link>$ref->{description}</a></td>";
+      }
+      else {
+         $column_data{description} = "<td>$ref->{description}</td>";
+      }
       $column_data{debit} = "<td align=right>$debit</td>";
       $column_data{credit} = "<td align=right>$credit</td>";
       $column_data{begbalance} = "<td align=right>$begbalance</td>";
