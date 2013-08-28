@@ -454,13 +454,31 @@ sub get_spoolfiles {
 sub zip_spool {
   my ($self, $myconfig, $form, $spool) = @_;
 
-  unlink qq|$spool/download.zip|;
+  my $fileid = time;
+  my $tmpfile = "$form->{login}.$fileid.zip";
+
   foreach my $i (1 .. $form->{rowcount}) {
       $_ = qq|$spool/$form->{"spoolfile_$i"}|;
       if ($form->{"ndx_$i"}) {
-	system("zip -q -u $spool/download.zip $_");
+	system("zip -q -u $tmpfile $_");
       }
   }
+
+  open(IN, $tmpfile);
+  binmode(IN);
+
+  print qq|Content-Type: application/zip
+Content-Disposition: attachment; filename="$tmpfile"\n\n|;
+
+  open(OUT, ">-");
+
+  while (<IN>) {
+     print OUT $_;
+  }
+
+  close(IN);
+  close(OUT);
+  unlink $tmpfile;
 }
 
 

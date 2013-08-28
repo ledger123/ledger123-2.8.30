@@ -388,14 +388,15 @@ sub yes {
 
 }
 
-sub create_zip_file {
+sub download_zip_file {
 
-  $form->info($locale->text('Zipping marked entries from queue ...'));
+  my $selected = 0;
+  foreach my $i (1 .. $form->{rowcount}) {
+     $selected = 1 if $form->{"ndx_$i"};
+  }
+  $form->error('Nothing selected ...') if !$selected;
 
   BP->zip_spool(\%myconfig, \%$form, $spool);
-  $form->{callback} .= "&header=1" if $form->{callback};
-  $form->redirect($locale->text('Zipped spoolfiles!'));
-
 }
 
 
@@ -918,9 +919,6 @@ function CheckAll() {
     $media = "" unless %printer;
   }
 
-
-  print qq|<a href=spool/download.zip>|.$locale->text('Download zip file').qq|</a>| if -f 'spool/download.zip';
-
   print qq|
 <table>
   $message
@@ -943,7 +941,7 @@ function CheckAll() {
                'Print' => { ndx => 4, key => 'P', value => $locale->text('Print') },
                'E-mail' => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
 	       'Remove' => { ndx => 6, key => 'R', value => $locale->text('Remove') },
-	       'Create zip file' => { ndx => 7, key => 'R', value => $locale->text('Create zip file') },
+	       'Download zip file' => { ndx => 7, key => 'R', value => $locale->text('Download zip file') },
 	      );
 
 
