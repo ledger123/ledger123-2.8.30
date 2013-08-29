@@ -944,7 +944,6 @@ function CheckAll() {
 	       'Download zip file' => { ndx => 7, key => 'R', value => $locale->text('Download zip file') },
 	      );
 
-
   if ($form->{deselect}) {
     delete $button{'Select all'};
   } else {
@@ -956,6 +955,7 @@ function CheckAll() {
   }
   if ($form->{batch} ne 'queue') {
     delete $button{'Remove'};
+    delete $button{'Download zip file'};
   }
   if ($form->{batch} eq 'email') {
     delete $button{'Print'};

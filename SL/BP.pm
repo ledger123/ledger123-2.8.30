@@ -460,11 +460,11 @@ sub zip_spool {
   foreach my $i (1 .. $form->{rowcount}) {
       $_ = qq|$spool/$form->{"spoolfile_$i"}|;
       if ($form->{"ndx_$i"}) {
-	system("zip -q -u $tmpfile $_");
+	system("zip -q -u $spool/$tmpfile $_");
       }
   }
 
-  open(IN, $tmpfile);
+  open(IN, "$spool/$tmpfile");
   binmode(IN);
 
   print qq|Content-Type: application/zip
@@ -478,7 +478,7 @@ Content-Disposition: attachment; filename="$tmpfile"\n\n|;
 
   close(IN);
   close(OUT);
-  unlink $tmpfile;
+  unlink $spool/$tmpfile;
 }
 
 
