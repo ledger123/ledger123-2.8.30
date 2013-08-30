@@ -432,8 +432,24 @@ sub invoice_details {
   }
 
   my $cd_tax = 0;
-  
-  for (sort keys %taxaccounts) {
+
+
+  # Remove incorrect 0 taxes from $form and acc_trans
+  # First find all taxes which are applicable to this invoice.
+  # Duplicated below too
+  my %taxaccs;
+  for my $tax1 (split / /, $form->{taxaccounts}){
+    for my $i (1 .. $form->{rowcount} - 1) {
+      for my $tax2 (split / /, $form->{"taxaccounts_$i"}){
+       if ($tax1 eq $tax2){
+          $taxaccs{$tax2} = 1 if !$taxaccs{$tax2};
+       }
+      }
+    }
+  }
+
+
+  for (sort keys %taxaccs) {
     
     #if ($taxaccounts{$_}) {
 
@@ -514,6 +530,7 @@ sub invoice_details {
 
   # Remove incorrect 0 taxes from $form and acc_trans
   # First find all taxes which are applicable to this invoice.
+  # Duplicate of similar code above
   my %taxaccs;
   for my $tax1 (split / /, $form->{taxaccounts}){
     for my $i (1 .. $form->{rowcount} - 1) {
