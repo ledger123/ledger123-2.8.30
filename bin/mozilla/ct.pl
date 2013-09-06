@@ -1430,7 +1430,7 @@ sub list_history {
       # print the header
       print qq|
         <tr class=listheading>
-	  <th colspan=$colspan><a class=listheading href=$form->{script}?action=edit&id=$ref->{ctid}&db=$form->{db}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{name} $ref->{address}</a></th>
+	  <th colspan=$colspan><a class=listheading href=$form->{script}?action=edit&id=$ref->{ctid}&db=$form->{db}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{name} - $ref->{"$form->{db}number"} - $ref->{address}</a></th>
 	</tr>
 |;
     }

@@ -1011,17 +1011,17 @@ sub get_history {
   }
 
 
-  %ordinal = ( partnumber	=> 8,
-	       description	=> 12,
-	       "$deldate"	=> 16,
-	       serialnumber	=> 17,
-	       projectnumber	=> 18
+  %ordinal = ( partnumber	=> 9,
+	       description	=> 13,
+	       "$deldate"	=> 17,
+	       serialnumber	=> 18,
+	       projectnumber	=> 19
 	      );
 
   $form->{direction} =~ s/;//g;
   $sortorder = "2 $form->{direction}, 1, $ordinal{$sortorder} $form->{direction}";
     
-  $query = qq|SELECT ct.id AS ctid, ct.name, ad.address1,
+  $query = qq|SELECT ct.id AS ctid, ct.$form->{db}number, ct.name, ad.address1,
 	      ad.address2, ad.city, ad.state,
 	      p.id AS pid, p.partnumber, a.id AS invid,
 	      a.$invnumber, a.curr, i.description,
