@@ -214,6 +214,9 @@ sub history {
 	      </tr>
 	      <tr>
 		<td>
+		<input name="l_transdate" type=checkbox class=checkbox value=Y checked>&nbsp;|.$locale->text('Date').qq|
+		</td>
+		<td>
 		<input name="l_qty" type=checkbox class=checkbox value=Y checked>&nbsp;|.$locale->text('Qty').qq|
 		</td>
 		<td>
@@ -1254,7 +1257,7 @@ sub list_history {
   $callback = "$form->{script}?action=list_history&direction=$form->{direction}&oldsort=$form->{oldsort}&db=$form->{db}&path=$form->{path}&login=$form->{login}&type=$form->{type}&transdatefrom=$form->{transdatefrom}&transdateto=$form->{transdateto}&history=$form->{history}";
   
   $form->{l_fxsellprice} = $form->{l_curr};
-  @columns = $form->sort_columns(partnumber, description, qty, unit, sellprice, fxsellprice, total, curr, discount, deliverydate, projectnumber, serialnumber);
+  @columns = $form->sort_columns(partnumber, description, transdate, qty, unit, sellprice, fxsellprice, total, curr, discount, deliverydate, projectnumber, serialnumber);
 
   if ($form->{db} eq 'customer') {
     $vcname = $locale->text('Customer');
@@ -1346,6 +1349,7 @@ sub list_history {
 
   $column_header{partnumber} = qq|<th><a class=listheading href=$href&sort=partnumber>|.$locale->text('Part Number').qq|</a></th>|;
   $column_header{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</a></th>|;
+  $column_header{transdate} = qq|<th><a class=listheading href=$href&sort=transdate>|.$locale->text('Date').qq|</a></th>|;
 
   $column_header{total} = qq|<th class=listheading>|.$locale->text('Total').qq|</th>|;
   $column_header{sellprice} = qq|<th class=listheading>|.$locale->text('Sell Price').qq|</th>|;
