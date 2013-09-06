@@ -1805,7 +1805,7 @@ sub import_parts {
 
       $m++;
       
-      if (!$form->{"partsgroup_id_$i"}){
+      if ($form->{"partsgroup_$i"} and !$form->{"partsgroup_id_$i"}){
       	  for (keys %$newform) { delete $newform->{$_} };
 	  #Lookup partsgroup id if it is already added by this procedure.
 	  $query = qq|SELECT id FROM partsgroup WHERE partsgroup='$form->{"partsgroup_$i"}'|;
@@ -1845,7 +1845,7 @@ sub import_parts {
       $newform->{"partnumber"} = $form->{"partnumber_$i"};
       $newform->{"description"} = $form->{"description_$i"};
       $newform->{"unit"} = $form->{"unit_$i"};
-      $newform->{"partsgroup"} = qq|$form->{"partsgroup_$i"}--$form->{"partsgroup_id_$i"}|;
+      $newform->{"partsgroup"} = qq|$form->{"partsgroup_$i"}--$form->{"partsgroup_id_$i"}| if $form->{"partsgroup_id_$i"};
       $newform->{"listprice"} = $form->{"listprice_$i"};
       $newform->{"sellprice"} = $form->{"sellprice_$i"};
       $newform->{"lastcost"} = $form->{"lastcost_$i"};
