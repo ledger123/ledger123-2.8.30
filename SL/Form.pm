@@ -160,7 +160,7 @@ sub select_option {
   my $str;
   my @a = split /\r?\n/, $self->unescape($list);
   my $var;
-  
+
   for (@a) {
     $var = $_ = $self->quote($_);
     if ($rev ne "") {
@@ -294,23 +294,27 @@ sub header {
 
   return if $self->{header};
 
-  my ($stylesheet, $favicon, $charset);
+  my ($stylesheet, $javascript, $favicon, $charset);
 
   if ($ENV{HTTP_USER_AGENT}) {
 
     if ($self->{stylesheet} && (-f "css/$self->{stylesheet}")) {
-      $stylesheet = qq|<LINK REL="stylesheet" HREF="css/$self->{stylesheet}" TYPE="text/css" TITLE="SQL-Ledger stylesheet">
+      $stylesheet = qq|<link rel="stylesheet" href="css/$self->{stylesheet}" type="text/css" title="SQL-Ledger stylesheet">
   |;
     }
 
+    if (-f "js/sql-ledger.js") {
+      $javascript = qq|<script type="text/javascript" src="js/sql-ledger.js"></script>|;
+    }
+
     if ($self->{favicon} && (-f "$self->{favicon}")) {
-      $favicon = qq|<LINK REL="icon" HREF="$self->{favicon}" TYPE="image/x-icon">
-<LINK REL="shortcut icon" HREF="$self->{favicon}" TYPE="image/x-icon">
+      $favicon = qq|<link rel="icon" href="$self->{favicon}" type="image/x-icon">
+<link rel="shortcut icon" href="$self->{favicon}" type="image/x-icon">
   |;
     }
 
     if ($self->{charset}) {
-      $charset = qq|<META HTTP-EQUIV="Content-Type" CONTENT="text/plain; charset=$self->{charset}">
+      $charset = qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}">
   |;
     }
 
@@ -322,11 +326,14 @@ sub header {
 
 <head>
   <title>$self->{titlebar}</title>
-  <META NAME="robots" CONTENT="noindex,nofollow" />
+  <meta name="robots" content="noindex,nofollow" />
   $favicon
   $self->{customheader}
   $stylesheet
   $charset
+  <script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
+  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
+  <script src="js/rma.js" type="text/javascript"></script>
 </head>
 
 $self->{pre}
