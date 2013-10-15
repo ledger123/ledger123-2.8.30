@@ -441,6 +441,10 @@ sub header {
   |;
     }
 
+    if (-f "js/sql-ledger.js") {
+      $javascript = qq|<script type="text/javascript" src="js/sql-ledger.js"></script>|;
+    }
+
     if ($self->{favicon} && (-f "$self->{favicon}")) {
       $favicon = qq|<LINK REL="icon" HREF="$self->{favicon}" TYPE="image/x-icon">
 <LINK REL="shortcut icon" HREF="$self->{favicon}" TYPE="image/x-icon">
@@ -451,6 +455,7 @@ sub header {
 <link href="css/start/jquery-ui-1.8.23.custom.css" type="text/css" rel="Stylesheet" />
 <script src="js/jquery-1.7.2.min.js"></script>
 <script src="js/jquery-ui-1.8.23.custom.min.js"></script>
+<script src="js/rma.js" type="text/javascript"></script>
 | if 1;
 
     $jquery_dateformat = q|

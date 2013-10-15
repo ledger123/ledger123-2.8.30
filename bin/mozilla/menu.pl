@@ -80,7 +80,7 @@ sub display_frame {
 
   print qq|
 
-<FRAMESET COLS="$menuwidth,*" BORDER="1">
+<FRAMESET COLS="240,*" BORDER="1" bordercolor="#53626A">
 
   <FRAME NAME="acc_menu" SRC="$form->{script}?login=$form->{login}&action=acc_menu&path=$form->{path}&js=$form->{js}">
   <FRAME NAME="main_window" SRC="am.pl?login=$form->{login}&action=$form->{main}&path=$form->{path}">
@@ -125,6 +125,25 @@ function ChangeClass(menu, newClass) {
   }
 }
 document.onselectstart = new Function("return false");
+
+function SwitchMenuAndSub(menu, submenu) {
+  if (document.getElementById) {
+    var el = document.getElementById(submenu);
+
+    if (el.style.display == "none") {
+      el.style.display = "block"; //display the block of info
+    } else {
+      el.style.display = "none";
+    }
+    
+    if ( document.getElementById(menu).className == 'menuClose' ) {
+      document.getElementById(menu).className = 'menuOpen';
+    } else if ( document.getElementById(menu).className == 'menuOpen' ) {
+      document.getElementById(menu).className = 'menuClose';
+    }
+  }
+}
+
 </script>
 
 <body class=menu>
@@ -233,7 +252,7 @@ sub jsmenu_frame {
 	$display = "display: none;" unless $level eq ' ';
 
 	print qq|
-        <div id="menu$i" class="menuOut" onclick="SwitchMenu('sub$i')" onmouseover="ChangeClass('menu$i','menuOver')" onmouseout="ChangeClass('menu$i','menuOut')">$label</div>
+	<div id="menu$i" class="menuClose" onclick="SwitchMenuAndSub('menu$i','sub$i')">$label</div>
 	<div class="submenu" id="sub$i" style="$display">|;
 	
 	# remove same level items
@@ -249,7 +268,7 @@ sub jsmenu_frame {
 
       if ($menu->{$item}{module}) {
 	if ($level eq "") {
-	  print qq|<div id="menu$i" class="menuOut" onmouseover="ChangeClass('menu$i','menuOver')" onmouseout="ChangeClass('menu$i','menuOut')"> |. 
+	  print qq|<div id="menu$i" class="menuClose">|.
 	  $menu->menuitem(\%myconfig, \%$form, $item, $level).qq|$label</a></div>|;
 
 	  # remove same level items
@@ -268,7 +287,7 @@ sub jsmenu_frame {
 	$display = "display: none;" unless $item eq ' ';
 
 	print qq|
-<div id="menu$i" class="menuOut" onclick="SwitchMenu('sub$i')" onmouseover="ChangeClass('menu$i','menuOver')" onmouseout="ChangeClass('menu$i','menuOut')">$label</div>
+<div id="menu$i" class="menuClose" onclick="SwitchMenuAndSub('menu$i','sub$i')">$label</div>
 	<div class="submenu" id="sub$i" style="$display">|;
 	
 	&jsmenu_frame($menu, $item);

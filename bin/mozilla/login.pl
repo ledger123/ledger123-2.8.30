@@ -93,7 +93,7 @@ $sf
 <center>
 <table class=login border=3 cellpadding=20>
   <tr>
-    <td class=login align=center><a href="http://www.sql-ledger.com" target=_blank><img src=$images/sql-ledger.gif border=0></a>
+    <td class=login align=center><a class="mainpageref" href="http://www.sql-ledger-network.com" target=_blank><img src=$images/sql-ledger.gif border=0></a>
 <h1 class=login align=center>|.$locale->text('Version').qq| $form->{version}</h1>
 
 <p>
@@ -160,7 +160,7 @@ sub selectdataset {
 <center>
 <table class=login border=3 cellpadding=20>
   <tr>
-    <td class=login align=center><a href="http://www.sql-ledger.com" target=_blank><img src=$images/sql-ledger.gif border=0></a>
+    <td class=login align=center><a href="http://www.sql-ledger-network.com" target=_blank><img src=$images/sql-ledger.gif border=0></a>
 <h1 class=login align=center>|.$locale->text('Version').qq| $form->{version}</h1>
 
 <p>
@@ -179,7 +179,7 @@ sub selectdataset {
 	      </tr> 
 	      <tr>
 		<th align=right>|.$locale->text('Password').qq|</th>
-		<td><input class=login type=password name=password size=30 value=$form->{password}></td>
+		<td><input class=login type=password name=password size=30 value="$form->{password}"></td>
 	      </tr>
 	      <tr>
 		<th align=right>|.$locale->text('Company').qq|</th>

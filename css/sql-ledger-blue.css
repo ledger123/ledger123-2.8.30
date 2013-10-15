@@ -172,6 +172,12 @@ h2.error {
   font-size: 14px;
 }
 
+h2.dberror {
+  color: red;
+  font-size: 14px;
+}
+
+
 
 /* media stuff */
 
