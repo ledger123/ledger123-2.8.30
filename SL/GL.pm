@@ -413,14 +413,16 @@ sub transactions {
     $apwhere .= " AND ac.transdate <= '$form->{dateto}'";
   }
   if ($form->{amountfrom}) {
-    $glwhere .= " AND abs(ac.amount) >= $form->{amountfrom}";
-    $arwhere .= " AND abs(ac.amount) >= $form->{amountfrom}";
-    $apwhere .= " AND abs(ac.amount) >= $form->{amountfrom}";
+    my $amountfrom = $form->parse_amount($myconfig, $form->{amountfrom});
+    $glwhere .= " AND abs(ac.amount) >= $amountfrom";
+    $arwhere .= " AND abs(ac.amount) >= $amountfrom";
+    $apwhere .= " AND abs(ac.amount) >= $amountfrom";
   }
   if ($form->{amountto}) {
-    $glwhere .= " AND abs(ac.amount) <= $form->{amountto}";
-    $arwhere .= " AND abs(ac.amount) <= $form->{amountto}";
-    $apwhere .= " AND abs(ac.amount) <= $form->{amountto}";
+    my $amountto = $form->parse_amount($myconfig, $form->{amountto});
+    $glwhere .= " AND abs(ac.amount) <= $amountto";
+    $arwhere .= " AND abs(ac.amount) <= $amountto";
+    $apwhere .= " AND abs(ac.amount) <= $amountto";
   }
   if ($form->{notes}) {
     $var = $form->like(lc $form->{notes});
