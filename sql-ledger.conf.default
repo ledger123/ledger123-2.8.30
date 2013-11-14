@@ -43,5 +43,8 @@ $language = "";
 # jQuery integration is currently experimental. To enable set $jquery_enabled to 1
 $jquery_enabled = 1;
 
+# Preferences to customize sql-ledger. Currently only one.
+%pref = ( remove_payment_on_post_as_new => 1 );
+
 1;
 
