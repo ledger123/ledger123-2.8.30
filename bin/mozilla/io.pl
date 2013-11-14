@@ -332,7 +332,7 @@ function CheckAll(v) {
     
     if ($i == $numrows) {
       $partsgroup = "";
-      if ($features{partsgroup_autocomplete}){
+      if ($pref{partsgroup_autocomplete}){
 	$partsgroup = qq|
 	        <tr>
 		  <td colspan=$colspan>

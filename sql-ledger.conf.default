@@ -1,8 +1,4 @@
-use vars qw($userspath $spool $memberfile $templates $sendmail $images $language $sid $latex $gzip $dvipdf $jquery_enabled %features);
-
-# Enable / disable features
-$features{partsgroup_autocomplete} = 1;       # Set to 1 to enable partsgroup autocomplete lookup
-$features{delete_payment_on_save_as_new} = 0; #Set to 1 to delete payment on save as new.
+use vars qw($userspath $spool $memberfile $templates $sendmail $images $language $sid $latex $gzip $dvipdf $jquery_enabled %pref);
 
 # path to user configuration files
 $userspath = "users";
@@ -43,8 +39,12 @@ $language = "";
 # jQuery integration is currently experimental. To enable set $jquery_enabled to 1
 $jquery_enabled = 1;
 
-# Preferences to customize sql-ledger. Currently only one.
-%pref = ( remove_payment_on_post_as_new => 1 );
+# Preferences to customize sql-ledger.
+$pref{remove_payment_on_post_as_new} = 1; # Set to 0 to preserve payment
+
+$pref{closed_checked} = 'checked'; # Set to empty string ('') to make closed unchecked by default
+
+$pref{partsgroup_autocomplete} = 1;  # Set to 1 to enable partsgroup autocomplete lookup
 
 1;
 
