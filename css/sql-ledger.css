@@ -266,6 +266,8 @@ A.listheading:link, A.listheading:active, A.listheading:visited {
 	font-size: 13px; 
 	color: black; 
 	font-weight: bold;
+	border-top: 1px solid #CCCCCC;
+	border-bottom: 3px solid #CCCCCC;
 }
 
 textarea {
