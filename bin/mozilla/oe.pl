@@ -609,6 +609,9 @@ sub form_header {
   
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
+
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
+
 |;
   &vc_autocomplete;
   print qq|
@@ -1796,6 +1799,8 @@ function CheckAll() {
 
   print qq|
 <body>
+
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
 
 <form method=post action=$form->{script}>
 

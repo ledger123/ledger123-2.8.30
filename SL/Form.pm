@@ -491,11 +491,33 @@ $(function() {
   <META NAME="robots" CONTENT="noindex,nofollow" />
   $favicon
   $stylesheet
+  $charset
   $jquery_header
   $jquery_dateformat
-  $charset
+|;
+
+  print q|
+<script>
+$(document).ready(function(){
+    var str = $("div.redirectmsg").text();
+    if ( str.length > 0 ) {
+       setTimeout(function(){
+       
+               $("div.redirectmsg").show();
+               $("div.redirectmsg").fadeOut("slow", function () {
+                   $("div.redirectmsg").remove();
+               });
+               }, 2000);
+       } else {
+               $("div.redirectmsg").hide();
+       }
+});
+</script>
 </head>
 
+|;
+
+    print qq|
 $self->{pre}
 |;
   }
@@ -535,6 +557,7 @@ sub redirect {
 
   if ($self->{callback}) {
 
+    $self->{callback} .= "&redirectmsg=$msg";
     my ($script, $argv) = split(/\?/, $self->{callback});
     exec ("perl", $script, $argv);
    

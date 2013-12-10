@@ -510,6 +510,8 @@ sub search_name {
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
 
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
+
 <form method=post action=$form->{script}>
 
 <table width=100%>
@@ -955,6 +957,8 @@ sub list_names {
 
   print qq|
 <body>
+
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
 
 <table width=100%>
   <tr>

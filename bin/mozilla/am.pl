@@ -114,6 +114,8 @@ sub account_header {
   print qq|
 <body>
 
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
+
 <form method=post action=$form->{script}>
 
 <input type=hidden name=type value=account>
@@ -355,6 +357,8 @@ sub list_account {
 
   print qq|
 <body>
+
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
 
 <table width=100%>
   <tr>

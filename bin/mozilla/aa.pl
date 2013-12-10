@@ -650,6 +650,9 @@ sub form_header {
   
   print qq|
 <body onload="document.forms[0].${focus}.focus()" />
+
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
+
 |;
 
   &vc_autocomplete;
@@ -2172,6 +2175,8 @@ sub transactions {
 
   print qq|
 <body>
+
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
 
 <table width=100%>
   <tr>

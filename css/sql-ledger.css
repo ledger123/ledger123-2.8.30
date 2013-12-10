@@ -403,4 +403,7 @@ h2.error {
 	display: none;
 }
 
+.redirectmsg { color: black; background: yellow; padding: 2px 0px; }
+
 ---------------------------------------------------------------------------
+

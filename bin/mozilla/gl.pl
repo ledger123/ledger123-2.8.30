@@ -768,6 +768,8 @@ sub transactions {
   print qq|
 <body>
 
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
+
 <table width=100%>
   <tr>
     <th class=listtop>$form->{helpref}$form->{title}</a></th>
@@ -1281,6 +1283,8 @@ sub form_header {
 
   print qq|
 <body onload="document.forms[0].${focus}.focus()" />
+
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
 
 <form method=post action=$form->{script}>
 |;
