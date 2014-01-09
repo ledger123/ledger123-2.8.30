@@ -148,7 +148,9 @@ ALTER TABLE parts ADD pos BOOLEAN DEFAULT true;
 --
 -- Table for generic text file import
 -- 
+DROP TABLE generic_import;
 CREATE TABLE generic_import (
+    id  serial,
     c1  text,
     c2  text,
     c3  text,
