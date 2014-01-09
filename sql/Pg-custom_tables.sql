@@ -145,5 +145,31 @@ CREATE TABLE parts_alt (parts_id integer, alt_parts_id integer);
 --
 ALTER TABLE parts ADD pos BOOLEAN DEFAULT true;
 
+--
+-- Table for generic text file import
+-- 
+CREATE TABLE generic_import (
+    c1  text,
+    c2  text,
+    c3  text,
+    c4  text,
+    c5  text,
+    c6  text,
+    c7  text,
+    c8  text,
+    c9  text,
+    c10 text,
+    c11 text,
+    c12 text,
+    c13 text,
+    c14 text,
+    c15 text,
+    c16 text,
+    c17 text,
+    c18 text,
+    c19 text,
+    c20 text
+);
+
 
 -- EOF

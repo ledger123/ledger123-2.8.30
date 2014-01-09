@@ -35,6 +35,7 @@ sub import {
         service        => 'Services',
         labor          => 'Labor/Overhead',
         partsgroup     => 'Groups',
+        generic        => 'Generic Text File',
         coa            => 'Chart of Accounts',
         partscustomer  => 'Parts Customers',
         partsvendor    => 'Parts Vendors',
@@ -1870,6 +1871,114 @@ sub import_items {
     $form->info;
 
 }
+
+sub im_generic {
+
+    &import_file;
+
+    $form->{callback} = "$form->{script}?action=import";
+    for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
+
+    @columns = qw(c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 c20);
+    for ( @columns ) {
+        $form->{ $form->{type} }{$_} = { field => $_, length => "", ndx => $i++ };
+    }
+
+    @column_index = qw(runningnumber ndx);
+
+    for ( sort { $form->{ $form->{type} }{$a}{ndx} <=> $form->{ $form->{type} }{$b}{ndx} } keys %{ $form->{ $form->{type} } } ) {
+        push @column_index, $_;
+    }
+
+    $column_data{runningnumber} = "&nbsp;";
+    $column_data{ndx}           = "&nbsp;";
+    for (@columns) { $column_data{$_} = $locale->text($_) }
+
+    $form->helpref( "import_$form->{type}", $myconfig{countrycode} );
+
+    $form->header;
+
+    print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{helpref}$form->{title}</a></th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr class=listheading>
+|;
+
+    for (@column_index) { print "\n<th>$column_data{$_}</th>" }
+
+    print qq|
+        </tr>
+|;
+
+    $form->{reportcode} = "import_$form->{type}";
+    IM->prepare_import_data( \%myconfig, \%$form );
+
+    for $i ( 1 .. $form->{rowcount} ) {
+
+        $j++;
+        $j %= 2;
+
+        print qq|
+      <tr class=listrow$j>
+|;
+
+        for (@column_index) {
+            $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>|;
+        }
+
+        $column_data{runningnumber} = qq|<td align=right>$i</td>|;
+        $column_data{ndx}           = qq|<td><input name="ndx_$i" type=checkbox class=checkbox checked></td>|;
+
+        for (@column_index) { print $column_data{$_} }
+
+        print qq|
+	</tr>
+|;
+    }
+
+    print qq|
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+
+</table>
+|;
+
+    $form->hide_form(qw(rowcount reportcode type login path callback));
+
+    print qq|
+<input name=action class=submit type=submit value="| . $locale->text('Import Generic') . qq|">
+</form>
+
+</body>
+</html>
+|;
+
+}
+
+sub import_generic {
+
+    IM->import_generic( \%myconfig, \%$form );
+
+    $form->info( $locale->text('Import successful!'));
+
+}
+
+
 
 sub im_partsgroup {
 
