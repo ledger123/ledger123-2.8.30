@@ -1253,6 +1253,8 @@ sub import_generic {
 	      AND reportvariable LIKE ?|;
     my $sth = $form->{dbh}->prepare($query) || $form->dberror($query);
 
+    $form->{dbs}->query('delete from generic_import') or die($form->{dbs}->error);
+
     for my $i ( 1 .. $form->{rowcount} ) {
         if ( $form->{"ndx_$i"} ) {
 
