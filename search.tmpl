@@ -1,0 +1,20 @@
+[% form1.jshead %]
+<body onLoad="document.forms[0].reference.focus()" />
+  <table width="100%">
+  <tr><th class=listtop>[% form1.title %]</th></tr>
+  <tr height="5"></tr>
+  <tr>
+     <td align="top">
+     [% form1.start %]
+     <table>
+       [% FOREACH field = form1.fields %]
+       <tr valign="top">
+          <th align="right">[% field.required ? "$field.label *" : field.label %]</th>
+          <td>
+            [% IF field.invalid %]
+            Missing or invalid entry, please try again.<br/>
+            [% END %]
+            [% field.field %]
+          </td>
+       </tr>
+       [% END %]
