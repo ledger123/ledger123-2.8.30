@@ -63,6 +63,9 @@ sub search_domus {
         th => { class => ['listheading'] },
       );
     $table1->set_group( 'reference', 1 );
+    $table1->calc_totals([qw(debit credit)]);
+    $table1->calc_subtotals([qw(debit credit)]);
+    $table1->modify( td => { align => 'right' }, [qw(debit credit)] );
 
     print $table1->output;
 
@@ -83,8 +86,8 @@ sub process_domus {
     for (@rows){
        $form->{dbs}->query('
            update generic_import set c8 = ?, c9 = ? where id = ?',
-            $form->parse_amount(\%myconfig, $_->{c8}),
-            $form->parse_amount(\%myconfig, $_->{c9}),
+            $form->parse_amount({ numberformat => '1.000,00' }, $_->{c8}),
+            $form->parse_amount({ numberformat => '1.000,00' }, $_->{c9}),
             $_->{id}
        ) or die($form->{dbs}->error);
     }
