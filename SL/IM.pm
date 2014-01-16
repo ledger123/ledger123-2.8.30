@@ -1381,7 +1381,7 @@ sub prepare_import_data {
     my $j = 0;
 
     my @d = split /\n/, $form->{data};
-    shift @d if !$form->{mapfile};
+    shift @d if !$form->{mapfile} and $form->{type} ne 'generic';
 
     my @dl;
 
