@@ -481,6 +481,7 @@ sub prepare_employee {
 	do {
 	  if (/password/) {
 	    ($null, $form->{employeepassword}) = split /=/, $_, 2;
+        chomp $form->{employeepassword};
 	    $form->{oldemployeepassword} = $form->{employeepassword};
 	    last;
 	  }
