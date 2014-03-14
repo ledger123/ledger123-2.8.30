@@ -451,7 +451,8 @@ sub search {
 	  <td><input name=status class=radio type=radio value=all checked>&nbsp;|.$locale->text('All').qq|
 	  <input name=status class=radio type=radio value=active>&nbsp;|.$locale->text('Active').qq|
 	  <input name=status class=radio type=radio value=inactive>&nbsp;|.$locale->text('Inactive').qq|
-	  <input name=status class=radio type=radio value=orphaned>&nbsp;|.$locale->text('Orphaned').qq|</td>
+	  <input name=status class=radio type=radio value=orphaned>&nbsp;|.$locale->text('Orphaned').qq|
+	  <input name=status class=radio type=radio value=sleeper>&nbsp;|.$locale->text('Sleeper').qq|</td>
 	</tr>
 |;
 
@@ -496,6 +497,22 @@ sub search_name {
 	  <td><input name=employee size=32></td>
 |;
   }
+
+  # BUSINESS
+  $form->all_business(\%myconfig);
+  if (@{ $form->{all_business} }) {
+      $form->{selectbusiness} = "\n";
+      for (@{ $form->{all_business} }) { $form->{selectbusiness} .= qq|$_->{description}--$_->{id}\n| }
+  }
+  $business = qq|
+              <tr>
+                <th align=right nowrap>|.$locale->text('Type of Business').qq|</th>
+                <td><select name=business>|
+                .$form->select_option($form->{selectbusiness}, $form->{business}, 1)
+                .qq|</select>
+                </td>
+              </tr>
+  | if $form->{selectbusiness};
   
   if (! $form->{helpref}) {
     $form->helpref("search_$form->{db}", $myconfig{countrycode});
@@ -548,6 +565,7 @@ sub search_name {
 		<th align=right nowrap>|.$locale->text('Notes').qq|</th>
 		<td colspan=3><textarea name=notes rows=3 cols=32></textarea></td>
 	      </tr>
+    $business
 	    </table>
 	  </td>
 
@@ -736,6 +754,16 @@ sub list_names {
   }
   if ($form->{status} eq 'inactive') {
     $option = $locale->text('Inactive');
+  }
+  if ($form->{status} eq 'sleeper') {
+    $option = $locale->text('Sleeper');
+  }
+  if ($form->{business}){
+      $option .= "\n<br>" if $option;
+      ($business) = split /--/, $form->{business};
+      $option .= $locale->text('Type of Business')." : $business";
+      $callback .= "&business=".$form->escape($form->{business},1);
+      $href .= "&business=".$form->escape($form->{business});
   }
 
   if ($form->{name}) {

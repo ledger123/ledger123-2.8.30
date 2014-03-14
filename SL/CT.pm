@@ -685,7 +685,36 @@ sub search {
     }
     $form->{l_invnumber} = $form->{l_ordnumber} = $form->{l_quonumber} = "";
   }
-  
+
+  if ($form->{status} eq 'sleeper') {
+
+    $transwhere = "";
+    $transwhere .= " AND transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
+    $transwhere .= " AND transdate <= '$form->{transdateto}'" if $form->{transdateto};
+ 
+    $where .= qq| AND c.id NOT IN (SELECT o.$form->{db}_id
+                                    FROM oe o, $form->{db} vc
+		 	            WHERE vc.id = o.$form->{db}_id
+                        $transwhere)|;
+    if ($form->{db} eq 'customer') {
+      $where .= qq| AND c.id NOT IN (SELECT a.customer_id
+                                      FROM ar a, customer vc
+				      WHERE vc.id = a.customer_id
+                      $transwhere)|;
+    }
+    if ($form->{db} eq 'vendor') {
+      $where .= qq| AND c.id NOT IN (SELECT a.vendor_id
+                                      FROM ap a, vendor vc
+				      WHERE vc.id = a.vendor_id
+                      $transwhere)|;
+    }
+    $form->{l_invnumber} = $form->{l_ordnumber} = $form->{l_quonumber} = "";
+  }
+
+  if ($form->{business}) {
+    ($null, $business_id) = split /--/, $form->{business};
+    $where .= qq| AND c.business_id = $business_id|;
+  }
 
   my $query = qq|SELECT c.*, b.description AS business,
                  e.name AS employee, g.pricegroup, l.description AS language,
@@ -866,7 +895,7 @@ sub search {
 
   $query .= qq|
 		 ORDER BY $sortorder|;
-		 
+
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 

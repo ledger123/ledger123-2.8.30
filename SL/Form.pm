@@ -2535,6 +2535,32 @@ sub all_languages {
   
 }
 
+sub all_business {
+  my ($self, $myconfig, $dbh) = @_;
+  
+  my $disconnect = ($dbh) ? 0 : 1;
+
+  if (! $dbh) {
+    $dbh = $self->dbconnect($myconfig);
+  }
+  my $sth;
+  my $query;
+
+  $query = qq|SELECT *
+              FROM business
+	      ORDER BY 2|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $self->dberror($query);
+
+  $self->{all_business} = ();
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $self->{all_business} }, $ref;
+  }
+  $sth->finish;
+
+  $dbh->disconnect if $disconnect;
+}
+
 
 sub all_taxaccounts {
   my ($self, $myconfig, $dbh, $transdate) = @_;
