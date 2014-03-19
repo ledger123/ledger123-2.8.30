@@ -1039,6 +1039,7 @@ sub list_names {
       }
 	
       $column_data{name} = "<td><a href=$form->{script}?action=edit&id=$ref->{id}&db=$form->{db}&path=$form->{path}&login=$form->{login}&status=$form->{status}&callback=$callback>$ref->{name}&nbsp;</td>";
+      $column_data{"$form->{db}number"} = qq|<td><a href=$form->{script}?action=continue&nextsub=list_history&history=detail&db=$form->{db}&$form->{db}number=$ref->{"$form->{db}number"}&ARAP=$form->{ARAP}&path=$form->{path}&type=invoice&l_partnumber=Y&l_descrpition=Y&l_sellprice=Y&l_qty=Y&login=$form->{login}&callback=$callback>$ref->{"$form->{db}number"}&nbsp;</td>|;
 
       $email = "";
       if ($form->{sort} =~ /(email|cc)/) {
