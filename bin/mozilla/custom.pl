@@ -11,7 +11,7 @@ sub continue { &{ $form->{nextsub} } }
 sub search_domus {
 
     my @departments = $form->{dbs}->query('select id, description from department order by 2')->arrays;
-    my @form1flds   = qw(department_id);
+    my @form1flds   = qw(department_id add_missing);
 
     my $form1 = CGI::FormBuilder->new(
         method     => 'post',
@@ -20,7 +20,7 @@ sub search_domus {
         required   => [qw(department_id)],
         options    => { department_id => \@departments },
         messages   => { form_required_text => '', },
-        labels     => { department_id => $locale->text('Department'), },
+        labels     => { department_id => $locale->text('Department'), add_missing => $locale->text('Add missing account?'), },
         selectnum  => 2,
         submit     => [qw(Continue)],
         params     => $form,
@@ -32,6 +32,7 @@ sub search_domus {
         },
         keepextras => [qw(id title action path login callback)],
     );
+    $form1->fields(name => 'add_missing', type => 'checkbox', options => [qw(Y)]);
     $form->header;
     print $form1->render;
     print qq|
@@ -88,6 +89,24 @@ sub process_domus {
           or die( $form->{dbs}->error );
     }
 
+    @missing_accounts = $form->{dbs}->query('select distinct c3 from generic_import where c3 not in (select accno from chart) order by 1')->hashes;
+
+    if (@missing_accounts){
+        if ($form->{add_missing}){
+            $form->info("Adding missing accounts ...\n");
+            for (@missing_accounts){
+               $form->info("$_->{c3} is missing...");
+               $form->{dbs}->query('insert into chart (accno, description) values (?, ?)', $_->{c3}, 'New account' ); 
+               $form->info(" added.\n");
+            }
+            $form->{dbs}->commit;
+        } else {
+            $form->info($locale->text("Missing accounts ...\n"));
+            for (@missing_accounts){ $form->info("$_->{c3}\n") }
+            $form->error($locale->text('Missing accounts found. Data not imported...'));
+        }
+    }
+
     my @gl = $form->{dbs}->query('select distinct c1 from generic_import order by c1')->hashes or die( $form->{dbs}->error );
 
     $query = qq|SELECT curr FROM curr ORDER BY rn|;
@@ -138,7 +157,7 @@ sub search_datev {
 
     my @departments = $form->{dbs}->query('select id, description from department order by 2')->arrays;
     my @projects    = $form->{dbs}->query('select id, projectnumber from project order by 2')->arrays;
-    my @form1flds   = qw(department_id project_id year);
+    my @form1flds   = qw(department_id project_id year add_missing);
 
     my $form1 = CGI::FormBuilder->new(
         method   => 'post',
@@ -151,6 +170,7 @@ sub search_datev {
             year          => [qw(2013 2014 2015 2016 2017 2018 2019 2020)]
         },
         messages => { form_required_text => '', },
+        labels     => { department_id => $locale->text('Department'), add_missing => $locale->text('Add missing account?'), },
         labels   => {
             department_id => $locale->text('Department'),
             project_id    => $locale->text('Project'),
@@ -167,6 +187,7 @@ sub search_datev {
         },
         keepextras => [qw(id title action path login callback)],
     );
+    $form1->fields(name => 'add_missing', type => 'checkbox', options => [qw(Y)]);
     $form1->field( name => 'year', other => 1 );
     $form->header;
     print $form1->render;
@@ -221,6 +242,30 @@ sub process_datev {
 
     use SL::GL;
     my $newform = new Form;
+
+    @missing_accounts = $form->{dbs}->query('
+        select distinct c7 c3 from generic_import where c7 not in (select accno from chart) 
+        union
+        select distinct c8 from generic_import where c8 not in (select accno from chart) 
+        order by 1
+    ')->hashes;
+
+    if (@missing_accounts){
+        if ($form->{add_missing}){
+            $form->info("Adding missing accounts ...\n");
+            for (@missing_accounts){
+               $form->info("$_->{c3} is missing...");
+               $form->{dbs}->query('insert into chart (accno, description) values (?, ?)', $_->{c3}, 'New account' ); 
+               $form->info(" added.\n");
+            }
+            $form->{dbs}->commit;
+        } else {
+            $form->info($locale->text("Missing accounts ...\n"));
+            for (@missing_accounts){ $form->info("$_->{c3}\n") }
+            $form->error($locale->text('Missing accounts found. Data not imported...'));
+        }
+    }
+
     my @gl = $form->{dbs}->query('select * from generic_import order by id')->hashes or die( $form->{dbs}->error );
 
     $query = qq|SELECT curr FROM curr ORDER BY rn|;
