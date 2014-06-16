@@ -1482,7 +1482,7 @@ sub get_jcitems {
 	       j.sellprice, j.parts_id, pr.$form->{vc}_id, j.project_id,
 	       j.checkedin::date AS transdate, j.notes,
                c.name AS $form->{vc}, c.$form->{vc}number, pr.projectnumber,
-	       p.partnumber
+	       p.partnumber, e.name employee
                FROM jcitems j
 	       JOIN project pr ON (pr.id = j.project_id)
 	       JOIN employee e ON (e.id = j.employee_id)

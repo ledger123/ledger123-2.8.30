@@ -2461,7 +2461,7 @@ sub jcitems {
   $vc = ucfirst $form->{vc};
   $vcnumber = "$vc Number";
   
-  @column_index = qw(id projectnumber name);
+  @column_index = qw(id projectnumber name employee);
   push @column_index, "$form->{vc}number";
 
   if (!$form->{summary}) {
@@ -2477,6 +2477,7 @@ sub jcitems {
   $column_header{projectnumber} = qq|<th class=listheading>|.$locale->text('Project Number').qq|</th>|;
   $column_header{description} = qq|<th class=listheading>|.$locale->text('Description').qq|</th>|;
   $column_header{itemnotes} = qq|<th class=listheading>|.$locale->text('Notes').qq|</th>|;
+  $column_header{employee} = qq|<th class=listheading>|.$locale->text('Employee').qq|</th>|;
   $column_header{name} = qq|<th class=listheading>$vc</th>|;
   $column_header{"$form->{vc}number"} = qq|<th class=listheading>|.$locale->text($vcnumber).qq|</th>|;
   $column_header{qty} = qq|<th class=listheading>|.$locale->text('Qty').qq|</th>|;
@@ -2527,7 +2528,7 @@ sub jcitems {
       $column_data{name} = qq|<td><input name="ndx_$i" class=checkbox type=checkbox value="1"></td>|;
     }
     
-    $form->hide_form(map {"${_}_$i"} qw(id project_id parts_id projectnumber transdate partnumber description itemnotes qty amount taxaccounts sellprice));
+    $form->hide_form(map {"${_}_$i"} qw(id project_id parts_id employee projectnumber transdate partnumber description itemnotes qty amount taxaccounts sellprice));
 
     $j++; $j %= 2;
     print "
@@ -2677,7 +2678,7 @@ sub generate_sales_orders {
 	reqdate => $form->{"transdate_$i"},
 	taxaccounts => $form->{"taxaccounts_$i"},
 	jcitems => $form->{"id_$i"},
-	itemnotes => $form->{"itemnotes_$i"},
+	itemnotes => qq|$form->{"employee_$i"} - $form->{"itemnotes_$i"}|,
       }
     }
   }
