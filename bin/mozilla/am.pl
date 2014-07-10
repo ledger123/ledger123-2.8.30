@@ -3477,7 +3477,29 @@ sub yearend {
   AM->earningsaccounts(\%myconfig, \%$form);
   
   for (@{ $form->{chart} }) { $form->{selectchart} .= "$_->{accno}--$_->{description}\n" }
-  
+
+  $form->all_departments(\%myconfig);
+
+  if (@{ $form->{all_department} }) {
+    if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+    	$form->{selectdepartment} = qq|$myconfig{department}--$myconfig{department_id}\n|;
+    } else {
+    	$form->{selectdepartment} = "\n";
+    	$form->{department} = "$form->{department}--$form->{department_id}" if $form->{department_id};
+    
+    	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
+  }
+  $department = qq|
+              <tr>
+	        <th align="right" nowrap>|.$locale->text('Department').qq|</th>
+		<td><select name=department>|
+		.$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+		.qq|</select>
+		</td>
+	      </tr>
+| if $form->{selectdepartment};
+ 
   $checked{accrual} = "checked" if $form->{method} eq 'accrual';
   $checked{cash} = "checked" if $form->{method} eq 'cash';
   
@@ -3525,6 +3547,7 @@ sub yearend {
           <th align=right>|.$locale->text('Method').qq|</th>
           <td><input name=method class=radio type=radio value=accrual $checked{accrual}>&nbsp;|.$locale->text('Accrual').qq|&nbsp;<input name=method class=radio type=radio value=cash $checked{cash}>&nbsp;|.$locale->text('Cash').qq|</td>
         </tr>
+	$department;
       </table>
     </td>
   </tr>
