@@ -1423,7 +1423,7 @@ sub print_options {
   $form->{groupprojectnumber} = "checked" if $form->{groupprojectnumber};
   $form->{grouppartsgroup} = "checked" if $form->{grouppartsgroup};
   
-  for (qw(runningnumber partnumber description bin)) { $sortby{$_} = "checked" if $form->{sortby} eq $_ }
+  for (qw(runningnumber partnumber description itemnotes bin)) { $sortby{$_} = "checked" if $form->{sortby} eq $_ }
 
   if ($form->{media} eq 'email') {
     $form->hide_form(qw(groupprojectnumber grouppartsgroup sortby));
@@ -1448,6 +1448,8 @@ sub print_options {
 	    <td>|.$locale->text('Number').qq|</td>
 	    <td><input name=sortby type=radio class=radio value=description $sortby{description}></td>
 	    <td>|.$locale->text('Description').qq|</td>
+	    <td><input name=sortby type=radio class=radio value=itemnotes $sortby{itemnotes}></td>
+	    <td>|.$locale->text('Item Notes').qq|</td>
 	    <td><input name=sortby type=radio class=radio value=bin $sortby{bin}></td>
 	    <td>|.$locale->text('Bin').qq|</td>
 	  </tr>

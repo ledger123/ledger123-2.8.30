@@ -119,7 +119,7 @@ sub invoice_details {
     
     $sortby = qq|$projectnumber$form->{partsgroup}|;
     if ($form->{sortby} ne 'runningnumber') {
-      for (qw(partnumber description bin)) {
+      for (qw(partnumber description bin itemnotes)) {
 	$sortby .= $form->{"${_}_$i"} if $form->{sortby} eq $_;
       }
     }
