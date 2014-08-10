@@ -1927,13 +1927,15 @@ sub post_yearend {
   ($form->{id}) = $dbh->selectrow_array($query);
 
   $form->{reference} = $form->update_defaults($myconfig, 'glnumber', $dbh) unless $form->{reference};
-  
+  my ($null, $department_id) = split(/--/, $form->{department});
+  $department_id *= 1;
+
   $query = qq|UPDATE gl SET 
 	      reference = |.$dbh->quote($form->{reference}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      transdate = '$form->{transdate}',
-	      department_id = 0,
+	      department_id = $department_id,
 	      exchangerate = 1
 	      WHERE id = $form->{id}|;
 
