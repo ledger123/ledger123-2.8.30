@@ -1930,6 +1930,10 @@ sub post_yearend {
   my ($null, $department_id) = split(/--/, $form->{department});
   $department_id *= 1;
 
+  if ($department_id){
+    $query = qq|INSERT INTO dpt_trans (trans_id, department_id) VALUES ($form->{id}, $department_id)|;
+    $dbh->do($query) || $form->dberror($query);
+  }
   $query = qq|UPDATE gl SET 
 	      reference = |.$dbh->quote($form->{reference}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
