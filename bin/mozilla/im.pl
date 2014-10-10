@@ -127,7 +127,7 @@ sub import {
         <tr>
 	  <th align="right">| . $locale->text('File to Import') . qq|</th>
 	  <td>
-	    <input name=data size=60 type=file>
+	    <input name=data size=60 type=file>&nbsp;<a href="samples/$form->{ARAP}$form->{type}.csv">| . $locale->text('sample') . qq|
 	  </td>
 	</tr>
 	<tr>
