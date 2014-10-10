@@ -1,0 +1,4 @@
+partnumber,description,unit,partsgroup,listprice,sellprice,lastcost,rop,bin,image,drawing,notes
+B002,"Brush Set",NOS,brush,9.99,9.99,7,150,TOP,noimage,brush.jpg,notes about brush set 
+D010,"Deluxe Hand Saw",NOS,SAW,17.99,17.99,16,50,TOP,saw.jpg,nodrawing,notes about hand saw 
+D011,"Digger Hand Trencher",NOS,Picks & Hatchets,18.99,18.99,15,200,TOP,,nodrawing,notes about hand saw

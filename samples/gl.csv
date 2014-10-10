@@ -1,0 +1,6 @@
+reference,transdate,description,notes,accno,debit,credit,source,memo
+GL001,01-20-2008,"Paid for training,support",Next session in 2009,8203,124,0,23211,new hiring
+GL001,01-20-2008,"Paid for training,support",Next session in 2009,1230,0,124,23211,new hiring
+GL002,10-19-2008,"Overdue pymt for inv 11,12,13",,1230,204,0,"11,12,13", 
+GL002,10-19-2008,"Overdue pymt for inv 11,12,13",,1102,0,204,"11,12,13",
+GL003,11-20-2008,Invalid transaction for testing,This account is not in chart,00121,0,255,source2,memo2
