@@ -163,7 +163,7 @@ sub import {
 </table>
 |;
 
-    $form->hide_form(qw(defaultcurrency title type nextsub login path));
+    $form->hide_form(qw(vc ARAP defaultcurrency title type nextsub login path));
 
     print qq|
 <input name=action class=submit type=submit value="| . $locale->text('Continue') . qq|">
@@ -3245,14 +3245,16 @@ sub import_parts_vendors {
 
 #=========================================
 sub im_transactions {
+ 
+    # TODO: (a) Check validity of AR/AP and line item accounts (b) If AR/AP missing, get default. (c) Taxes
 
     &import_file;
 
     if ( $form->{vc} eq 'customer' ) {
-        @column_index = qw(ndx invnumber customernumber name transdate account account_description amount description notes source memo);
+        @column_index = qw(ndx invnumber customernumber name transdate araccount incomeaccount account_description amount description notes source memo);
     }
     else {
-        @column_index = qw(ndx invnumber vendornumber name transdate account account_description amount description notes source memo);
+        @column_index = qw(ndx invnumber vendornumber name transdate apaccount expenseaccount account_description amount description notes source memo);
     }
     @flds = @column_index;
     push @flds, qw(vendor_id customer_id employee employee_id);
@@ -3263,11 +3265,6 @@ sub im_transactions {
 
     &xrefhdr;
 
-    ( $form->{arapaccount} )    = split /--/, $form->{arapaccount};
-    ( $form->{incomeaccount} )  = split /--/, $form->{incomeaccount};
-    ( $form->{expenseaccount} ) = split /--/, $form->{expenseaccount};
-    ( $form->{paymentaccount} ) = split /--/, $form->{paymentaccount};
-
     IM->transactions( \%myconfig, \%$form );
 
     $column_data{runningnumber}       = "&nbsp;";
@@ -3275,8 +3272,16 @@ sub im_transactions {
     $column_data{"$form->{vc}number"} = $locale->text('Number');
     $column_data{name}                = $locale->text('Name');
     $column_data{transdate}           = $locale->text('Invoice Date');
-    $column_data{account}             = $locale->text('Account');
+    $column_data{araccount}           = $locale->text('AR');
+    $column_data{apaccount}           = $locale->text('AP');
+    $column_data{incomeaccount}       = $locale->text('Income');
+    $column_data{expenseaccount}      = $locale->text('Expense');
+    $column_data{account_description} = $locale->text('Account Description');
     $column_data{amount}              = $locale->text('Amount');
+    $column_data{description}         = $locale->text('Description');
+    $column_data{notes}               = $locale->text('Notes');
+    $column_data{source}              = $locale->text('Source');
+    $column_data{memo}                = $locale->text('Memo');
 
     $form->header;
 
@@ -3316,9 +3321,14 @@ sub im_transactions {
         $column_data{amount} = qq|<td align=right>| . $form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|</td>|;
         $total_amount += $form->{"amount_$i"};
 
-        $form->{"ndx_$i"}           = '1';
+        $form->{"ndx_$i"} = '1';
         $column_data{runningnumber} = qq|<td align=right>$i</td>|;
-        $column_data{ndx}           = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='1' checked></td>|;
+        if ( $form->{"account_description_$i"} ) {
+            $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='1' checked></td>|;
+        }
+        else {
+            $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='1'></td>|;
+        }
 
         for (@column_index) { print $column_data{$_} }
 
@@ -3350,7 +3360,7 @@ sub im_transactions {
 </table>
 |;
 
-    $form->hide_form(qw(markpaid ARAP vc currency arapaccount incomeaccount paymentaccount expenseaccount precision rowcount type login path callback));
+    $form->hide_form(qw(markpaid ARAP vc currency precision rowcount type login path callback));
 
     print qq|
 <input name=action class=submit type=submit value="| . $locale->text('Import Transactions') . qq|">
@@ -3364,6 +3374,8 @@ sub im_transactions {
 
 #=========================================
 sub import_transactions {
+
+    use SL::AA;
 
     my $m = 0;
     $newform = new Form;
@@ -3630,3 +3642,4 @@ sub import_gl {
 
 # EOF
 
+## Please see file perltidy.ERR

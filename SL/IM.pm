@@ -1882,14 +1882,16 @@ sub transactions {
                 $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
             }
 
-            $ath->execute("$a[$form->{$form->{type}}->{account}{ndx}]");
-            my $ref = $ath->fetchrow_hashref(NAME_lc);
-            $form->{"account_description_$i"} = $ref->{description};
-
             if ( $form->{vc} eq 'customer' ) {
+                $ath->execute("$a[$form->{$form->{type}}->{incomeaccount}{ndx}]");
+                my $ref = $ath->fetchrow_hashref(NAME_lc);
+                $form->{"account_description_$i"} = $ref->{description};
                 $cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
             }
             else {
+                $ath->execute("$a[$form->{$form->{type}}->{expenseaccount}{ndx}]");
+                my $ref = $ath->fetchrow_hashref(NAME_lc);
+                $form->{"account_description_$i"} = $ref->{description};
                 $cth->execute("$a[$form->{$form->{type}}->{vendornumber}{ndx}]");
             }
             while ( $ref = $cth->fetchrow_hashref(NAME_lc) ) {
