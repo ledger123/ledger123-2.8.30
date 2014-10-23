@@ -1,0 +1,20 @@
+$self{charset} = 'UTF-8';
+
+$self{texts} = {
+  'Department'                  => 'Kostnadsställe/resultatenhet',
+  'Posting failed!'             => 'Bokföring misslyckats!',
+  'Project'                     => 'Projekt',
+  'Year'                        => 'År',
+  'ok'                          => 'OK',
+};
+
+$self{subs} = {
+  'continue'                    => 'continue',
+  'process_datev'               => 'process_datev',
+  'process_domus'               => 'process_domus',
+  'search_datev'                => 'search_datev',
+  'search_domus'                => 'search_domus',
+};
+
+1;
+
