@@ -1065,7 +1065,8 @@ sub post_invoice {
 	    $allocated = &cogs_returns($dbh, $form, $form->{"id_$i"}, $form->{"qty_$i"}, $project_id, $i);
 	    
 	    # change account to inventory
-	    $form->{acc_trans}{lineitems}[$ndx]->{chart_id} = $form->{"inventory_accno_id_$i"};
+        # armaghan 17-aug-2014 disabled following line for correct return posting to gl.
+        #$form->{acc_trans}{lineitems}[$ndx]->{chart_id} = $form->{"inventory_accno_id_$i"};
 
 	  }
 	}
@@ -1165,13 +1166,13 @@ sub post_invoice {
         if ($amount = &cogs_difference($dbh, $form, $i)) {
           $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
                       transdate, project_id)
-                      VALUES ($form->{id}, $form->{"income_accno_id_$i"}, $amount * -1,
+                      VALUES ($form->{id}, $form->{"expense_accno_id_$i"}, $amount,
                       '$form->{transdate}', $project_id)|;
           $dbh->do($query) || $form->dberror($query);
 
           $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
                       transdate, project_id)
-                      VALUES ($form->{id}, $form->{"inventory_accno_id_$i"}, $amount,
+                      VALUES ($form->{id}, $form->{"inventory_accno_id_$i"}, $amount * -1,
                       '$form->{transdate}', $project_id)|;
           $dbh->do($query) || $form->dberror($query);
         }
