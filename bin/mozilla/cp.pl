@@ -1717,10 +1717,11 @@ sub payment_footer {
     %button = ('Update' => { ndx => 1, key => 'U', value => $locale->text('Update') },
 	       'Select all' => { ndx => 2, key => 'A', value => $locale->text('Select all') },
 	       'Deselect all' => { ndx => 3, key => 'A', value => $locale->text('Deselect all') },
-	       'Print' => { ndx => 5, key => 'P', value => $locale->text('Print') },
-	       'Post' => { ndx => 6, key => 'O', value => $locale->text('Post') },
-	       'Back' => { ndx => 7, key => 'B', value => $locale->text('Back') }
-	      ); 
+	       'Export' => { ndx => 5, value => $locale->text('Export') },
+	       'Print' => { ndx => 6, key => 'P', value => $locale->text('Print') },
+	       'Post' => { ndx => 7, key => 'O', value => $locale->text('Post') },
+	       'Back' => { ndx => 8, key => 'B', value => $locale->text('Back') }
+	      );
 
     if ($form->{deselect}) {
       delete $button{'Select all'};
@@ -1945,6 +1946,62 @@ sub post_payment {
 
   $form->error($locale->text($msg2)) if ! $rc;
 
+}
+
+sub export {
+
+    my $count;
+    my $ids;
+    for $i (1 .. $form->{rowcount}){
+        if ($form->{"checked_$i"}){
+           $ids .= qq|$form->{"id_$i"},|;
+           $count++;
+        }
+    }
+
+    $form->error($locale->text('No payment selected')) if !$count;
+    $form->error($locale->text('Select only 1 payment')) if $count > 1;
+
+    chop $ids;
+    my ($paidaccount, $null) = split /--/, $form->{AP_paid};
+
+    use Template;
+    my $tt = Template->new({
+        INCLUDE_PATH => [ "$templates/$myconfig{dbname}/$form->{language_code}" ],
+        INTERPOLATE  => 1,
+    }) || die "$Template::ERROR\n";
+
+    my $vars = {};
+    my $query;
+    $query = qq|
+        SELECT v.name, v.contact,
+                b.name bank_name, b.iban
+        FROM vendor v
+        LEFT JOIN bank b ON (b.id = v.id)
+        LEFT JOIN address ba ON (ba.id = b.address_id)
+        WHERE v.id = ?
+    |;
+    $vars->{vendor} = $form->{dbs}->query($query, $form->{vendor_id})->hash;
+
+    $query = qq|
+        SELECT amount, netamount
+        FROM ap
+        WHERE id IN ($ids)
+    |;
+    $vars->{ap} = $form->{dbs}->query($query)->hash;
+
+    #use Data::Dumper; $form->info('<br/>'); print Dumper($vars->{vendor}); print Dumper($vars->{ap});
+
+    print qq|Content-Type: text/xml
+Content-Disposition: attachment; filename="test.xml"
+
+|;
+    $tt->process("iso_pain_001_001_03_credit_transfer.xml", $vars) || die $tt->error(), "\n";
+
+    #$form->info("$ids\n");
+    #$form->info($paidaccount);
+    #$form->debug;
+    #$form->error;
 }
 
 
