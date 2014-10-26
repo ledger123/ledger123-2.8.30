@@ -147,6 +147,11 @@ sub db_init {
    $self->{dbs} = DBIx::Simple->connect($self->{dbh});
 }
 
+sub param {
+   my ($self, $fldname) = @_;
+   return $self->{$fldname};
+}
+
 sub helpref {
   my ($self, $file, $countrycode) = @_;
 

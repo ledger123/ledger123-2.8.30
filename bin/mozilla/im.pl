@@ -2926,7 +2926,8 @@ sub im_generic {
     $form->{callback} = "$form->{script}?action=import";
     for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
 
-    @columns = qw(c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 c20);
+    #-- aa is just a place hold to fix the yet-to-resolve bug that first column is not imported into a0
+    @columns = qw(aa a0 b0 c0 d0 e0 f0 g0 h0 i0 j0 k0 l0 m0 n0 o0 p0 q0 r0 s0 t0 u0 v0 w0 x0 y0 z0);
     for (@columns) {
         $form->{ $form->{type} }{$_} = { field => $_, length => "", ndx => $i++ };
     }
@@ -3023,6 +3024,26 @@ sub import_generic {
 
     $form->info( $locale->text('Import successful!') );
 
+    print qq|<br/><br/>
+<b>Process imported file as:</b><br/><br/>
+
+* <a href="im.pl?action=data_backup_import&path=$form->{path}&login=$form->{login}">'Data backup' data file.</a><br/>
+* <a href="im.pl?action=staffing_data_import&path=$form->{path}&login=$form->{login}">'Staffing data' data file.</a><br/>
+* <a href="im.pl?action=web_protection_import&path=$form->{path}&login=$form->{login}">'Web protection' data file.</a><br/>
+|;
+
+}
+
+sub data_backup_import {
+    $form->info('Done1');
+}
+
+sub staffing_data_import {
+    $form->info('Done2');
+}
+
+sub web_protection_import {
+    $form->info('Done3');
 }
 
 sub im_partscustomer {
