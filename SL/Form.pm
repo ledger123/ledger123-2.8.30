@@ -28,6 +28,8 @@
 #
 #======================================================================
 
+use DBIx::Simple;
+
 package Form;
 
 
@@ -138,6 +140,47 @@ sub new {
   bless $self, $type;
   
 }
+
+sub db_init {
+   my ($self, $myconfig) = @_;
+   $self->{dbh} = $self->dbconnect_noauto($myconfig);
+   $self->{dbs} = DBIx::Simple->connect($self->{dbh});
+}
+
+sub helpref {
+  my ($self, $file, $countrycode) = @_;
+
+  return;
+
+}
+
+sub all_languages {
+  my ($self, $myconfig, $dbh) = @_;
+  
+  my $disconnect = ($dbh) ? 0 : 1;
+
+  if (! $dbh) {
+    $dbh = $self->dbconnect($myconfig);
+  }
+  my $sth;
+  my $query;
+
+  $query = qq|SELECT *
+              FROM language
+	      ORDER BY 2|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $self->dberror($query);
+
+  $self->{all_language} = ();
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $self->{all_language} }, $ref;
+  }
+  $sth->finish;
+
+  $dbh->disconnect if $disconnect;
+  
+}
+
 
 
 sub debug {
