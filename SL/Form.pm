@@ -33,11 +33,12 @@ package Form;
 
 sub new {
   my $type = shift;
+  my $userspath = 'users';
   
   my $self = {};
 
   read(STDIN, $_, $ENV{CONTENT_LENGTH});
-  
+
   if ($ENV{QUERY_STRING}) {
     $_ = $ENV{QUERY_STRING};
   }
@@ -47,13 +48,88 @@ sub new {
   }
 
   %$self = split /[&=]/;
-  for (keys %$self) { $self->{$_} = unescape("", $self->{$_}) }
+
+  my $data;
+  my $null;
+  my $esc = 1;
+
+  # if multipart form take apart on boundary
+  my ($content, $boundary) = split /; /, $ENV{CONTENT_TYPE};
+
+  if ($boundary) {
+    ($null, $boundary) = split /=/, $boundary;
+
+    $esc = 0;
+    %$self = ();
+    
+    my $var;
+    my @file = split /\r\n/, $_;
+
+    for my $line (@file) {
+
+      last if $line =~ /${boundary}--/;
+      if ($line =~ /${boundary}/) {
+	next;
+      }
+
+      if ($line =~ /Content-Disposition: form-data;/) {
+
+	my @b = split /; /, $line;
+	my @c = split /=/, $b[1];
+	$c[1] =~ s/(^"|"$)//g;
+	$var = $c[1];
+
+	if ($b[2]) {
+	  @c = split /=/, $b[2];
+	  $c[1] =~ s/(^"|"$)//g;
+	  $self->{$c[0]} = $c[1];
+	}
+	next;
+      }
+      if ($line =~ /Content-Type:/) {
+	($null, $self->{"content-type"}) = split /: /, $line;
+	$data = $var;
+	next;
+      }
+
+      if ($self->{$var}) {
+	$self->{$var} .= "\r\n$line";
+      } else {
+	$self->{$var} = "$line";
+      }
+      
+    }
+    
+    if ($data) {
+      $self->{tmpfile} = time;
+      $self->{tmpfile} .= $$;
+      my (@e) = split /\./, $self->{filename};
+      if ($#e >= 1) {
+	$self->{tmpfile} .= ".$e[$#e]";
+      }
+      if (! open(FH, ">$userspath/$self->{tmpfile}")) {
+	if ($ENV{HTTP_USER_AGENT}) {
+	  print "Content-Type: text/html\n\n";
+	}
+	print "$userspath/$self->{tmpfile} : $!";
+	die;
+      }
+      print FH $self->{$data};
+      close(FH);
+      delete $self->{$data};
+    }
+
+  }
+
+  if ($esc) {
+    for (keys %$self) { $self->{$_} = unescape("", $self->{$_}) }
+  }
  
   if (substr($self->{action}, 0, 1) !~ /( |\.)/) {
     $self->{action} = lc $self->{action};
     $self->{action} =~ s/( |-|,|\#|\/|\.$)/_/g;
   }
-
+ 
   $self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
   $self->{version} = "2.6.27";
