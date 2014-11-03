@@ -1960,48 +1960,57 @@ sub export {
     }
 
     $form->error($locale->text('No payment selected')) if !$count;
-    $form->error($locale->text('Select only 1 payment')) if $count > 1;
 
     chop $ids;
     my ($paidaccount, $null) = split /--/, $form->{AP_paid};
 
     use Template;
     my $tt = Template->new({
-        INCLUDE_PATH => [ "$templates/$myconfig{dbname}/$form->{language_code}" ],
+        INCLUDE_PATH => [ "$templates", "$templates/$myconfig{dbname}/$form->{language_code}" ],
         INTERPOLATE  => 1,
     }) || die "$Template::ERROR\n";
 
     my $vars = {};
-    my $query;
-    $query = qq|
-        SELECT v.name, v.contact,
-                b.name bank_name, b.iban
-        FROM vendor v
-        LEFT JOIN bank b ON (b.id = v.id)
-        LEFT JOIN address ba ON (ba.id = b.address_id)
-        WHERE v.id = ?
-    |;
-    $vars->{vendor} = $form->{dbs}->query($query, $form->{vendor_id})->hash;
 
-    $query = qq|
-        SELECT amount, netamount
+    $vars->{currency} = $form->{currency};
+    $vars->{count} = $count;
+    $vars->{company} = $form->{dbs}->query(qq|select fldvalue from defaults where fldname='company'|)->list;
+    $vars->{current_date} = $form->current_date(\%myconfig);
+    $vars->{creation_date_time} = localtime;
+
+    my $query = qq|
+        SELECT ap.id, ap.transdate, ap.invnumber, ap.amount,
+        vc.name,
+        bk.name bank_name, bk.iban, bk.bic,
+        ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country
         FROM ap
-        WHERE id IN ($ids)
+        JOIN vendor vc ON (ap.vendor_id = vc.id)
+        LEFT JOIN bank bk ON (ap.vendor_id = bk.id)
+        LEFT JOIN address ad ON (ap.vendor_id = ad.trans_id)
+        WHERE ap.id IN ($ids)
     |;
-    $vars->{ap} = $form->{dbs}->query($query)->hash;
 
-    #use Data::Dumper; $form->info('<br/>'); print Dumper($vars->{vendor}); print Dumper($vars->{ap});
+    $vars->{ap} = $form->{dbs}->query($query)->map_hashes('id');
+
+    $query = qq|
+        SELECT c.accno, c.description,
+            bk.name bank_name, bk.iban, bk.bic,
+            ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country
+        FROM chart c
+        LEFT JOIN bank bk ON (c.id = bk.id)
+        LEFT JOIN address ad ON (c.id = ad.trans_id)
+        WHERE accno = ?
+    |;
+    $vars->{account} = $form->{dbs}->query($query, $paidaccount)->hash;
+
+    # uncomment following line to debug
+    #use Data::Dumper; $form->info('<pre>'); print Dumper($vars->{ap}); print Dumper($vars->{account}); $form->error; # Stop
 
     print qq|Content-Type: text/xml
-Content-Disposition: attachment; filename="test.xml"
+Content-Disposition: attachment; filename="iso_pain_001_001_03_credit_transfer.xml"
 
 |;
     $tt->process("iso_pain_001_001_03_credit_transfer.xml", $vars) || die $tt->error(), "\n";
-
-    #$form->info("$ids\n");
-    #$form->info($paidaccount);
-    #$form->debug;
-    #$form->error;
 }
 
 
@@ -2011,8 +2020,6 @@ sub print {
   &update if $form->{media} ne 'screen';
   
 }
-
-
 
 sub print_payments {
 

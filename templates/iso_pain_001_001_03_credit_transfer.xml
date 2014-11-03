@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <CstmrCdtTrfInitn>
+        <GrpHdr>
+            <MsgId>ABC/060928/CCT001</MsgId>
+            <CreDtTm>[% creation_date_time %]</CreDtTm>
+            <NbOfTxs>[% count %]</NbOfTxs>
+            <InitgPty>
+                <Nm>[% account.bank_name %]</Nm>
+                <Id>
+                    <OrgId>
+                        <Othr>
+                            <Id>0468651441</Id>
+                            <Issr>KBO-BCE</Issr>
+                        </Othr>
+                    </OrgId>
+                </Id>
+            </InitgPty>
+        </GrpHdr>
+[% FOREACH id IN ap.keys.sort %]
+        <PmtInf>
+            <PmtInfId>ABC/4560/2010-12-15</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>false</BtchBookg>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            <ReqdExctnDt>[% current_date %]</ReqdExctnDt>
+            <Dbtr>
+                <Nm>[% company %]</Nm>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <IBAN>[% account.bank_name %]</IBAN>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BIC>AAAABE33</BIC>
+                </FinInstnId>
+            </DbtrAgt>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <EndToEndId>ABC/4562/2010-12-18</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="[% currency %]">[% ap.$id.amount %]</InstdAmt>
+                </Amt>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>[% ap.$id.bic %]</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>[% ap.$id.name %]</Nm>
+                    <PstlAdr>
+                        <Ctry>[% ap.$id.city %]</Ctry>
+                        <AdrLine>[% ap.$id.address1 %]</AdrLine>
+                        <AdrLine>[% ap.$id.address2 %]</AdrLine>
+                    </PstlAdr>
+                </Cdtr>
+                <CdtrAcct>
+                    <Id>
+                        <IBAN>[% ap.$id.iban %]</IBAN>
+                    </Id>
+                </CdtrAcct>
+                <RmtInf>
+                    <Ustrd>[% ap.$id.invnumber %]</Ustrd>
+                </RmtInf>
+            </CdtTrfTxInf>
+        </PmtInf>
+[% END %]
+    </CstmrCdtTrfInitn>
+</Document>
+
