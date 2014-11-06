@@ -1974,12 +1974,13 @@ sub export {
 
     $vars->{currency} = $form->{currency};
     $vars->{count} = $count;
-    $vars->{company} = $form->{dbs}->query(qq|select fldvalue from defaults where fldname='company'|)->list;
-    $vars->{current_date} = $form->current_date(\%myconfig);
-    $vars->{creation_date_time} = localtime;
+    ($vars->{company}) = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'company'|)->list;
+    ($vars->{businessnumber}) = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'businessnumber'|)->list;
+    $vars->{current_date} = $form->{dbs}->query(qq|select to_char(current_date, 'yyyy-mm-dd')|)->list;
+    $vars->{creation_date_time} = $form->{dbs}->query(qq|select to_char(now(), 'yyyy-mm-ddThh24:mi:ss')|)->list;
 
     my $query = qq|
-        SELECT ap.id, ap.transdate, ap.invnumber, ap.amount,
+        SELECT ap.id, to_char(ap.transdate, 'yyyy-dd-mm') transdate, ap.invnumber, ap.amount,
         vc.name,
         bk.name bank_name, bk.iban, bk.bic,
         ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country

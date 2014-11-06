@@ -2,7 +2,7 @@
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <CstmrCdtTrfInitn>
         <GrpHdr>
-            <MsgId>ABC/060928/CCT001</MsgId>
+            <MsgId>hardcoded 001</MsgId>
             <CreDtTm>[% creation_date_time %]</CreDtTm>
             <NbOfTxs>[% count %]</NbOfTxs>
             <InitgPty>
@@ -10,8 +10,8 @@
                 <Id>
                     <OrgId>
                         <Othr>
-                            <Id>0468651441</Id>
-                            <Issr>KBO-BCE</Issr>
+                            <Id>[% businessnumber %]</Id>
+                            <Issr>[% company %]</Issr>
                         </Othr>
                     </OrgId>
                 </Id>
@@ -19,7 +19,7 @@
         </GrpHdr>
 [% FOREACH id IN ap.keys.sort %]
         <PmtInf>
-            <PmtInfId>ABC/4560/2010-12-15</PmtInfId>
+            <PmtInfId>[% ap.$id.invnumber %]</PmtInfId>
             <PmtMtd>TRF</PmtMtd>
             <BtchBookg>false</BtchBookg>
             <PmtTpInf>
@@ -33,17 +33,17 @@
             </Dbtr>
             <DbtrAcct>
                 <Id>
-                    <IBAN>[% account.bank_name %]</IBAN>
+                    <IBAN>[% account.iban %]</IBAN>
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BIC>AAAABE33</BIC>
+                    <BIC>[% ap.$id.bic %]</BIC>
                 </FinInstnId>
             </DbtrAgt>
             <CdtTrfTxInf>
                 <PmtId>
-                    <EndToEndId>ABC/4562/2010-12-18</EndToEndId>
+                    <EndToEndId>[% ap.$id.invnumber %]</EndToEndId>
                 </PmtId>
                 <Amt>
                     <InstdAmt Ccy="[% currency %]">[% ap.$id.amount %]</InstdAmt>
@@ -56,9 +56,9 @@
                 <Cdtr>
                     <Nm>[% ap.$id.name %]</Nm>
                     <PstlAdr>
-                        <Ctry>[% ap.$id.city %]</Ctry>
-                        <AdrLine>[% ap.$id.address1 %]</AdrLine>
-                        <AdrLine>[% ap.$id.address2 %]</AdrLine>
+                        <Ctry>[% ap.$id.country %]</Ctry>
+                        <AdrLine>line1: [% ap.$id.address1 %]</AdrLine>
+                        <AdrLine>line2: [% ap.$id.address2 %]</AdrLine>
                     </PstlAdr>
                 </Cdtr>
                 <CdtrAcct>
@@ -67,7 +67,7 @@
                     </Id>
                 </CdtrAcct>
                 <RmtInf>
-                    <Ustrd>[% ap.$id.invnumber %]</Ustrd>
+                    <Ustrd>Invoice [% ap.$id.invnumber %]</Ustrd>
                 </RmtInf>
             </CdtTrfTxInf>
         </PmtInf>
