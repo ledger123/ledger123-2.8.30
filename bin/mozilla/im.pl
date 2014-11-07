@@ -3034,18 +3034,132 @@ sub import_generic {
 
 }
 
-sub data_backup_import {
-    $form->info('Done1');
+#---------------------------------------------------------------------
+sub ask_data_backup_import {
+
+  $form->header;
+
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+|;
+
+  $form->{nextsub} = "do_data_backup_import";
+  $form->hide_form;
+
+  print qq|
+<h2 class=confirm>|.$locale->text('Confirm!').qq|</h2>
+
+<h4>|.$locale->text('Are you sure you want to proceed with processing?').qq|
+</h4>
+
+<p>
+<input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
+</form>
+|;
+
 }
 
-sub staffing_data_import {
-    $form->info('Done2');
+sub do_data_backup_import {
+   $form->info('Done data backup import');
 }
 
-sub web_protection_import {
-    $form->info('Done3');
+#---------------------------------------------------------------------
+sub ask_staffing_data_import {
+
+  $form->header;
+
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+|;
+
+  $form->{nextsub} = "do_staffing_data_import";
+  $form->hide_form;
+
+  print qq|
+<h2 class=confirm>|.$locale->text('Confirm!').qq|</h2>
+
+<h4>|.$locale->text('Are you sure you want to proceed with processing?').qq|
+</h4>
+
+<p>
+<input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
+</form>
+|;
+
 }
 
+sub do_staffing_data_import {
+   $form->info('Done staffing data import');
+}
+
+#---------------------------------------------------------------------
+sub ask_web_protection_import {
+
+  $form->header;
+
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+|;
+
+  $form->{nextsub} = "do_web_protection_import";
+  $form->hide_form;
+
+  print qq|
+<h2 class=confirm>|.$locale->text('Confirm!').qq|</h2>
+
+<h4>|.$locale->text('Are you sure you want to proceed with processing?').qq|
+</h4>
+
+<p>
+<input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
+</form>
+|;
+
+}
+
+sub do_web_protection_import {
+   $form->info('Done web protection import');
+}
+
+#---------------------------------------------------------------------
+sub ask_google_import {
+
+  $form->header;
+
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+|;
+
+  $form->{nextsub} = "do_google_import";
+  $form->hide_form;
+
+  print qq|
+<h2 class=confirm>|.$locale->text('Confirm!').qq|</h2>
+
+<h4>|.$locale->text('Are you sure you want to proceed with processing?').qq|
+</h4>
+
+<p>
+<input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
+</form>
+|;
+
+}
+
+sub do_google_import {
+   $form->info('Done google import');
+}
+
+
+#---------------------------------------------------------------------
 sub im_partscustomer {
 
     &import_file;
