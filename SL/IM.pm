@@ -2016,15 +2016,27 @@ sub import_generic {
             }
             $sth->finish;
 
-            $form->{dbs}->query( '
-               INSERT INTO generic_import (a0, b0, c0, d0, e0, f0, g0, h0, i0, j0, k0, l0, m0, n0, o0, p0, q0, r0, s0, t0, u0, v0, w0, x0, y0, z0)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            $form->{dbs}->query('
+               INSERT INTO generic_import (
+                    a0, b0, c0, d0, e0, f0, g0, h0, i0, j0, k0, l0, m0, n0, o0, p0, q0, r0, s0, t0, u0, v0, w0, x0, y0, z0,
+                    aa, ab, ac, ad, ae, af, ag, ah, ai, aj, ak, al, am, an, ao, ap, aq, ar, as0, at, au, av, aw, ax, ay, az
+               )
+               VALUES (
+               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+               )',
                 $newform->{a0}, $newform->{b0}, $newform->{c0}, $newform->{d0}, $newform->{e0},
                 $newform->{f0}, $newform->{g0}, $newform->{h0}, $newform->{i0}, $newform->{j0},
                 $newform->{k0}, $newform->{l0}, $newform->{m0}, $newform->{n0}, $newform->{o0},
                 $newform->{p0}, $newform->{q0}, $newform->{r0}, $newform->{s0}, $newform->{t0},
                 $newform->{u0}, $newform->{v0}, $newform->{w0}, $newform->{x0}, $newform->{y0},
-                $newform->{z} 
+                $newform->{z0},
+                $newform->{aa}, $newform->{ab}, $newform->{ac}, $newform->{ad}, $newform->{ae},
+                $newform->{af}, $newform->{ag}, $newform->{ah}, $newform->{ai}, $newform->{aj},
+                $newform->{ak}, $newform->{al}, $newform->{am}, $newform->{an}, $newform->{ao},
+                $newform->{ap}, $newform->{aq}, $newform->{ar}, $newform->{as0}, $newform->{at},
+                $newform->{au}, $newform->{av}, $newform->{aw}, $newform->{ax}, $newform->{ay},
+                $newform->{az} 
             );
         }
         $i++;

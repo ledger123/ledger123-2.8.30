@@ -2926,8 +2926,8 @@ sub im_generic {
     $form->{callback} = "$form->{script}?action=import";
     for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
 
-    #-- aa is just a place hold to fix the yet-to-resolve bug that first column is not imported into a0
-    @columns = qw(aa a0 b0 c0 d0 e0 f0 g0 h0 i0 j0 k0 l0 m0 n0 o0 p0 q0 r0 s0 t0 u0 v0 w0 x0 y0 z0);
+    #-- xx is just a place hold to fix the yet-to-resolve bug that first column is not imported into a0
+    @columns = qw(xx a0 b0 c0 d0 e0 f0 g0 h0 i0 j0 k0 l0 m0 n0 o0 p0 q0 r0 s0 t0 u0 v0 w0 x0 y0 z0 aa ab ac ad ae af ag ah ai aj ak al am an ao ap aq ar as0 at au av aw ax ay az);
     for (@columns) {
         $form->{ $form->{type} }{$_} = { field => $_, length => "", ndx => $i++ };
     }
@@ -3026,10 +3026,12 @@ sub import_generic {
 
     print qq|<br/><br/>
 <b>Process imported file as:</b><br/><br/>
-
-* <a href="im.pl?action=data_backup_import&path=$form->{path}&login=$form->{login}">'Data backup' data file.</a><br/>
-* <a href="im.pl?action=staffing_data_import&path=$form->{path}&login=$form->{login}">'Staffing data' data file.</a><br/>
-* <a href="im.pl?action=web_protection_import&path=$form->{path}&login=$form->{login}">'Web protection' data file.</a><br/>
+<ul>
+<li><a href="im.pl?action=ask_data_backup_import&path=$form->{path}&login=$form->{login}">'Data backup' data file.</a><br/>
+<li><a href="im.pl?action=ask_staffing_data_import&path=$form->{path}&login=$form->{login}">'Staffing data' data file.</a><br/>
+<li><a href="im.pl?action=ask_web_protection_import&path=$form->{path}&login=$form->{login}">'Web protection' data file.</a><br/>
+<li><a href="im.pl?action=ask_google_import&path=$form->{path}&login=$form->{login}">'Google' data file.</a><br/>
+<ul>
 |;
 
 }
@@ -3062,7 +3064,79 @@ sub ask_data_backup_import {
 }
 
 sub do_data_backup_import {
-   $form->info('Done data backup import');
+
+  # a0: customer_id after two '::'
+  # c0: item description (grouped on customer_id)
+  # h0/1024: qty (totaled on customer_id)
+  # k0: price from price matrix
+  # l0: department
+  # m0: gl sales
+  # o0: gl ar
+  # p0: currency
+  # q0: salesperson
+  # r0: transdate
+  # s0: duedate
+
+  my %imp;
+
+  my @allrows = $form->{dbs}->query('select * from generic_import order by a0')->hashes;
+
+  $form->header;
+
+  $imp{customer} = '';
+  $imp{customer_id} = '';
+  $imp{transdate} = '';
+  $imp{duedate} = '';
+  $imp{currency} = '';
+  $imp{department} = '';
+  $imp{salesperson} = '';
+  $imp{partnumber} = '';
+  $imp{description} = '';
+  $imp{qty} = 0;
+  $imp{sellprice} = 0;
+
+  print qq|<table border=1 cellspacing=0 cellpadding=3>|;
+  print qq|<tr>|;
+  for (sort keys (%imp)){ print qq|<th>$_</th>| }
+  print qq|</tr>|;
+
+  for $row (@allrows){
+      #$index = index($row->{a0}, ';;');
+      #if ($index != -1){
+      #  $customer_id = substr($row->{a0}, $index+2);
+      #}
+      if ($current_customer ne $row->{a0}){
+         $imp{qty} /= 1024;
+         $imp{sellprice} = $form->{dbs}->query(
+             qq|SELECT sellprice FROM partscustomer 
+             WHERE parts_id = (SELECT id FROM parts WHERE partnumber='8389' LIMIT 1)
+             AND pricebreak >= $imp{qty} ORDER BY sellprice LIMIT 1|
+         )->list;
+
+         if ($current_customer){
+            print qq|<tr>|;
+            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
+            print qq|</tr>|;
+         }
+         $current_customer = $row->{a0};
+         $imp{customer} = $row->{a0};
+         $imp{customer_id}++;
+         $imp{transdate} = $row->{r0};
+         $imp{duedate} = $row->{s0};
+         $imp{currency} = $row->{p0};
+         $imp{department} = $row->{l0};
+         $imp{salesperson} = $row->{q0};
+         $imp{partnumber} = '8389';
+         $imp{description} = '';
+         $imp{qty} = 0;
+         $imp{sellprice} = 0;
+      }
+      $imp{description} .= " $row->{c0}";
+      $imp{qty} += $form->parse_amount(\%myconfig, $row->{h0});
+  }
+  print qq|</table>|;
+
+  $form->info('Done data backup import');
 }
 
 #---------------------------------------------------------------------
@@ -3093,8 +3167,63 @@ sub ask_staffing_data_import {
 }
 
 sub do_staffing_data_import {
-   $form->info('Done staffing data import');
+
+  my %imp;
+
+  my @allrows = $form->{dbs}->query('select * from generic_import order by a0')->hashes;
+
+  $form->header;
+
+  $imp{customer} = '';
+  $imp{customer_id} = '';
+  $imp{transdate} = '';
+  $imp{duedate} = '';
+  $imp{currency} = '';
+  $imp{department} = '';
+  $imp{salesperson} = '';
+  $imp{partnumber} = '';
+  $imp{description} = '';
+  $imp{qty} = 0;
+  $imp{sellprice} = 0;
+
+  print qq|<table border=1 cellspacing=0 cellpadding=3>|;
+  print qq|<tr>|;
+  for (sort keys (%imp)){ print qq|<th>$_</th>| }
+  print qq|</tr>|;
+
+  # b0: customer_id
+  # c0: qty
+  # d0: amount
+  # e0: department
+  # f0: gl code (?)
+  # g0+h0: description
+  # i0: gl AR
+  # j0: currency
+  # k0: salesperson
+  # l0: transdate
+  # m0: duedate
+
+  for $row (@allrows){
+     $imp{customer_id} = $row->{b0};
+     $imp{transdate} = $row->{l0};
+     $imp{duedate} = $row->{m0};
+     $imp{currency} = $row->{j0};
+     $imp{department} = $row->{e0};
+     $imp{salesperson} = $row->{k0};
+     $imp{partnumber} = '8389';
+     $imp{description} = $row->{g0} . ' ' . $row->{h0};
+     $imp{qty} = $row->{c0};
+     $imp{sellprice} = $row->{e0};
+
+     print qq|<tr>|;
+     for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
+     print qq|</tr>|;
+  }
+  print qq|</table>|;
+
+  $form->info('Done staffing data import');
 }
+
 
 #---------------------------------------------------------------------
 sub ask_web_protection_import {
@@ -3124,7 +3253,78 @@ sub ask_web_protection_import {
 }
 
 sub do_web_protection_import {
-   $form->info('Done web protection import');
+
+  my %imp;
+
+  my @allrows = $form->{dbs}->query('select * from generic_import order by a0')->hashes;
+
+  $form->header;
+
+  $imp{customer} = '';
+  $imp{customer_id} = '';
+  $imp{transdate} = '';
+  $imp{duedate} = '';
+  $imp{currency} = '';
+  $imp{department} = '';
+  $imp{salesperson} = '';
+  $imp{partnumber} = '';
+  $imp{description} = '';
+  $imp{qty} = 0;
+  $imp{sellprice} = 0;
+  $imp{servers} = 0;
+  $imp{workstations} = 0;
+  $imp{webprotection} = 0;
+  $imp{managed_anti_virus} = 0;
+
+  print qq|<table border=1 cellspacing=0 cellpadding=3>|;
+  print qq|<tr>|;
+  for (sort keys (%imp)){ print qq|<th>$_</th>| }
+  print qq|</tr>|;
+
+  # Four service items will be created per customer
+  # 1. Server and its unit price (This will be customer specific)
+  # 2. Work station and its unit price (This will also be customer specific)
+  # 3. Web protection and its unit price
+  # 4. Managed anti virus and its unit price
+
+  # For each customer in a0 (customer_id after ':'), we shall count:
+  ## How many servers (d0 starts with 1)
+  ## How many workstations (d0 starts with 2)
+  ## How many managed anti virus ('Active' in aj)
+  ## How many web protected ('Active' in am)
+
+  for $row (@allrows){
+      if ($current_customer ne $row->{a0}){
+         if ($current_customer){
+            print qq|<tr>|;
+            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
+            print qq|</tr>|;
+         }
+         $current_customer = $row->{a0};
+         $imp{customer} = $row->{a0};
+         $imp{customer_id}++;
+         $imp{transdate} = $row->{as0}; #new
+         $imp{duedate} = $row->{at}; #new
+         $imp{currency} = $row->{au}; #new
+         $imp{department} = $row->{av}; #new
+         $imp{salesperson} = $row->{aw}; #new
+         $imp{partnumber} = '8389';
+         $imp{description} = '';
+         $imp{qty} = 0;
+         $imp{sellprice} = 0;
+         $imp{servers} = 0;
+         $imp{workstations} = 0;
+         $imp{webprotection} = 0;
+         $imp{managed_anti_virus} = 0;
+      }
+      $imp{servers}++ if substr($row->{d0},0,1) eq '1';
+      $imp{workstations}++ if substr($row->{d0},0,1) eq '2';
+      $imp{webprotection}++ if $row->{aj} eq 'Active';
+      $imp{managed_anti_virus}++ if $row->{am} eq 'Active';
+  }
+  print qq|</table>|;
+
+  $form->info('Done web protection import');
 }
 
 #---------------------------------------------------------------------
@@ -3155,7 +3355,66 @@ sub ask_google_import {
 }
 
 sub do_google_import {
-   $form->info('Done google import');
+
+  my %imp;
+
+  my @allrows = $form->{dbs}->query(q/select * from generic_import where c0 is null or c0 <> '' order by a0/)->hashes;
+
+  $form->header;
+
+  $imp{customer} = '';
+  $imp{customer_id} = '';
+  $imp{transdate} = '';
+  $imp{duedate} = '';
+  $imp{currency} = '';
+  $imp{department} = '';
+  $imp{salesperson} = '';
+  $imp{partnumber} = '';
+  $imp{description} = '';
+  $imp{qty} = 0;
+  $imp{sellprice} = 0;
+
+  print qq|<table border=1 cellspacing=0 cellpadding=3>|;
+  print qq|<tr>|;
+  for (sort keys (%imp)){ print qq|<th>$_</th>| }
+  print qq|</tr>|;
+
+  # b0: get domain name and then find its respective customer id
+  # d0: qty
+  # h0: gl (?)
+  # i0: unit price
+  # j0 transdate
+  # k0 duedate
+  # l0 currency
+  # m0 department
+  # n0 salesperson
+
+  for $row (@allrows){
+
+     $index = index($row->{b0}, 'Domain Name: ');
+     if ($index != -1){
+        $customer_id = substr($row->{b0}, $index+13);
+     }
+
+     $imp{customer} =  substr($row->{b0}, $index+13);
+     $imp{customer_id} = $row->{b0};
+     $imp{transdate} = $row->{j0};
+     $imp{duedate} = $row->{k0};
+     $imp{currency} = $row->{l0};
+     $imp{department} = $row->{m0};
+     $imp{salesperson} = $row->{n0};
+     $imp{partnumber} = '8389';
+     $imp{description} = $row->{b0};
+     $imp{qty} = $row->{d0};
+     $imp{sellprice} = $row->{i0};
+
+     print qq|<tr>|;
+     for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
+     print qq|</tr>|;
+  }
+  print qq|</table>|;
+
+  $form->info('Done google import');
 }
 
 
@@ -3773,6 +4032,23 @@ sub import_gl {
     else {
         $form->error( $locale->text('Posting failed!') );
     }
+}
+
+sub view_generic_import {
+
+    $form->header;
+
+    my $query = qq/
+        SELECT *
+        FROM generic_import
+        ORDER BY id
+    /;
+
+    my $table = $form->{dbs}->query( $query )->xto();
+    $table->modify( table => { cellpadding => "5", cellspacing => "0", border => "1" } );
+    print qq|<br/>|;
+    print $table->output;
+
 }
 
 # EOF

@@ -16,7 +16,7 @@ CREATE TABLE reportvars (
 -- Table for generic text file import
 -- 
 CREATE TABLE generic_import (
-    id  serial,
+    id serial,
     a0 text,
     b0 text,
     c0 text,
@@ -42,7 +42,33 @@ CREATE TABLE generic_import (
     w0 text,
     x0 text,
     y0 text,
-    z0 text
+    z0 text,
+    aa text,
+    ab text,
+    ac text,
+    ad text,
+    ae text,
+    af text,
+    ag text,
+    ah text,
+    ai text,
+    aj text,
+    ak text,
+    al text,
+    am text,
+    an text,
+    ao text,
+    ap text,
+    aq text,
+    ar text,
+    as0 text,
+    at text,
+    au text,
+    av text,
+    aw text,
+    ax text,
+    ay text,
+    az text
 );
 
 CREATE TABLE invoices_import (
