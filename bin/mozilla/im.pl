@@ -3271,10 +3271,16 @@ sub do_web_protection_import {
   $imp{description} = '';
   $imp{qty} = 0;
   $imp{sellprice} = 0;
+
   $imp{servers} = 0;
   $imp{workstations} = 0;
   $imp{webprotection} = 0;
   $imp{managed_anti_virus} = 0;
+
+  $partnumber_servers = '1917';
+  $partnumber_workstations = '1917';
+  $partnumber_webprotection = '9064';
+  $partnumber_anti_virus = '9063';
 
   print qq|<table border=1 cellspacing=0 cellpadding=3>|;
   print qq|<tr>|;
@@ -3308,7 +3314,6 @@ sub do_web_protection_import {
          $imp{currency} = $row->{au}; #new
          $imp{department} = $row->{av}; #new
          $imp{salesperson} = $row->{aw}; #new
-         $imp{partnumber} = '8389';
          $imp{description} = '';
          $imp{qty} = 0;
          $imp{sellprice} = 0;
@@ -3319,8 +3324,8 @@ sub do_web_protection_import {
       }
       $imp{servers}++ if substr($row->{d0},0,1) eq '1';
       $imp{workstations}++ if substr($row->{d0},0,1) eq '2';
-      $imp{webprotection}++ if $row->{aj} eq 'Active';
-      $imp{managed_anti_virus}++ if $row->{am} eq 'Active';
+      $imp{webprotection}++ if $row->{am} eq 'Active';
+      $imp{managed_anti_virus}++ if $row->{aj} eq 'Active';
   }
   print qq|</table>|;
 
