@@ -85,4 +85,5 @@ CREATE TABLE invoices_import (
     sellprice       numeric(12,2)
 );
 
-
+ALTER TABLE customer ADD domain text;
+ALTER TABLE vendor ADD domain text;

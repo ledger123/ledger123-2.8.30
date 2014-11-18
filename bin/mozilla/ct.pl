@@ -297,6 +297,7 @@ sub include_in_report {
   push @a, qq|<input name="l_iban" type=checkbox class=checkbox value=Y> |.$locale->text('IBAN');
   push @a, qq|<input name="l_bic" type=checkbox class=checkbox value=Y> |.$locale->text('BIC');
   push @a, qq|<input name="l_business" type=checkbox class=checkbox value=Y> |.$locale->text('Type of Business');
+  push @a, qq|<input name="l_domain" type=checkbox class=checkbox value=Y> |.$locale->text('Domain');
   push @a, qq|<input name="l_terms" type=checkbox class=checkbox value=Y> |.$locale->text('Terms');
   push @a, qq|<input name="l_language" type=checkbox class=checkbox value=Y> |.$locale->text('Language');
   push @a, qq|<input name="l_startdate" type=checkbox class=checkbox value=Y> |.$locale->text('Startdate');
@@ -705,6 +706,7 @@ sub list_names {
   $column_header{gifi_accno} = qq|<th><a class=listheading href=$href&sort=gifi_accno>|.$locale->text('GIFI').qq|</a></th>|;
   $column_header{sic_code} = qq|<th><a class=listheading href=$href&sort=sic_code>|.$locale->text('SIC').qq|</a></th>|;
   $column_header{business} = qq|<th><a class=listheading href=$href&sort=business>|.$locale->text('Type of Business').qq|</a></th>|;
+  $column_header{domain} = qq|<th><a class=listheading href=$href&sort=domain>|.$locale->text('Domain').qq|</a></th>|;
   $column_header{iban} = qq|<th class=listheading>|.$locale->text('IBAN').qq|</th>|;
   $column_header{bic} = qq|<th class=listheading>|.$locale->text('BIC').qq|</th>|;
   $column_header{startdate} = qq|<th><a class=listheading href=$href&sort=startdate>|.$locale->text('Startdate').qq|</a></th>|;
@@ -1569,6 +1571,8 @@ sub form_header {
 	  <td><input name=bic size=11 maxlength=11 value="$form->{bic}"></td>
 	  <th align=right>|.$locale->text('IBAN').qq|</th>
 	  <td><input name=iban size=24 maxlength=34 value="$form->{iban}"></td>
+	  <th align=right>|.$locale->text('Domain').qq|</th>
+	  <td><input name=domain size=24 maxlength=100 value="$form->{domain}"></td>
 	</tr>
 	<tr>
 	  $pricegroup
