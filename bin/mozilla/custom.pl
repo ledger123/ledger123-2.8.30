@@ -50,18 +50,21 @@ sub search_invoices {
 
     my $table1 = $form->{dbs}->query(
         qq|
-            select *
-            from invoices_import
-            order by 1
+            SELECT i.filetype, i.customer_id, c.name, i.transdate, i.duedate,
+                    i.currency, i.salesperson, i.partnumber, p.description part_description, i.description, i.qty, i.sellprice, i.qty*i.sellprice amount
+            FROM invoices_import i
+            LEFT JOIN customer c ON (c.id = i.customer_id)
+            LEFT JOIN parts p ON (p.partnumber = i.partnumber)
+            ORDER BY i.customer_id, i.filetype, i.partnumber
         |
       )->xto(
         tr => { class => [ 'listrow0', 'listrow1' ] },
         th => { class => ['listheading'] },
       );
-      #$table1->set_group( 'reference', 1 );
-      #$table1->calc_totals(    [qw(debit credit)] );
-      #$table1->calc_subtotals( [qw(debit credit)] );
-      #$table1->modify( td => { align => 'right' }, [qw(debit credit)] );
+      $table1->set_group( 'customer_id', 1 );
+      $table1->calc_totals(    [qw(amount)] );
+      $table1->calc_subtotals( [qw(amount)] );
+      $table1->modify( td => { align => 'right' }, [qw(qty sellprice amount)] );
 
     print $table1->output;
 
@@ -118,6 +121,44 @@ sub process_invoices {
 
     $form->redirect( $locale->text('Processed!') );
 }
+
+
+#--------------------------------------------------------------------------------
+sub ask_delete {
+
+  $form->header;
+
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+|;
+
+  $form->{nextsub} = "do_delete";
+  $form->hide_form;
+
+  print qq|
+<h2 class=confirm>|.$locale->text('Confirm!').qq|</h2>
+
+<h4>|.$locale->text('Are you sure you want to delete Invoice staging table?').qq|
+</h4>
+
+<p>
+<input name=action class=submit type=submit value="|.$locale->text('Yes').qq|">
+</form>
+|;
+
+
+}
+
+
+
+sub yes {
+    $form->{dbs}->query("delete from invoices_import");
+    $form->{dbs}->commit;
+    $form->info('Staging table purged!');
+}
+
 
 #########
 ### EOF

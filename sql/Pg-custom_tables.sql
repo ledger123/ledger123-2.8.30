@@ -72,11 +72,10 @@ CREATE TABLE generic_import (
 );
 
 CREATE TABLE invoices_import (
+    filetype        text,
     customer_id     integer,
     transdate       date,
     duedate         date,
-    glcode          text,
-    recordin        text,
     currency        text,
     salesperson     text,
     partnumber      text,
