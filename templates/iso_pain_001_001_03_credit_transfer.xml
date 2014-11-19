@@ -5,8 +5,9 @@
             <MsgId>hardcoded 001</MsgId>
             <CreDtTm>[% creation_date_time %]</CreDtTm>
             <NbOfTxs>[% count %]</NbOfTxs>
+	        <CtrlSum>[% ctrlsum %]</CtrlSum>
             <InitgPty>
-                <Nm>[% account.bank_name %]</Nm>
+                <Nm>[% company %]</Nm>
                 <Id>
                     <OrgId>
                         <Othr>
@@ -30,6 +31,11 @@
             <ReqdExctnDt>[% current_date %]</ReqdExctnDt>
             <Dbtr>
                 <Nm>[% company %]</Nm>
+                <PstlAdr> 
+                   <Ctry>[% country %]</Ctry> 
+			        <AdrLine>[% address1 %]</AdrLine> 
+ 			        <AdrLine>[% address2 %]</AdrLine> 
+		        </PstlAdr> 
             </Dbtr>
             <DbtrAcct>
                 <Id>
@@ -38,7 +44,7 @@
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BIC>[% ap.$id.bic %]</BIC>
+                    <BIC>[% account.bic %]</BIC>
                 </FinInstnId>
             </DbtrAgt>
             <CdtTrfTxInf>
@@ -46,7 +52,7 @@
                     <EndToEndId>[% ap.$id.invnumber %]</EndToEndId>
                 </PmtId>
                 <Amt>
-                    <InstdAmt Ccy="[% currency %]">[% ap.$id.amount %]</InstdAmt>
+                    <InstdAmt Ccy="[% currency %]">[% ap.$id.payment %]</InstdAmt>
                 </Amt>
                 <CdtrAgt>
                     <FinInstnId>
@@ -57,8 +63,8 @@
                     <Nm>[% ap.$id.name %]</Nm>
                     <PstlAdr>
                         <Ctry>[% ap.$id.country %]</Ctry>
-                        <AdrLine>line1: [% ap.$id.address1 %]</AdrLine>
-                        <AdrLine>line2: [% ap.$id.address2 %]</AdrLine>
+                        <AdrLine>[% ap.$id.address1 %]</AdrLine>
+                        <AdrLine>[% ap.$id.zipcode %] [% ap.$id.city %]</AdrLine>
                     </PstlAdr>
                 </Cdtr>
                 <CdtrAcct>

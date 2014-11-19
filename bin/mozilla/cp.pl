@@ -1974,13 +1974,26 @@ sub export {
 
     $vars->{currency} = $form->{currency};
     $vars->{count} = $count;
-    ($vars->{company}) = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'company'|)->list;
-    ($vars->{businessnumber}) = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'businessnumber'|)->list;
+    $vars->{company} = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'company'|)->list;
+    $address = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'address'|)->list;
+
+    @addresslines = split /\n/, $address;
+    $vars->{address1} = $addresslines[0];
+    $vars->{address2} = $addresslines[1];
+    $vars->{city} = $addresslines[2];
+    $vars->{country} = $addresslines[3];
+
+    $vars->{businessnumber} = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'businessnumber'|)->list;
     $vars->{current_date} = $form->{dbs}->query(qq|select to_char(current_date, 'yyyy-mm-dd')|)->list;
     $vars->{creation_date_time} = $form->{dbs}->query(qq|select to_char(now(), 'yyyy-mm-ddThh24:mi:ss')|)->list;
 
-    my $query = qq|
-        SELECT ap.id, to_char(ap.transdate, 'yyyy-dd-mm') transdate, ap.invnumber, ap.amount,
+    my $query;
+
+    $query = qq|SELECT SUM(ROUND(ap.amount::numeric - ap.paid::numeric,2)) FROM ap WHERE ap.id IN ($ids)|;
+    $vars->{ctrlsum} = $form->{dbs}->query($query)->list;
+
+    $query = qq|
+        SELECT ap.id, to_char(ap.transdate, 'yyyy-dd-mm') transdate, ap.invnumber, round(ap.amount::numeric - ap.paid::numeric,2) AS payment,
         vc.name,
         bk.name bank_name, bk.iban, bk.bic,
         ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country
