@@ -47,6 +47,7 @@
                     <BIC>[% account.bic %]</BIC>
                 </FinInstnId>
             </DbtrAgt>
+            <ChrgBr>SLEV</ChrgBr>
             <CdtTrfTxInf>
                 <PmtId>
                     <EndToEndId>[% ap.$id.invnumber %]</EndToEndId>
