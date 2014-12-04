@@ -789,16 +789,74 @@ sub form_footer {
   }
 
   $form->hide_form(qw(login path callback previousform));
-  
+
   print qq|
 </form>
-
+|;
+  
+  if ($form->{id}){
+    print qq|<br/><br/>
+<form enctype="multipart/form-data" method=post action="$form->{script}">
+    <input name=data size=60 type=file>
+    <input type=submit class=submit name=action value='Upload Image'>
+    |; 
+    $form->hide_form(qw(id login path callback));
+  print qq|
+</form>
+|;
+  }
+  print qq|
 </body>
 </html>
 |;
 
 }
 
+sub upload_image {
+
+    # TODO: flag to enable/disable in conf, sizes in conf, check file type
+
+    $form->error( $locale->text('File missing!') ) unless $form->{filename};
+
+    use File::Basename qw(fileparse);
+    my ($filename, $path, $extension) = fileparse($form->{filename}, qr/\.[^.]*/);
+
+    $filename = lc $filename;
+    $filename =~ s/ /_/g;
+    $filename =~ s/-/_/g;
+    $filename =~ s/[^A-Za-z0-9\-_]//g;
+    $filename = "$filename.$form->{id}$extension";
+
+    # Create folder if it does not exist
+    my $folder = "uploads/$myconfig{dbname}";
+    if ( !-d "$folder" ) {
+        umask(002);
+        mkdir "$folder", oct("771");
+        $folder .= "/images";
+        mkdir "$folder", oct("771");
+        mkdir "$folder/thumbs", oct("771");
+        umask(007);
+    }
+
+    use File::Copy qw(move);
+    move "$userspath/$form->{tmpfile}", "$folder/$filename";
+    $form->{dbs}->query(qq|UPDATE parts SET image = ? WHERE id = ?|, $filename, $form->{id});
+    $form->{dbs}->commit;
+
+    # Create thumbnails
+    use GD::Thumbnail;
+    my $thumb = GD::Thumbnail->new;
+
+    my %sizes = ( t => 60, s => 120, m => 300, l => 600 );
+    for (qw(t s m l)) {
+        my $raw = $thumb->create( "$folder/$filename", $sizes{$_} );
+        open IMG, ">$folder/thumbs/${_}.$filename" or die "Error: $!";
+        binmode IMG;
+        print IMG $raw;
+        close IMG;
+    }
+    $form->info($locale->text('File uploaded.') . qq| <a href=$folder/$filename>$filename</a>|);
+}
 
 sub search {
 
