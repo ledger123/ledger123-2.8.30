@@ -1972,6 +1972,7 @@ sub tax_report {
 		$cashwhere
 	GROUP BY a.id, a.invoice, $transdate, a.invnumber, n.name,
 	a.netamount, a.till, n.id, a.description, n.${vc}number
+    HAVING sum(ac.amount) * $ml <> 0
 		|;
 
       if ($form->{fromdate}) {
@@ -1994,6 +1995,7 @@ sub tax_report {
 		$cashwhere
 	GROUP BY a.id, a.invoice, $transdate, a.invnumber, n.name,
 	a.netamount, a.till, n.id, a.description, n.${vc}number
+    HAVING sum(ac.amount) * $ml <> 0
 		|;
 	}
       }
@@ -2014,6 +2016,7 @@ sub tax_report {
 		$accno
 		AND a.invoice = '0'
 		AND NOT (ch.link LIKE '%_paid' OR ch.link = '$ARAP')
+        AND ac.amount * $ml <> 0
 		$cashwhere
 		
 	      UNION ALL
@@ -2035,6 +2038,7 @@ sub tax_report {
 		WHERE $where
 		$accno
 		AND a.invoice = '1'
+        AND ac.amount * $ml <> 0
 		$cashwhere
 		|;
 
@@ -2056,6 +2060,7 @@ sub tax_report {
 		$accno
 		AND a.invoice = '0'
 		AND NOT (ch.link LIKE '%_paid' OR ch.link = '$ARAP')
+        AND ac.amount * $ml <> 0
 		$cashwhere
 		
 	      UNION
@@ -2077,6 +2082,7 @@ sub tax_report {
 		WHERE a.datepaid >= '$form->{fromdate}'
 		$accno
 		AND a.invoice = '1'
+        AND ac.amount * $ml <> 0
 		$cashwhere
 		|;
 	}
