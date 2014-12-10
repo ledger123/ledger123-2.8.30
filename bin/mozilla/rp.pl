@@ -2894,6 +2894,7 @@ if ($form->{alltaxes} and !$header){
 	JOIN chart ch ON (ch.id = ac.chart_id)
 	WHERE $where $cashwhere
 	AND ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AR_tax%')
+    AND ac.trans_id IN (SELECT id FROM ar WHERE amount <> netamount)
 	GROUP BY seq, ch.accno, ch.description
 
         UNION ALL
@@ -2924,6 +2925,7 @@ if ($form->{alltaxes} and !$header){
 	JOIN chart ch ON (ch.id = ac.chart_id)
 	WHERE $where $cashwhere
 	AND ch.accno IN (SELECT accno FROM chart WHERE link LIKE '%AP_tax%')
+    AND ac.trans_id IN (SELECT id FROM ap WHERE amount <> netamount)
 	GROUP BY seq, ch.accno, ch.description
 
         UNION ALL
