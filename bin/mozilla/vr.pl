@@ -1088,7 +1088,6 @@ sub export_batch {
     my $vars = {};
 
     $vars->{currency} = $form->{currency};
-    $vars->{count} = $count;
     $vars->{company} = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'company'|)->list;
     $address = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'address'|)->list;
 
@@ -1111,6 +1110,14 @@ sub export_batch {
         AND ac.id IS NOT NULL
     |;
     $vars->{ctrlsum} = $form->{dbs}->query($query, $form->{batchid})->list;
+
+    $query = qq|
+        SELECT COUNT(*)
+        FROM acc_trans ac
+        WHERE ac.vr_id IN (SELECT id FROM vr WHERE br_id = ?)
+        AND ac.id IS NOT NULL
+    |;
+    $vars->{count} = $form->{dbs}->query($query, $form->{batchid})->list;
 
     $query = qq|
         SELECT ap.id, to_char(ac.transdate, 'yyyy-dd-mm') transdate, ap.invnumber,
