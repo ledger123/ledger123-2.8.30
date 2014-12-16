@@ -1030,6 +1030,10 @@ sub list_vouchers {
       }
       
       $button{'Delete Batch'} = { ndx => 3, key => 'D', value => $locale->text('Delete Batch') };
+
+      if ($form->{batch} eq 'payment'){
+        $button{'Export Batch'} = { ndx => 4, key => 'E', value => $locale->text('Export Batch') };
+      }
 	
       for (split /;/, $myconfig{acs}) {
 	($module, $function) = split /--/, $_;
@@ -1068,6 +1072,82 @@ sub list_vouchers {
 </html>
 |;
 
+}
+
+
+sub export_batch {
+
+    my ($paidaccount, $null) = split /--/, $form->{AP_paid};
+
+    use Template;
+    my $tt = Template->new({
+        INCLUDE_PATH => [ "$templates", "$templates/$myconfig{dbname}/$form->{language_code}" ],
+        INTERPOLATE  => 1,
+    }) || die "$Template::ERROR\n";
+
+    my $vars = {};
+
+    $vars->{currency} = $form->{currency};
+    $vars->{count} = $count;
+    $vars->{company} = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'company'|)->list;
+    $address = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'address'|)->list;
+
+    @addresslines = split /\n/, $address;
+    $vars->{address1} = $addresslines[0];
+    $vars->{address2} = $addresslines[1];
+    $vars->{city} = $addresslines[2];
+    $vars->{country} = $addresslines[3];
+
+    $vars->{businessnumber} = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'businessnumber'|)->list;
+    $vars->{current_date} = $form->{dbs}->query(qq|select to_char(current_date, 'yyyy-mm-dd')|)->list;
+    $vars->{creation_date_time} = $form->{dbs}->query(qq|select to_char(now(), 'yyyy-mm-ddThh24:mi:ss')|)->list;
+
+    my $query;
+
+    $query = qq|
+        SELECT SUM(ROUND(ac.amount::numeric,2))
+        FROM acc_trans ac
+        WHERE ac.vr_id IN (SELECT id FROM vr WHERE br_id = ?)
+        AND ac.id IS NOT NULL
+    |;
+    $vars->{ctrlsum} = $form->{dbs}->query($query, $form->{batchid})->list;
+
+    $query = qq|
+        SELECT ap.id, to_char(ac.transdate, 'yyyy-dd-mm') transdate, ap.invnumber,
+            round(ac.amount::numeric,2) AS payment, vc.name,
+            bk.name bank_name, bk.iban, bk.bic,
+            ad.address1, ad.address2, ad.city,
+            ad.state, ad.zipcode, ad.country
+        FROM ap
+        JOIN acc_trans ac ON (ac.trans_id = ap.id)
+        JOIN vendor vc ON (ap.vendor_id = vc.id)
+        LEFT JOIN bank bk ON (ap.vendor_id = bk.id)
+        LEFT JOIN address ad ON (ap.vendor_id = ad.trans_id)
+        WHERE ac.vr_id IN (SELECT id FROM vr WHERE br_id = ?)
+        AND ac.id IS NOT NULL
+    |;
+
+    $vars->{ap} = $form->{dbs}->query($query, $form->{batchid})->map_hashes('id');
+
+    $query = qq|
+        SELECT c.accno, c.description,
+            bk.name bank_name, bk.iban, bk.bic,
+            ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country
+        FROM chart c
+        LEFT JOIN bank bk ON (c.id = bk.id)
+        LEFT JOIN address ad ON (c.id = ad.trans_id)
+        WHERE accno = ?
+    |;
+    $vars->{account} = $form->{dbs}->query($query, $paidaccount)->hash;
+
+    # uncomment following line to debug
+    #use Data::Dumper; $form->info('<pre>'); print Dumper($vars->{ap}); print Dumper($vars->{account}); $form->error; # Stop
+
+    print qq|Content-Type: text/xml
+Content-Disposition: attachment; filename="iso_pain_001_001_03_credit_transfer.xml"
+
+|;
+    $tt->process("iso_pain_001_001_03_credit_transfer.xml", $vars) || die $tt->error(), "\n";
 }
 
 
