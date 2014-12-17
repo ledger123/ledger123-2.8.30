@@ -571,7 +571,7 @@ sub retrieve_assemblies {
   
   # retrieve assembly items
   my $query = qq|SELECT p.id, p.partnumber, p.description,
-                 p.bin, p.onhand, p.rop
+                 p.bin, (SELECT SUM(qty) FROM inventory i WHERE i.parts_id = p.id) onhand, p.rop
                  FROM parts p
  		 WHERE $where
 		 AND p.assembly = '1'
