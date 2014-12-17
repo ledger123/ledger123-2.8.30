@@ -1077,8 +1077,6 @@ sub list_vouchers {
 
 sub export_batch {
 
-    my ($paidaccount, $null) = split /--/, $form->{AP_paid};
-
     use Template;
     my $tt = Template->new({
         INCLUDE_PATH => [ "$templates", "$templates/$myconfig{dbname}/$form->{language_code}" ],
@@ -1087,7 +1085,6 @@ sub export_batch {
 
     my $vars = {};
 
-    $vars->{currency} = $form->{currency};
     $vars->{company} = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'company'|)->list;
     $address = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'address'|)->list;
 
@@ -1121,31 +1118,28 @@ sub export_batch {
 
     $query = qq|
         SELECT ap.id, to_char(ac.transdate, 'yyyy-dd-mm') transdate, ap.invnumber,
-            round(ac.amount::numeric,2) AS payment, vc.name,
+            round(ac.amount::numeric,2) AS payment, vc.name, ap.curr,
             bk.name bank_name, bk.iban, bk.bic,
             ad.address1, ad.address2, ad.city,
-            ad.state, ad.zipcode, ad.country
+            ad.state, ad.zipcode, ad.country,
+            c.accno, c.description account_description,
+            bk2.name account_bank_name, bk2.iban account_iban, bk2.bic account_bic,
+            ad2.address1 bank_address1, ad2.address2 bank_address2, 
+            ad2.city bank_city, ad2.state bank_state,
+            ad2.zipcode bank_zipcode, ad2.country bank_country
         FROM ap
         JOIN acc_trans ac ON (ac.trans_id = ap.id)
         JOIN vendor vc ON (ap.vendor_id = vc.id)
         LEFT JOIN bank bk ON (ap.vendor_id = bk.id)
         LEFT JOIN address ad ON (ap.vendor_id = ad.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
+        LEFT JOIN bank bk2 ON (c.id = bk2.id)
+        LEFT JOIN address ad2 ON (c.id = ad2.trans_id)
         WHERE ac.vr_id IN (SELECT id FROM vr WHERE br_id = ?)
         AND ac.id IS NOT NULL
     |;
 
     $vars->{ap} = $form->{dbs}->query($query, $form->{batchid})->map_hashes('id');
-
-    $query = qq|
-        SELECT c.accno, c.description,
-            bk.name bank_name, bk.iban, bk.bic,
-            ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country
-        FROM chart c
-        LEFT JOIN bank bk ON (c.id = bk.id)
-        LEFT JOIN address ad ON (c.id = ad.trans_id)
-        WHERE accno = ?
-    |;
-    $vars->{account} = $form->{dbs}->query($query, $paidaccount)->hash;
 
     # uncomment following line to debug
     #use Data::Dumper; $form->info('<pre>'); print Dumper($vars->{ap}); print Dumper($vars->{account}); $form->error; # Stop

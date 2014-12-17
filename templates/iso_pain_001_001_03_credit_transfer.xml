@@ -39,12 +39,12 @@
             </Dbtr>
             <DbtrAcct>
                 <Id>
-                    <IBAN>[% account.iban %]</IBAN>
+                    <IBAN>[% ap.$id.account_iban %]</IBAN>
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BIC>[% account.bic %]</BIC>
+                    <BIC>[% ap.$id.account_bic %]</BIC>
                 </FinInstnId>
             </DbtrAgt>
             <ChrgBr>SLEV</ChrgBr>
@@ -53,7 +53,7 @@
                     <EndToEndId>[% ap.$id.invnumber %]</EndToEndId>
                 </PmtId>
                 <Amt>
-                    <InstdAmt Ccy="[% currency %]">[% ap.$id.payment %]</InstdAmt>
+                    <InstdAmt Ccy="[% ap.$id.curr %]">[% ap.$id.payment %]</InstdAmt>
                 </Amt>
                 <CdtrAgt>
                     <FinInstnId>
