@@ -1085,6 +1085,7 @@ sub export_batch {
 
     my $vars = {};
 
+    $vars->{batchnumber} = $form->{dbs}->query(qq|select batchnumber from br where id = ?|, $form->{batchid})->list;
     $vars->{company} = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'company'|)->list;
     $address = $form->{dbs}->query(qq|select fldvalue from defaults where fldname = 'address'|)->list;
 
@@ -1122,6 +1123,7 @@ sub export_batch {
             bk.name bank_name, bk.iban, bk.bic,
             ad.address1, ad.address2, ad.city,
             ad.state, ad.zipcode, ad.country,
+            substr(bk.iban, 1, 2) iban_country,
             c.accno, c.description account_description,
             bk2.name account_bank_name, bk2.iban account_iban, bk2.bic account_bic,
             ad2.address1 bank_address1, ad2.address2 bank_address2, 

@@ -2,7 +2,7 @@
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <CstmrCdtTrfInitn>
         <GrpHdr>
-            <MsgId>hardcoded 001</MsgId>
+            <MsgId>[% batchnumber %]</MsgId>
             <CreDtTm>[% creation_date_time %]</CreDtTm>
             <NbOfTxs>[% count %]</NbOfTxs>
 	        <CtrlSum>[% ctrlsum %]</CtrlSum>
@@ -63,7 +63,7 @@
                 <Cdtr>
                     <Nm>[% ap.$id.name %]</Nm>
                     <PstlAdr>
-                        <Ctry>[% ap.$id.country %]</Ctry>
+                        <Ctry>[% ap.$id.iban_country %]</Ctry>
                         <AdrLine>[% ap.$id.address1 %]</AdrLine>
                         <AdrLine>[% ap.$id.zipcode %] [% ap.$id.city %]</AdrLine>
                     </PstlAdr>
