@@ -1,0 +1,94 @@
+<!-- TRIAL Statement, Chinese simplified -->
+<!-- First Choice Internet, B.Plagge, 2008-07-21 -->
+<body bgcolor=ffffff>
+<table width=100%>
+  <%include letterhead.html%>  
+  <tr>
+    <td width=10>&nbsp;</td>    
+    <th colspan=3><h4>借 贷 表</h4></th>    
+  </tr>
+  <tr>
+    <td>&nbsp;</td>    
+    <td colspan=3 align=right><%statementdate%></td>
+  </tr>  
+  <tr>
+    <td>&nbsp;</td>    
+    <td>
+		<%include customer_cn.tex%>
+    </td>
+  </tr>
+  <tr height=10></tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>
+      <table width=100%>
+        <tr>
+	  <th align=left>发票号码</th>
+ <th align=left>订单号码</th>
+<th align=left>注明</th>
+	  <th width=10%>日期</th>
+	  <th width=10%>限期</th>
+	  <th width=10%>现在</th>
+	  <th width=10%>30</th>
+	  <th width=10%>60</th>
+	  <th width=10%>90+</th>
+	</tr>
+<%foreach invnumber%>
+	<tr>
+	  <td><%invnumber%></td>
+<td><%ordnumber%></td>
+<td><%notes%></td>
+	  <td><%invdate%></td>
+	  <td><%duedate%></td>
+	  <td align=right><%c0%></td>
+	  <td align=right><%c30%></td>
+	  <td align=right><%c60%></td>
+	  <td align=right><%c90%></td>
+	</tr>
+<%end invnumber%>
+        <tr>
+	  <td colspan=9><hr size=1></td>
+	</tr>
+	<tr>
+	  <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+	  <td>&nbsp;</td>
+	  <th align=right><%c0total%></td>
+	  <th align=right><%c30total%></td>
+	  <th align=right><%c60total%></td>
+	  <th align=right><%c90total%></td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+  <tr height=10></tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td align=right>
+      <table width=50%>
+        <tr><br><br>
+	  <th>未付</th>
+          <th align=right><%total%></th>
+	</tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td><hr noshade></td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>请转帐至 <b><%company%></b>.<br><br>
+    <hr noshade>
+      <%include bankacct_cn.html%>  
+    </td>
+  </tr>
+
+</table>
+
+</body>
+</html>
+

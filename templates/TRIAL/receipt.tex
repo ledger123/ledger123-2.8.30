@@ -1,0 +1,61 @@
+%% First Choice Internet
+%% Receipt, English
+%% B.Plagge 2008-01-06
+%% B.Plagge 2014-07-01 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_cust_en.tex%>
+\vspace*{0.5cm}
+
+\centerline{\large\bf{Receipt}}
+\normalsize
+
+\vspace{2.5cm}
+-
+\vspace{0.5cm}
+
+\begin{tabularx}{\textwidth}{*{3}{|X}|} \hline
+  \textbf{Name} & \textbf{Date Paid} & \textbf{Source} \\ 
+  \hline
+	<%name%> & <%datepaid%> & <%source%> \\
+  \hline
+\end{tabularx}
+
+\vspace{0.5cm}
+Currency: \textbf{<%currency%>}.
+}
+\vspace{0.5cm}  
+
+\begin{longtable}{|l p{5.5cm} @{\extracolsep\fill} rr|} \hline
+  \textbf{Invoice No} & \textbf{Invoice Date} & \textbf{Due Date} & \textbf{Applied} \\     
+  \hline
+\endfirsthead
+  \multicolumn{3}{l}{\emph{Continued from previous page ...}} \\
+  \hline
+  \textbf{Invoice No} & \textbf{Invoice Date} & \textbf{Due Date} & \textbf{Applied} \\     
+  \hline
+\endhead
+   \hline \multicolumn{4}{r}{\emph{Continued on next page ...}}
+\endfoot
+   \hline
+   \multicolumn{3}{|r} \textbf{Total} & <%amount%> \\ 
+	\hline
+\endlastfoot
+<%foreach invnumber%>
+  <%invnumber%> & <%invdate%> \dotfill & <%due%> & <%paid%> \\
+<%end invnumber%>
+\end{longtable}
+
+\vspace{1cm}
+
+<%if memo%>
+  <%memo%>
+<%end memo%>
+
+\vfill
+<%include footer_en.tex%>
+\end{CJK}
+\end{document}

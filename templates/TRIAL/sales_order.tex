@@ -1,0 +1,88 @@
+%% First Choice Internet
+%% Order Confirmation, English
+%% B.Plagge 2005-07-02, 2006-03-19
+%% B.Plagge 2008-01-06
+%% B.Plagge 2014-06-30 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_cust_en.tex%>
+\vspace*{0.5cm}
+
+\parbox[t]{.80\textwidth}{
+\textbf{SHIP TO} \\
+<%include shipto_en.tex%>
+}
+
+\vspace{1.2cm}
+
+\centerline{\large\bf{O R D E R}\hspace{5mm}C O N F I R M A T I O N}}
+\normalsize
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
+  \textbf{Order No} & \textbf{Order Date} & \textbf{Shipping Date} & \textbf{Contact}
+  & \textbf{Shipping Point} & \textbf{Ship via} \\ [0.5em]
+  \hline
+  <%ordnumber%> & <%orddate%> & <%reqdate%> & <%employee%> & 
+  <%shippingpoint%> & <%shipvia%> \\
+  \hline
+\end{tabularx}
+
+\vspace{0.5cm}
+	Prices in: \textbf{<%currency%>}.
+<%if terms%> - Terms:<%terms%> days<%end terms%>
+<%if orddescription%> - <%orddescription%><%end orddescription%>
+}
+\vspace{0.5cm}  
+
+\begin{longtable}{|ll p{4.5cm} @{\extracolsep\fill} rlrrr|} \hline
+  \textbf{Item} & \textbf{Number} & \textbf{Description} & \textbf{Qty} &
+        \textbf{Unit} & \textbf{Price}  & \textbf{Disc \%} & \textbf{Amount} \\
+  \hline
+\endfirsthead
+  \multicolumn{7}{l}{\emph{Continued from previous page ...}} \\
+  \hline
+  \textbf{Item} & \textbf{Number} & \textbf{Description} & \textbf{Qty} &
+        \textbf{Unit} & \textbf{Price}  & \textbf{Discount} & \textbf{Amount} \\
+  \hline
+\endhead
+   \hline \multicolumn{7}{r}{\emph{Continued on next page ...}}
+\endfoot
+   \hline
+   \multicolumn{7}{|r} \textbf{Total} & <%ordtotal%> \\
+
+<%foreach tax%>
+  \multicolumn{7}{|r} \textbf{VAT (Base: <%taxbase%>)} & <%tax%>\\
+<%end tax%>
+  
+<%if ordtotal%>
+		\hline
+	  \multicolumn{7}{|r} \textbf{Total} & <%ordtotal%> \\
+<%end ordtotal%>
+  \hline
+\endlastfoot
+<%foreach number%>
+  <%runningnumber%> & <%number%> & <%description%> & <%qty%> & 
+  <%unit%> & <%sellprice%> & <%discount%> & <%linetotal%> \\
+  Batch: & <%serialnumber%> & <%itemnotes%> & & & & &\\
+<%end number%>
+\end{longtable}
+
+\parbox{\textwidth}{
+\vspace{0.5cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+}
+\vfill
+\centerline{Thank You for your valued business!}
+\vspace{1cm}
+<%include footer_en.tex%>
+\end{CJK}
+\end{document}

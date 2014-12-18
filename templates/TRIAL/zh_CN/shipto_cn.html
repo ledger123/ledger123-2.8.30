@@ -1,0 +1,26 @@
+<!-- TRIAL Shipping Address, Chinese simplified -->
+<!-- First Choice Internet, B.Plagge, 2008-07-17 -->
+<table width=100% cellspacing=0 cellpadding=0>
+	<tr valign=top>
+	  <td>
+	   <%shiptocountry%><%shiptostate%><%shiptocity%><%shiptoaddress2%><%shiptoaddress1%><%shiptoname%><br/>
+	  </td>
+	  <td>
+	  <%if shiptocontact%>
+	  <br><%shiptocontact%> 様
+	  <%end shiptocontact%>
+	  
+	  <%if shiptophone%>
+	  <br>电话: <%shiptophone%>
+	  <%end shiptophone%>
+	  
+	  <%if shiptofax%>
+	  <br>传真: <%shiptofax%>
+	  <%end shiptofax%>
+
+	  <%if shiptoemail%>
+		<br>电邮: <%shiptoemail%>
+	  <%end shiptoemail%>
+	  </td>
+	</tr>
+</table>

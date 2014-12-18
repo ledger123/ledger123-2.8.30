@@ -1,0 +1,68 @@
+%% First Choice Internet
+%% TRIAL AR Transaction, Japanese
+%% A.Plagge 2006-03-19
+%% B.Plagge 2008-01-03
+%% B.Plagge 2009-09-15 - modified letterhead
+%% B.Plagge 2014-07-07 TRIAL templates
+<%include settings.tex%> 
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_cust_ja.tex%>
+\vspace*{1.0cm}
+
+\rule{\textwidth}{0.5pt}
+
+\vspace*{3.0cm}
+\centerline{\textbf{販　売S}}
+\vspace*{1.0cm}
+-
+
+\vspace*{0.5cm}
+\begin{tabular}[t]{ll}
+  \textbf{請求番号} & <%invnumber%> \\
+  \textbf{日付} & <%invdate%> \\
+  \textbf{支払予定日} & <%duedate%> \\
+  \textbf{注文番号} & <%ordnumber%> \\
+  \textbf{担当者} & <%employee%> \\
+  \textbf{通貨} & <%currency%> \\
+\end{tabular}
+
+\vspace{1cm}
+
+\begin{tabularx}{.5\textwidth}[t]{@{}llr{\hspace{1cm}}ll@{}}
+<%foreach amount%>
+  <%accno%> & <%account%> & <%amount%> & <%description%> $ <%projectnumber%> \\
+<%end amount%>
+
+  \multicolumn{2}{r}{\textbf{小計}} & <%subtotal%> & \\
+<%foreach tax%>
+  \multicolumn{2}{r}{\textbf{<%taxdescription%>}} & <%tax%> & \\
+<%end tax%>
+
+  \multicolumn{2}{r}{\textbf{合計}} & <%invtotal%> & \\
+  
+\end{tabularx}
+\vspace{1.0cm}
+
+<%notes%>
+\vspace{0.5cm}
+
+<%if paid%>
+\begin{tabular}{@{}llllr@{}}
+  \multicolumn{5}{c}{\textbf{支払金額}} \\
+  \hline
+  \textbf{日付} & & \textbf{元} & \textbf{メモ} & \textbf{金額} \\
+<%end paid%>
+<%foreach payment%>
+  <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%paymentmemo%> & <%payment%> \\
+<%end payment%>
+<%if paid%>
+\end{tabular}
+<%end paid%>
+\vfill
+<%include footer_ja.tex%>
+\end{CJK}  
+\end{document}
+

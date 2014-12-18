@@ -1,5 +1,4 @@
-$self{texts} = {
-};
+$self{charset} = 'UTF-8';
 
 $self{subs} = {
   'ca_subtotal'                 => 'ca_subtotal',

@@ -1,0 +1,56 @@
+%% First Choice Internet
+%% Time Card, Japanese
+%% B.Plagge 2007-01-06
+%% B.Plagge 2009-09-15 - modified letterhead
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include internal_doc_header_ja.tex%>
+
+\rule{\textwidth}{0.5pt}
+
+\vspace*{0.5cm}
+
+\centerline{\textbf{タイム} \parbox{0.3cm}{\hfill} \textbf{カード}}
+\normalsize
+
+\vspace{1.2cm}
+
+\begin{tabular}[t]{ll}
+  \textbf{従業員} & <%employee%> \\
+  \textbf{ID} & <%employee_id%> \\
+\end{tabular}
+\hfill
+\begin{tabular}[t]{ll}
+  \textbf{カード番号} & <%id%> \\
+  \textbf{作業日付} & <%transdate%> \\
+  \textbf{開始時間} & <%checkedin%> \\
+  \textbf{終了時間} & <%checkedout%> \\
+  \textbf{作業時間} & <%qty%> \\
+\end{tabular}
+
+\vspace{1cm}
+
+\begin{tabular}[b]{ll}
+  \textbf{プロジェクト/ジョブ 番号} & <%projectnumber%> \\
+  \textbf{テキスト} & <%projectdescription%> \\
+  \textbf{作業/サービス 番号} & <%partnumber%> \\
+  \textbf{内容/説明} & <%description%> \\
+\end{tabular}
+\hfill
+\begin{tabular}[b]{lr}
+  \textbf{レート} & <%sellprice%> \\
+  \textbf{合計} & <%total%> \\
+\end{tabular}
+  
+\vspace{0.3cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+
+\vfill
+<%include footer_ja.tex%>
+\end{CJK} 
+\end{document}

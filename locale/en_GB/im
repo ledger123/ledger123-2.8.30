@@ -1,0 +1,35 @@
+$self{charset} = 'UTF-8';
+
+$self{subs} = {
+  'continue'                    => 'continue',
+  'ex_payment'                  => 'ex_payment',
+  'export'                      => 'export',
+  'export_payments'             => 'export_payments',
+  'im_account'                  => 'im_account',
+  'im_gl'                       => 'im_gl',
+  'im_parts'                    => 'im_parts',
+  'im_partscustomer'            => 'im_partscustomer',
+  'im_partsvendor'              => 'im_partsvendor',
+  'im_payment'                  => 'im_payment',
+  'im_purchase_order'           => 'im_purchase_order',
+  'im_sales_invoice'            => 'im_sales_invoice',
+  'im_sales_order'              => 'im_sales_order',
+  'im_transactions'             => 'im_transactions',
+  'im_vc'                       => 'im_vc',
+  'import'                      => 'import',
+  'import_accounts'             => 'import_accounts',
+  'import_gl'                   => 'import_gl',
+  'import_parts'                => 'import_parts',
+  'import_parts_customers'      => 'import_parts_customers',
+  'import_parts_vendors'        => 'import_parts_vendors',
+  'import_payments'             => 'import_payments',
+  'import_purchase_orders'      => 'import_purchase_orders',
+  'import_sales_invoices'       => 'import_sales_invoices',
+  'import_sales_orders'         => 'import_sales_orders',
+  'import_transactions'         => 'import_transactions',
+  'import_vc'                   => 'import_vc',
+  'xrefhdr'                     => 'xrefhdr',
+};
+
+1;
+

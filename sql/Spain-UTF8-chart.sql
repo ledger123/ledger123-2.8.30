@@ -126,8 +126,14 @@ INSERT INTO "tax" ("chart_id", "rate") VALUES ((SELECT id FROM chart WHERE accno
 INSERT INTO "tax" ("chart_id", "rate") VALUES ((SELECT id FROM chart WHERE accno  = '477000005'), 0.01);
 INSERT INTO "tax" ("chart_id", "rate") VALUES ((SELECT id FROM chart WHERE accno  = '477000006'), 0.04);
 --
--- update defaults
+INSERT INTO defaults (fldname, fldvalue) VALUES ('inventory_accno_id', (SELECT id FROM chart WHERE accno = '300000000'));
+INSERT INTO defaults (fldname, fldvalue) VALUES ('income_accno_id', (SELECT id FROM chart WHERE accno = '700000000'));
+INSERT INTO defaults (fldname, fldvalue) VALUES ('expense_accno_id', (SELECT id FROM chart WHERE accno = '600000000'));
+INSERT INTO defaults (fldname, fldvalue) VALUES ('fxgain_accno_id', (SELECT id FROM chart WHERE accno = '768000000'));
+INSERT INTO defaults (fldname, fldvalue) VALUES ('fxloss_accno_id', (SELECT id FROM chart WHERE accno = '668000000'));
+INSERT INTO defaults (fldname, fldvalue) VALUES ('weightunit', 'kg');
+INSERT INTO defaults (fldname, fldvalue) VALUES ('precision', '2');
 --
-update defaults set inventory_accno_id = (select id from chart where accno = '300000000'), income_accno_id = (select id from chart where accno = '700000000'), expense_accno_id = (select id from chart where accno = '600000000'), fxgain_accno_id = (select id from chart where accno = '768000000'), fxloss_accno_id = (select id from chart where accno = '668000000'), curr = 'EUR', weightunit  = 'Kg';
---
+INSERT INTO curr (rn, curr, prec) VALUES (1,'EUR',2);
+INSERT INTO curr (rn, curr, prec) VALUES (2,'USD',2);
 

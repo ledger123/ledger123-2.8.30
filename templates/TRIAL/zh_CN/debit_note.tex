@@ -1,0 +1,80 @@
+%% First Choice Internet
+%% TRIAL Debit Note, Chinese simplified
+%% B.Plagge 2008-07-22
+<%include settings.tex%>
+
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead.tex%>
+\vspace*{1.5cm}
+
+\parbox[t]{.5\textwidth}{
+<%include vendor_cn.tex%>
+}
+\parbox[t]{.45\textwidth}{
+<%include ownaddress_cn.tex%>
+}
+
+\hfill 
+-
+\hfill
+\vspace{1.5cm}
+\centerline{\large\bf{贷 记 单}}
+\normalsize
+\hfill
+\vspace{1cm}
+\hfill \\
+\begin{tabular}[t]{ll}
+  \textbf{发票号码} & <%invnumber%> \\
+  \textbf{发票日期} & <%invdate%> \\
+  \textbf{限期} & <%duedate%> \\
+  <%if ponumber%>
+    \textbf{购买订单号码} & <%ponumber%> \\
+  <%end ponumber%>
+  <%if ordnumber%>
+    \textbf{订单号码} & <%ordnumber%> \\
+  <%end ordnumber%>
+  \textbf{制单员} & <%employee%> \\
+\end{tabular}
+
+\vspace{1cm}
+
+\begin{tabularx}{\textwidth}[t]{@{}llrX@{\hspace{1cm}}l@{}}
+<%foreach amount%>
+  <%accno%> & <%account%> & <%amount%> & <%description%> & <%projectnumber%> \\
+<%end amount%>
+
+  \multicolumn{2}{r}{\textbf{小计}} & <%subtotal%> & \\
+<%foreach tax%>
+  \multicolumn{2}{r}{\textbf{<%taxdescription%> @ <%taxrate%> \%}} & <%tax%> & \\
+<%end tax%>
+
+  \multicolumn{2}{r}{\textbf{总额}} & <%invtotal%> & \\
+  
+\end{tabularx}
+
+<%if notes%>
+\vspace{0.3cm}
+<%notes%>
+<%end notes%>
+
+\vspace{1.5cm}
+
+<%if paid_1%>
+\begin{tabular}{@{}llllr@{}}
+  \multicolumn{5}{c}{\textbf{付款}} \\
+  \hline
+  \textbf{日期} & & \textbf{付款方式} & \textbf{备注} & \textbf{付款} \\
+<%end paid_1%>
+<%foreach payment%>
+  <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%paymentmemo%> & <%payment%> \\
+<%end payment%>
+<%if paid_1%>
+\end{tabular}
+<%end paid_1%>
+\vfill
+\end{CJK}
+\end{document}
+

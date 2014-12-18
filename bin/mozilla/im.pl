@@ -14,14 +14,13 @@
 use SL::IM;
 use SL::CP;
 use SL::JS;
+use SL::GL;
 
 require "$form->{path}/sr.pl";
 
 1;
 
 # end of main
-
-sub continue { &{ $form->{nextsub} } }
 
 sub import {
 
@@ -36,12 +35,12 @@ sub import {
         service        => 'Services',
         labor          => 'Labor/Overhead',
         partsgroup     => 'Groups',
+        generic        => 'Generic Text File',
         coa            => 'Chart of Accounts',
         partscustomer  => 'Parts Customers',
         partsvendor    => 'Parts Vendors',
         transactions   => "$form->{ARAP} Transactions",
         gl             => 'General Ledger',
-        generic        => 'Generic Text File',
     );
 
     # $locale->text('Import Sales Invoices')
@@ -99,17 +98,6 @@ sub import {
 |;
     }
 
-    $form->all_languages( \%myconfig );
-
-    if ( @{ $form->{all_language} } ) {
-        $form->{language_code}       = $myconfig{countrycode};
-        $form->{selectlanguage_code} = "\n";
-        for ( @{ $form->{all_language} } ) { $form->{selectlanguage_code} .= qq|$_->{code}--$_->{description}\n| }
-
-        $lang = qq|
-            <select name=language_code>| . $form->select_option( $form->{selectlanguage_code}, $form->{language_code}, undef, 1 ) . qq|</select>|;
-    }
-
     print qq|
 <body>
 
@@ -127,7 +115,7 @@ sub import {
         <tr>
 	  <th align="right">| . $locale->text('File to Import') . qq|</th>
 	  <td>
-	    <input name=data size=60 type=file>&nbsp;<a href="samples/$form->{ARAP}$form->{type}.csv">| . $locale->text('sample') . qq|
+	    <input name=data size=60 type=file>
 	  </td>
 	</tr>
 	<tr>
@@ -148,7 +136,7 @@ sub import {
 	      </tr>
 -->
 	      <tr>
-		<td><input name=mapfile type=checkbox value=1>&nbsp;| . $locale->text('Mapfile') . qq|</td><td colspan=3>$lang</td>
+		<td><input name=mapfile type=checkbox value=1>&nbsp;| . $locale->text('Mapfile') . qq|</td>
 	      </tr>
 	    </table>
 	  </td>
@@ -163,7 +151,7 @@ sub import {
 </table>
 |;
 
-    $form->hide_form(qw(vc ARAP defaultcurrency title type nextsub login path));
+    $form->hide_form(qw(defaultcurrency title type nextsub login path));
 
     print qq|
 <input name=action class=submit type=submit value="| . $locale->text('Continue') . qq|">
@@ -1105,10 +1093,10 @@ sub xrefhdr {
 
     $form->{delimiter} ||= ',';
 
-    $i = 1;
+    $i = 0;
 
     if ( $form->{mapfile} ) {
-        open( FH, "$templates/$myconfig{dbname}/$form->{language_code}/import.map" ) or $form->error($!);
+        open( FH, "$templates/$myconfig{dbname}/import.map" ) or $form->error($!);
 
         while (<FH>) {
             next if /^(#|;|\s)/;
@@ -1130,14 +1118,13 @@ sub xrefhdr {
                 $form->{ $form->{type} }{ $f[0] } = { field => $key, length => $f[1], ndx => $i++ };
             }
         }
-        delete $form->{ $form->{type} }{''};
         close FH;
 
     }
     else {
+
         # get first line
         $str = ( split /\n/, $form->{data} )[0];
-        chomp $str;
 
         if ( $form->{tabdelimited} ) {
             $form->{delimiter} = '\t';
@@ -1884,6 +1871,114 @@ sub import_items {
     $form->info;
 
 }
+
+sub im_generic {
+
+    &import_file;
+
+    $form->{callback} = "$form->{script}?action=import";
+    for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
+
+    @columns = qw(c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 c20);
+    for ( @columns ) {
+        $form->{ $form->{type} }{$_} = { field => $_, length => "", ndx => $i++ };
+    }
+
+    @column_index = qw(runningnumber ndx);
+
+    for ( sort { $form->{ $form->{type} }{$a}{ndx} <=> $form->{ $form->{type} }{$b}{ndx} } keys %{ $form->{ $form->{type} } } ) {
+        push @column_index, $_;
+    }
+
+    $column_data{runningnumber} = "&nbsp;";
+    $column_data{ndx}           = "&nbsp;";
+    for (@columns) { $column_data{$_} = $locale->text($_) }
+
+    $form->helpref( "import_$form->{type}", $myconfig{countrycode} );
+
+    $form->header;
+
+    print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{helpref}$form->{title}</a></th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr class=listheading>
+|;
+
+    for (@column_index) { print "\n<th>$column_data{$_}</th>" }
+
+    print qq|
+        </tr>
+|;
+
+    $form->{reportcode} = "import_$form->{type}";
+    IM->prepare_import_data( \%myconfig, \%$form );
+
+    for $i ( 1 .. $form->{rowcount} ) {
+
+        $j++;
+        $j %= 2;
+
+        print qq|
+      <tr class=listrow$j>
+|;
+
+        for (@column_index) {
+            $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>|;
+        }
+
+        $column_data{runningnumber} = qq|<td align=right>$i</td>|;
+        $column_data{ndx}           = qq|<td><input name="ndx_$i" type=checkbox class=checkbox checked></td>|;
+
+        for (@column_index) { print $column_data{$_} }
+
+        print qq|
+	</tr>
+|;
+    }
+
+    print qq|
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+
+</table>
+|;
+
+    $form->hide_form(qw(rowcount reportcode type login path callback));
+
+    print qq|
+<input name=action class=submit type=submit value="| . $locale->text('Import Generic') . qq|">
+</form>
+
+</body>
+</html>
+|;
+
+}
+
+sub import_generic {
+
+    IM->import_generic( \%myconfig, \%$form );
+
+    $form->info( $locale->text('Import successful!'));
+
+}
+
+
 
 sub im_partsgroup {
 
@@ -2913,756 +3008,7 @@ sub yes__reconcile_payments {
 
 }
 
-#=================================================
-#
-# Following code has been added by Ledger123.com
-#
-#=================================================
-
-sub im_generic {
-
-    &import_file;
-
-    $form->{callback} = "$form->{script}?action=import";
-    for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
-
-    #-- xx is just a place hold to fix the yet-to-resolve bug that first column is not imported into a0
-    @columns = qw(xx a0 b0 c0 d0 e0 f0 g0 h0 i0 j0 k0 l0 m0 n0 o0 p0 q0 r0 s0 t0 u0 v0 w0 x0 y0 z0 aa ab ac ad ae af ag ah ai aj ak al am an ao ap aq ar as0 at au av aw ax ay az);
-    for (@columns) {
-        $form->{ $form->{type} }{$_} = { field => $_, length => "", ndx => $i++ };
-    }
-
-    @column_index = qw(runningnumber ndx);
-
-    for ( sort { $form->{ $form->{type} }{$a}{ndx} <=> $form->{ $form->{type} }{$b}{ndx} } keys %{ $form->{ $form->{type} } } ) {
-        push @column_index, $_;
-    }
-
-    $column_data{runningnumber} = "&nbsp;";
-    $column_data{ndx}           = "&nbsp;";
-    for (@columns) { $column_data{$_} = $locale->text($_) }
-
-    $form->helpref( "import_$form->{type}", $myconfig{countrycode} );
-
-    $form->header;
-
-    print qq|
-<body>
-
-<form method=post action=$form->{script}>
-
-<table width=100%>
-  <tr>
-    <th class=listtop>$form->{helpref}$form->{title}</a></th>
-  </tr>
-  <tr height="5"></tr>
-  <tr>
-    <td>
-      <table width=100%>
-        <tr class=listheading>
-|;
-
-    for (@column_index) { print "\n<th>$column_data{$_}</th>" }
-
-    print qq|
-        </tr>
-|;
-
-    $form->{reportcode} = "import_$form->{type}";
-    IM->prepare_import_data( \%myconfig, \%$form );
-
-    for $i ( 1 .. $form->{rowcount} ) {
-
-        $j++;
-        $j %= 2;
-
-        print qq|
-      <tr class=listrow$j>
-|;
-
-        for (@column_index) {
-            $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>|;
-        }
-
-        $column_data{runningnumber} = qq|<td align=right>$i</td>|;
-        $column_data{ndx}           = qq|<td><input name="ndx_$i" type=checkbox class=checkbox checked></td>|;
-
-        for (@column_index) { print $column_data{$_} }
-
-        print qq|
-	</tr>
-|;
-    }
-
-    print qq|
-        </tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td><hr size=3 noshade></td>
-  </tr>
-
-</table>
-|;
-
-    $form->hide_form(qw(rowcount reportcode type login path callback));
-
-    print qq|
-<input name=action class=submit type=submit value="| . $locale->text('Import Generic') . qq|">
-</form>
-
-</body>
-</html>
-|;
-
-}
-
-sub import_generic {
-
-    IM->import_generic( \%myconfig, \%$form );
-
-    $form->info( $locale->text('Import successful!') );
-
-    print qq|<br/><br/>
-<b>Process imported file as:</b><br/><br/>
-<ul>
-<li><a href="im.pl?action=ask_data_backup_import&path=$form->{path}&login=$form->{login}">'Data backup' data file.</a><br/>
-<li><a href="im.pl?action=ask_staffing_data_import&path=$form->{path}&login=$form->{login}">'Staffing data' data file.</a><br/>
-<li><a href="im.pl?action=ask_web_protection_import&path=$form->{path}&login=$form->{login}">'Data protection' data file.</a><br/>
-<li><a href="im.pl?action=ask_google_import&path=$form->{path}&login=$form->{login}">'Google' data file.</a><br/>
-<ul>
-|;
-
-}
-
-#---------------------------------------------------------------------
-sub ask_data_backup_import {
-
-  $form->header;
-
-  print qq|
-<body>
-
-<form method=post action=$form->{script}>
-|;
-
-  $form->{nextsub} = "do_data_backup_import";
-  $form->hide_form;
-
-  print qq|
-<h2 class=confirm>|.$locale->text('Confirm!').qq|</h2>
-
-<h4>|.$locale->text('Are you sure you want to proceed with processing?').qq|
-</h4>
-
-<p>
-<input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
-</form>
-|;
-
-}
-
-sub do_data_backup_import {
-
-  # a0: customer_id after two '::'
-  # c0: item description (grouped on customer_id)
-  # h0/1024: qty (totaled on customer_id)
-  # k0: price from price matrix
-  # l0: department
-  # m0: gl sales
-  # o0: gl ar
-  # p0: currency
-  # q0: salesperson
-  # r0: transdate
-  # s0: duedate
-
-  my %imp;
-
-  my @allrows = $form->{dbs}->query('select * from generic_import order by a0')->hashes;
-
-  $form->header;
-
-  $imp{customer} = '';
-  $imp{customer_id} = '';
-  $imp{transdate} = '';
-  $imp{duedate} = '';
-  $imp{currency} = '';
-  $imp{department} = '';
-  $imp{salesperson} = '';
-  $imp{partnumber} = '';
-  $imp{description} = '';
-  $imp{qty} = 0;
-  $imp{sellprice} = 0;
-
-  print qq|<table border=1 cellspacing=0 cellpadding=3>|;
-  print qq|<tr>|;
-  for (sort keys (%imp)){ print qq|<th>$_</th>| }
-  print qq|</tr>|;
-
-  for $row (@allrows){
-      $index = index($row->{a0}, ';;');
-      if ($index != -1){
-        $customer_id = substr($row->{a0}, $index+2);
-      }
-      if ($current_customer ne $row->{a0}){
-         $imp{qty} /= 1024;
-         $imp{sellprice} = $form->{dbs}->query(
-             qq|SELECT sellprice FROM partscustomer 
-             WHERE parts_id = (SELECT id FROM parts WHERE partnumber='8389' LIMIT 1)
-             AND pricebreak >= $imp{qty} ORDER BY sellprice LIMIT 1|
-         )->list;
-
-         if ($current_customer){
-            print qq|<tr>|;
-            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-            print qq|</tr>|;
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('backup', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-         }
-         $current_customer = $row->{a0};
-         $imp{customer} = $row->{a0};
-         $imp{customer_id} = $customer_id;
-         $imp{transdate} = $row->{r0};
-         $imp{duedate} = $row->{s0};
-         $imp{currency} = $row->{p0};
-         $imp{department} = $row->{l0};
-         $imp{salesperson} = $row->{q0};
-         $imp{partnumber} = '8389';
-         $imp{description} = '';
-         $imp{qty} = 0;
-         $imp{sellprice} = 0;
-      }
-      $imp{description} .= " $row->{c0}";
-      $imp{qty} += $form->parse_amount(\%myconfig, $row->{h0});
-  }
-  # Last customer
-  $imp{qty} /= 1024;
-  $imp{sellprice} = $form->{dbs}->query(
-         qq|SELECT sellprice FROM partscustomer 
-         WHERE parts_id = (SELECT id FROM parts WHERE partnumber='8389' LIMIT 1)
-         AND pricebreak >= $imp{qty} ORDER BY sellprice LIMIT 1|
-  )->list;
-
-  if ($current_customer){
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('backup', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-        print qq|<tr>|;
-        for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-        print qq|</tr>|;
-  }
-
-  print qq|</table>|;
-
-  $form->{dbs}->commit;
-  $form->info('Done data backup import');
-}
-
-#---------------------------------------------------------------------
-sub ask_staffing_data_import {
-
-  $form->header;
-
-  print qq|
-<body>
-
-<form method=post action=$form->{script}>
-|;
-
-  $form->{nextsub} = "do_staffing_data_import";
-  $form->hide_form;
-
-  print qq|
-<h2 class=confirm>|.$locale->text('Confirm!').qq|</h2>
-
-<h4>|.$locale->text('Are you sure you want to proceed with processing?').qq|
-</h4>
-
-<p>
-<input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
-</form>
-|;
-
-}
-
-sub do_staffing_data_import {
-
-  my %imp;
-
-  my @allrows = $form->{dbs}->query('select * from generic_import order by a0')->hashes;
-
-  $form->header;
-
-  $imp{customer} = '';
-  $imp{customer_id} = '';
-  $imp{transdate} = '';
-  $imp{duedate} = '';
-  $imp{currency} = '';
-  $imp{department} = '';
-  $imp{salesperson} = '';
-  $imp{partnumber} = '';
-  $imp{description} = '';
-  $imp{qty} = 0;
-  $imp{sellprice} = 0;
-
-  print qq|<table border=1 cellspacing=0 cellpadding=3>|;
-  print qq|<tr>|;
-  for (sort keys (%imp)){ print qq|<th>$_</th>| }
-  print qq|</tr>|;
-
-  # b0: customer_id
-  # c0: qty
-  # d0: amount
-  # e0: department
-  # f0: gl code (?)
-  # g0+h0: description
-  # i0: gl AR
-  # j0: currency
-  # k0: salesperson
-  # l0: transdate
-  # m0: duedate
-
-  for $row (@allrows){
-     $imp{customer_id} = $row->{b0};
-     $imp{transdate} = $row->{l0};
-     $imp{duedate} = $row->{m0};
-     $imp{currency} = $row->{j0};
-     $imp{department} = $row->{e0};
-     $imp{salesperson} = $row->{k0};
-     $imp{partnumber} = '0003';
-     $imp{description} = $row->{g0} . ' ' . $row->{h0};
-     $imp{qty} = $row->{c0};
-     $imp{sellprice} = $row->{d0};
-
-     print qq|<tr>|;
-
-        $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('staffing', ?,?,?,   ?,?,?,   ?,?,?)
-        |,
-            $imp{customer_id}, $imp{transdate}, $imp{duedate},
-            $imp{currency}, $imp{salesperson}, $imp{partnumber},
-            $imp{description}, $imp{qty}, $imp{sellprice}
-        );
-
-     for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-     print qq|</tr>|;
-  }
-  print qq|</table>|;
-
-  $form->{dbs}->commit;
-  $form->info('Done staffing data import');
-}
-
-
-#---------------------------------------------------------------------
-sub ask_web_protection_import {
-
-  $form->header;
-
-  print qq|
-<body>
-
-<form method=post action=$form->{script}>
-|;
-
-  $form->{nextsub} = "do_web_protection_import";
-  $form->hide_form;
-
-  print qq|
-<h2 class=confirm>|.$locale->text('Confirm!').qq|</h2>
-
-<h4>|.$locale->text('Are you sure you want to proceed with processing?').qq|
-</h4>
-
-<p>
-<input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
-</form>
-|;
-
-}
-
-sub do_web_protection_import {
-
-  my %imp;
-
-  my @allrows = $form->{dbs}->query('select * from generic_import order by a0')->hashes;
-
-  $form->header;
-
-  $imp{customer} = '';
-  $imp{customer_id} = '';
-  $imp{transdate} = '';
-  $imp{duedate} = '';
-  $imp{currency} = '';
-  $imp{department} = '';
-  $imp{salesperson} = '';
-  $imp{partnumber} = '';
-  $imp{description} = '';
-  $imp{qty} = 0;
-  $imp{sellprice} = 0;
-
-  $imp{servers} = 0;
-  $imp{workstations} = 0;
-  $imp{webprotection} = 0;
-  $imp{managed_anti_virus} = 0;
-
-  $partnumber_servers = '0001';
-  $partnumber_workstations = '0002';
-  $partnumber_webprotection = '9064';
-  $partnumber_anti_virus = '9063';
-
-  print qq|<table border=1 cellspacing=0 cellpadding=3>|;
-  print qq|<tr>|;
-  for (sort keys (%imp)){ print qq|<th>$_</th>| }
-  print qq|</tr>|;
-
-  # Four service items will be created per customer
-  # 1. Server and its unit price (This will be customer specific)
-  # 2. Work station and its unit price (This will also be customer specific)
-  # 3. Data protection and its unit price
-  # 4. Managed anti virus and its unit price
-
-  # For each customer in a0 (customer_id after ':'), we shall count:
-  ## How many servers (d0 starts with 1)
-  ## How many workstations (d0 starts with 2)
-  ## How many managed anti virus ('Active' in aj)
-  ## How many data protected ('Active' in am)
-
-  for $row (@allrows){
-      $index = index($row->{a0}, ';;');
-      if ($index != -1){
-        $customer_id = substr($row->{a0}, $index+2);
-      }
-      if ($current_customer ne $row->{a0}){
-         if ($current_customer){
-            #
-            # servers
-            $imp{partnumber} = '0001';
-            $imp{qty} = $imp{servers};
-            $imp{sellprice} = $form->{dbs}->query("select sellprice from parts where partnumber = ?", $imp{partnumber})->list;
-
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('protection', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-            print qq|<tr>|;
-            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-            print qq|</tr>|;
-            #
-            # work stations
-            $imp{partnumber} = '0002';
-            $imp{qty} = $imp{workstations};
-            $imp{sellprice} = $form->{dbs}->query("select sellprice from parts where partnumber = ?", $imp{partnumber})->list;
-            print qq|<tr>|;
-            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-            print qq|</tr>|;
-
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('protection', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-
-            # managed anti virus
-            $imp{partnumber} = '9063';
-            $imp{qty} = $imp{managed_anti_virus};
-            $imp{sellprice} = $form->{dbs}->query("select sellprice from parts where partnumber = ?", $imp{partnumber})->list;
-            print qq|<tr>|;
-            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-            print qq|</tr>|;
-
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('protection', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-
-            # data protection
-            $imp{partnumber} = '9064';
-            $imp{qty} = $imp{managed_anti_virus};
-            $imp{sellprice} = $form->{dbs}->query("select sellprice from parts where partnumber = ?", $imp{partnumber})->list;
-            print qq|<tr>|;
-            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-            print qq|</tr>|;
-
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('protection', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-         }
-         $current_customer = $row->{a0};
-         $imp{customer} = $row->{a0};
-         $imp{customer_id} = $customer_id;
-         $imp{transdate} = $row->{as0}; #new
-         $imp{duedate} = $row->{at}; #new
-         $imp{currency} = $row->{au}; #new
-         $imp{department} = $row->{av}; #new
-         $imp{salesperson} = $row->{aw}; #new
-         $imp{description} = '';
-         $imp{qty} = 0;
-         $imp{sellprice} = 0;
-         $imp{servers} = 0;
-         $imp{workstations} = 0;
-         $imp{webprotection} = 0;
-         $imp{managed_anti_virus} = 0;
-      }
-      $imp{servers}++ if substr($row->{d0},0,1) eq '1';
-      $imp{workstations}++ if substr($row->{d0},0,1) eq '2';
-      $imp{webprotection}++ if $row->{am} eq 'Active';
-      $imp{managed_anti_virus}++ if $row->{aj} eq 'Active';
-  }
-  # Last customer
-            #
-            # servers
-            $imp{partnumber} = '0001';
-            $imp{qty} = $imp{servers};
-            $imp{sellprice} = $form->{dbs}->query("select sellprice from parts where partnumber = ?", $imp{partnumber})->list;
-
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('protection', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-            print qq|<tr>|;
-            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-            print qq|</tr>|;
-            #
-            # work stations
-            $imp{partnumber} = '0002';
-            $imp{qty} = $imp{workstations};
-            $imp{sellprice} = $form->{dbs}->query("select sellprice from parts where partnumber = ?", $imp{partnumber})->list;
-            print qq|<tr>|;
-            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-            print qq|</tr>|;
-
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('protection', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-            #
-            # managed anti virus
-            $imp{partnumber} = '9063';
-            $imp{qty} = $imp{managed_anti_virus};
-            $imp{sellprice} = $form->{dbs}->query("select sellprice from parts where partnumber = ?", $imp{partnumber})->list;
-            print qq|<tr>|;
-            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-            print qq|</tr>|;
-
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('protection', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-
-            # data protection
-            $imp{partnumber} = '9064';
-            $imp{qty} = $imp{managed_anti_virus};
-            $imp{sellprice} = $form->{dbs}->query("select sellprice from parts where partnumber = ?", $imp{partnumber})->list;
-            print qq|<tr>|;
-            for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-            print qq|</tr>|;
-
-            $form->{dbs}->query(qq|
-                INSERT INTO invoices_import (
-                    filetype,
-                    customer_id, transdate, duedate,
-                    currency, salesperson, partnumber,
-                    description, qty, sellprice)
-                VALUES ('protection', ?,?,?,   ?,?,?,   ?,?,?)
-            |,
-                $imp{customer_id}, $imp{transdate}, $imp{duedate},
-                $imp{currency}, $imp{salesperson}, $imp{partnumber},
-                $imp{description}, $imp{qty}, $imp{sellprice}
-            );
-  print qq|</table>|;
-
-  $form->{dbs}->commit;
-  $form->info('Done data protection import');
-}
-
-#---------------------------------------------------------------------
-sub ask_google_import {
-
-  $form->header;
-
-  print qq|
-<body>
-
-<form method=post action=$form->{script}>
-|;
-
-  $form->{nextsub} = "do_google_import";
-  $form->hide_form;
-
-  print qq|
-<h2 class=confirm>|.$locale->text('Confirm!').qq|</h2>
-
-<h4>|.$locale->text('Are you sure you want to proceed with processing?').qq|
-</h4>
-
-<p>
-<input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
-</form>
-|;
-
-}
-
-sub do_google_import {
-
-  my %imp;
-
-  my @allrows = $form->{dbs}->query(q/select * from generic_import where c0 is null or c0 <> '' order by a0/)->hashes;
-
-  $form->header;
-
-  $imp{customer} = '';
-  $imp{customer_id} = '';
-  $imp{transdate} = '';
-  $imp{duedate} = '';
-  $imp{currency} = '';
-  $imp{department} = '';
-  $imp{salesperson} = '';
-  $imp{partnumber} = '';
-  $imp{description} = '';
-  $imp{qty} = 0;
-  $imp{sellprice} = 0;
-
-  print qq|<table border=1 cellspacing=0 cellpadding=3>|;
-  print qq|<tr>|;
-  for (sort keys (%imp)){ print qq|<th>$_</th>| }
-  print qq|</tr>|;
-
-  # b0: get domain name and then find its respective customer id
-  # d0: qty
-  # h0: gl (?)
-  # i0: unit price
-  # j0 transdate
-  # k0 duedate
-  # l0 currency
-  # m0 department
-  # n0 salesperson
-
-  for $row (@allrows){
-
-     $index = index($row->{b0}, 'Domain Name: ');
-     if ($index != -1){
-        $customer_id = substr($row->{b0}, $index+13);
-     }
-
-     $imp{customer} =  substr($row->{b0}, $index+13);
-     $imp{customer_id} = $form->{dbs}->query("select id from customer where domain = ?", $imp{customer})->list;
-     $imp{transdate} = $row->{j0};
-     $imp{duedate} = $row->{k0};
-     $imp{currency} = $row->{l0};
-     $imp{department} = $row->{m0};
-     $imp{salesperson} = $row->{n0};
-     $imp{partnumber} = '9008';
-     $imp{description} = $row->{b0};
-     $imp{qty} = $row->{d0};
-     $imp{sellprice} = $row->{i0};
-
-        $form->{dbs}->query(qq|
-            INSERT INTO invoices_import (
-                filetype,
-                customer_id, transdate, duedate,
-                currency, salesperson, partnumber,
-                description, qty, sellprice)
-            VALUES ('googleapps', ?,?,?,   ?,?,?,   ?,?,?)
-        |,
-            $imp{customer_id}, $imp{transdate}, $imp{duedate},
-            $imp{currency}, $imp{salesperson}, $imp{partnumber},
-            $imp{description}, $imp{qty}, $imp{sellprice}
-        );
-
-     print qq|<tr>|;
-     for (sort keys (%imp)){ print qq|<td>$imp{$_}</td>| }
-     print qq|</tr>|;
-  }
-  print qq|</table>|;
-
-  $form->{dbs}->commit;
-  $form->info('Done google import');
-}
-
-
-#---------------------------------------------------------------------
+#=========================================
 sub im_partscustomer {
 
     &import_file;
@@ -3853,6 +3199,51 @@ sub im_partsvendor {
 }
 
 #=========================================
+sub import_parts_customers {
+    my $m   = 0;
+    my $dbh = $form->dbconnect( \%myconfig );
+    for my $i ( 1 .. $form->{rowcount} ) {
+        if ( $form->{"ndx_$i"} ) {
+            $m++;
+
+            if ( $form->{"validfrom_$i"} ) {
+                $form->{"validfrom_$i"} = qq|'$form->{"validfrom_$i"}'|;
+            }
+            else {
+                $form->{"validfrom_$i"} = 'NULL';
+            }
+            if ( $form->{"validto_$i"} ) {
+                $form->{"validto_$i"} = qq|'$form->{"validto_$i"}'|;
+            }
+            else {
+                $form->{"validto_$i"} = 'NULL';
+            }
+
+            $form->{"customer_id_$i"}   *= 1;
+            $form->{"pricegroup_id_$i"} *= 1;
+            $form->{"pricebreak_$i"}    *= 1;
+            $form->{"sellprice_$i"}     *= 1;
+
+            $query = qq|INSERT INTO partscustomer(
+			parts_id, customer_id, 
+			pricegroup_id, pricebreak, 
+			sellprice, validfrom, 
+			validto, curr) 
+		VALUES ($form->{"parts_id_$i"}, $form->{"customer_id_$i"},
+			$form->{"pricegroup_id_$i"}, $form->{"pricebreak_$i"},
+			$form->{"sellprice_$i"}, $form->{"validfrom_$i"},
+			$form->{"validto_$i"}, '$form->{"curr_$i"}'
+		)|;
+            $dbh->do($query) || $form->dberror($query);
+            $form->info( "${m}. " . $locale->text('Add part ...') );
+            $form->info(qq| $form->{"partnumber_$i"}, $form->{"description_$i"}|);
+            $form->info( " ... " . $locale->text('ok') . "\n" );
+        }
+    }
+    $form->info('Parts customers imported');
+}
+
+#=========================================
 sub import_parts_vendors {
     my $m   = 0;
     my $dbh = $form->dbconnect( \%myconfig );
@@ -3881,18 +3272,15 @@ sub import_parts_vendors {
     $form->info('Parts vendors imported');
 }
 
-#=========================================
 sub im_transactions {
- 
-    # TODO: (a) Check validity of AR/AP and line item accounts (b) If AR/AP missing, get default. (c) Taxes
 
     &import_file;
 
     if ( $form->{vc} eq 'customer' ) {
-        @column_index = qw(ndx invnumber customernumber name transdate araccount incomeaccount account_description amount description notes source memo);
+        @column_index = qw(ndx invnumber customernumber name transdate account account_description amount description notes source memo);
     }
     else {
-        @column_index = qw(ndx invnumber vendornumber name transdate apaccount expenseaccount account_description amount description notes source memo);
+        @column_index = qw(ndx invnumber vendornumber name transdate account account_description amount description notes source memo);
     }
     @flds = @column_index;
     push @flds, qw(vendor_id customer_id employee employee_id);
@@ -3903,6 +3291,11 @@ sub im_transactions {
 
     &xrefhdr;
 
+    ( $form->{arapaccount} )    = split /--/, $form->{arapaccount};
+    ( $form->{incomeaccount} )  = split /--/, $form->{incomeaccount};
+    ( $form->{expenseaccount} ) = split /--/, $form->{expenseaccount};
+    ( $form->{paymentaccount} ) = split /--/, $form->{paymentaccount};
+
     IM->transactions( \%myconfig, \%$form );
 
     $column_data{runningnumber}       = "&nbsp;";
@@ -3910,16 +3303,8 @@ sub im_transactions {
     $column_data{"$form->{vc}number"} = $locale->text('Number');
     $column_data{name}                = $locale->text('Name');
     $column_data{transdate}           = $locale->text('Invoice Date');
-    $column_data{araccount}           = $locale->text('AR');
-    $column_data{apaccount}           = $locale->text('AP');
-    $column_data{incomeaccount}       = $locale->text('Income');
-    $column_data{expenseaccount}      = $locale->text('Expense');
-    $column_data{account_description} = $locale->text('Account Description');
+    $column_data{account}             = $locale->text('Account');
     $column_data{amount}              = $locale->text('Amount');
-    $column_data{description}         = $locale->text('Description');
-    $column_data{notes}               = $locale->text('Notes');
-    $column_data{source}              = $locale->text('Source');
-    $column_data{memo}                = $locale->text('Memo');
 
     $form->header;
 
@@ -3959,14 +3344,9 @@ sub im_transactions {
         $column_data{amount} = qq|<td align=right>| . $form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|</td>|;
         $total_amount += $form->{"amount_$i"};
 
-        $form->{"ndx_$i"} = '1';
+        $form->{"ndx_$i"}           = '1';
         $column_data{runningnumber} = qq|<td align=right>$i</td>|;
-        if ( $form->{"account_description_$i"} ) {
-            $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='1' checked></td>|;
-        }
-        else {
-            $column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='1'></td>|;
-        }
+        $column_data{ndx}           = qq|<td><input name="ndx_$i" type=checkbox class=checkbox value='1' checked></td>|;
 
         for (@column_index) { print $column_data{$_} }
 
@@ -3998,7 +3378,7 @@ sub im_transactions {
 </table>
 |;
 
-    $form->hide_form(qw(markpaid ARAP vc currency precision rowcount type login path callback));
+    $form->hide_form(qw(markpaid ARAP vc currency arapaccount incomeaccount paymentaccount expenseaccount precision rowcount type login path callback));
 
     print qq|
 <input name=action class=submit type=submit value="| . $locale->text('Import Transactions') . qq|">
@@ -4010,10 +3390,7 @@ sub im_transactions {
 
 }
 
-#=========================================
 sub import_transactions {
-
-    use SL::AA;
 
     my $m = 0;
     $newform = new Form;
@@ -4083,7 +3460,6 @@ sub import_transactions {
     }
 }
 
-#=========================================
 sub im_gl {
 
     &import_file;
@@ -4214,7 +3590,6 @@ sub im_gl {
 
 }
 
-#=========================================
 sub import_gl {
 
     my $m = 0;
@@ -4278,23 +3653,5 @@ sub import_gl {
     }
 }
 
-sub view_generic_import {
+sub continue { &{ $form->{nextsub} } }
 
-    $form->header;
-
-    my $query = qq/
-        SELECT *
-        FROM generic_import
-        ORDER BY id
-    /;
-
-    my $table = $form->{dbs}->query( $query )->xto();
-    $table->modify( table => { cellpadding => "5", cellspacing => "0", border => "1" } );
-    print qq|<br/>|;
-    print $table->output;
-
-}
-
-# EOF
-
-## Please see file perltidy.ERR

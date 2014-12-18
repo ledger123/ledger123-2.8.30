@@ -1,0 +1,82 @@
+%% First Choice Internet
+%% TRIAL Request for Quotation, Chinese simplified
+%% B.Plagge 2008-07-14
+<%include settings.tex%>
+
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead.tex%>
+\vspace*{1.5cm}
+
+\parbox[t]{.55\textwidth}{
+送货到: \\
+<%include shipto_cn.tex%>
+}
+\parbox[t]{.45\textwidth}{
+\vspace{0.3cm}
+<%include vendor_cn.tex%>
+}
+
+\hfill \\
+-
+\vspace{1.0cm}
+
+\centerline{\large\bf{咨 询 报 价 单}}
+\normalsize
+\hfill
+
+\vspace{1cm}
+
+
+\begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
+  \textbf{报价单号码} & \textbf{日期} & \textbf{需要日期} & \textbf{制单员}
+  & \textbf{装送点} & \textbf{经由} \\ [0.5em]
+  \hline
+  <%quonumber%> & <%quodate%> & <%reqdate%> & <%employee%> & 
+  <%shippingpoint%> & <%shipvia%> \\
+  \hline
+\end{tabularx}
+
+\parbox{\textwidth}{
+\vspace{1.0cm}
+请提供以下产品价格及时间
+}
+
+\vspace{0.5cm}
+	送货到: <%currency%>
+\vspace{0.5cm}
+
+\begin{longtable}{|l p{5.5cm} @{\extracolsep\fill} rclrr|} \hline
+\xstrut
+  \textbf{原料编号} & \textbf{说明} & \textbf{数量} & \textbf{単位}  & \textbf{交货日期} & \textbf{单价} & \textbf{金额} \\     
+  \hline
+\endfirsthead
+  \multicolumn{6}{l}{\emph{继续上页 ...}} \\
+  \hline
+  \textbf{原料编号} & \textbf{说明} & \textbf{数量} & \textbf{単位}  & \textbf{交货日期} & \textbf{单价} & \textbf{金额} \\     
+  \hline
+\endhead
+   \hline \multicolumn{6}{r}{\emph{下页继续 ...}}
+\endfoot
+   \hline
+\endlastfoot
+<%foreach number%>
+  <%number%> & <%description%> & <%qty%> & <%unit%> & & &\\
+  <%if itemnotes%>
+		& <%itemnotes%> & & & & &\\
+	<%end itemnotes%>
+<%end number%>
+\end{longtable}
+
+\parbox{\textwidth}{
+\vspace{0.5cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+}
+
+\vfill
+\end{CJK}
+\end{document}

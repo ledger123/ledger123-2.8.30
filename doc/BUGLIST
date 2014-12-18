@@ -1,0 +1,113 @@
+BUGLIST
+
+* reference documents
+  fields have been added to many screens. Upload of reference docs is listed as planned function for
+  SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
+
+bp 2014/12/18
+  but: bep_2014-07
+* Purchase order generation function creates Purchase Order numbers with 2-digit year (see bug: bep_201412-03)
+  -> function update_defaults() must be called with a date.
+
+bp 2014/12/15
+  bug: bep_201412-06
+  Sales Orders and Purchase Orders can't be deleted (anymore). This should be possible before the order has been
+  shipped or received and for services (i.e. there is no delivery)
+
+bp 2014/12/11
+  bug: bep_201412-06 - fixed 2014/12/11
+  When changing the customer/vendor selection fields in the receipt/payment transaction the precision is reset back
+  to the system default. Incorrect because "Currency" is one of the selection fields.
+
+bp 2014/12/11 - fixed 2014/12/11
+  bug: bep_201412-05
+* Receipt transaction: sql error in CP->get_openinvoices if the customer id is not available
+  Call get_openinvoices only if we have a customer.
+
+bp 2014/12/09 old bug/feature - same in 2.8.xx  - fixed 2014/12/10
+  bug: bep_201412-04 - fixed 2014/12/06
+* Receipt screen, manually entered exchange rate is deleted when pressing update, need to enter the exchange rate beforehand
+* call to $form->{check_exchangerate} in cp.pl
+  Call check_exchangerate only if no exchange rate has been entered or retrieved by the system. Manual entries have
+  priority.
+
+bp 2014/12/06 - fixed 2014/12/06
+  bug: bep_201412-03
+* order numbers with 4-digit year will only be created when $self->transdate is available for the 'update_defaults'
+* function in Form.pm.
+
+bp 2014/12/05 - fixed 2014/12/06
+  bug: bep_201412-02
+* AP-Transaction: calculation of cash discount incorrect if tax is not included
+  Cash discount calculation is incorrect when tax included data is entered.
+
+bp 2014/12/03 - fixed 2014/12/03
+  bug: bep_201412-01
+* Payment screen - post without update
+  If you enter a payment, enter the payment amount, chcke the checkbox and print "Post" a "overpayment" document
+  (AP transaction) with the negative payment amount will be created.
+
+bp 2014/11/22 - fixed 2014/12/02
+  bug: bep_201411-05
+* When creating a vendor invoice for a purchase order the payment method is copied from the vendor master record.
+  However, when saving the invoice the payment method is not stored in the AP record. When editing the invoice
+  the corrected payment method and account (e.g. bank transfer) are not copied to the AP record.
+
+bp 2014/11/22
+  bug: bep_201411-04
+* Additional payment record if payment is entered with new payment method
+  If you enter payment data for a vendor invoice and change/select a payment method and don't press update but post
+  the program will create an addition AP transaction record and 2 payments - 1 for the original invoice and 1 for
+  the new AP transaction. (screenshots erp-add-payment-record-bug-img1.png, erp-add-payment-record-bug-img2.png)
+  Analysis:
+  PO Invoices are stored in table AP. Data is kept in 1 record. The last field of the record holds the id of the
+  paymentmethod (e.g. bank transfer). Therefore you cannot have 2 payments with different payment methods for the
+  same invoice. Data check required before the payment is accepted for posting, throw error if we already have a
+  partial payment with a different or empty payment method. The payment also seems to update paymentmethod and
+  bank_id (chart_id) in the AP record.
+  Solution:
+  The bug originates in rounding problems with cash discount.
+  SQL-Ledger records a foreign currency payment by splitting it into 2 parts. First part is the amount entered and
+  the second part is (amount entered x exchange rate) - amount entered.
+  Example:
+    payment is 143.19 USD, exchange rate USD to JPY is 103.32 JPY/USD
+    1: part 1: 143.19
+    2: part 2: 14650.81 Jpy
+    3: Total : 14794.39 Jpy -> rounded to 14794
+    Problem is that we can't record fractions of Yen in the accounting ledger.
+  Why is SQL-Ledger recording the figures this way? It uses these postings together with the ID field in table
+  acc_trans to identify the partial payments. If you edit the Vendor Invoice you see all payments listed by their
+  id number and the "part 1 amount".
+  The same happens if we get a vendor cash discount for early payment. The discount in foreign currency is entered
+  in table acc_trans with an exchange rate of 1, then a second line is added and the two lines together hold the
+  discount amount in Jpy.
+  This really means that it is impossible to record foreign currency payments with decimals correctly. If we round
+  to full Yen amounts we can't record and show the actually paid amounts and the cash discount.
+  To solve this we add a field 'amount' to the payment record.
+  The payment record currently holds the trans_id, the exchange rate and the paymentmethod id. Records are indexed by
+  an id, thus we can have several payment records for one (invoice) transaction.
+  In the new amount colum we record the payment amount in the invoice/payment currency. The paymentmethod field may
+  have a 0 value. Cash discounts are entered with an exchange rate of 1 (these discounts are always in the vendor's
+  currency) and with the chart-id in the paymentmethod field (acc_trans-chart_id=payment-paymentmethod_id).
+  The same logic needs to be applied to customer invoices as well!
+  In order to be able to properly convert item values in foreign currency to the home currency we have added a
+  'fxamount' column to table acc_trans.
+  Compatibility/Migration
+  If the user wants to look up old foreign currency document the system recognizes that the new fields don't contain
+  any information and uses the old logic. When saving data is stored using the new logic (because the program deletes
+  a changed document and then saves it again.) For all new foreign currency documents the new logic will be used!
+
+bp 2014/11/16
+  bug: bep_201411-03
+* Partslist doesn't show maxpricedecimals
+  If a part has sellprice, list price, last cost or avg costs smaller than 1 currency unit and you have specified
+  the maxpricedecimals default with a higher precision then the prices should be shown with the maxpricedecimals
+  precision.
+
+bp 2014/11/10
+  bug: bep_201411-02
+* barcode printing works with PostScript format but can't create PDF documents with barcode
+
+bp 2014/11/10
+   bug: bep_201411-01
+* reference docs don't seem to be working in 3.03

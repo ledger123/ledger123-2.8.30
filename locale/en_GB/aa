@@ -1,13 +1,11 @@
+$self{charset} = 'UTF-8';
+
 $self{texts} = {
   'AP Transaction'              => 'Purchase Transaction',
   'AP Transactions'             => 'Purchase Transactions',
   'AR Transaction'              => 'Sales Transaction',
   'AR Transactions'             => 'Sales Transactions',
   'Check'                       => 'Cheque',
-  'Customer'                    => 'Debtor',
-  'Customer missing!'           => 'Debtor missing!',
-  'Vendor'                      => 'Creditor',
-  'Vendor missing!'             => 'Creditor missing!',
 };
 
 $self{subs} = {

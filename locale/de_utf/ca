@@ -1,6 +1,7 @@
 $self{charset} = 'UTF-8';
 
 $self{texts} = {
+  'AR/AP'                       => 'OF/OV',
   'Account'                     => 'Konto',
   'Apr'                         => 'Apr',
   'April'                       => 'April',
@@ -19,7 +20,7 @@ $self{texts} = {
   'Feb'                         => 'Feb',
   'February'                    => 'Februar',
   'From'                        => 'Von',
-  'GIFI'                        => 'GIFI',
+  'GIFI'                        => 'DATEV',
   'Include in Report'           => 'In Bericht aufnehmen',
   'Jan'                         => 'Jan',
   'January'                     => 'Januar',
@@ -44,6 +45,7 @@ $self{texts} = {
   'Reference'                   => 'Referenz',
   'Sep'                         => 'Sep',
   'September'                   => 'September',
+  'Source'                      => 'Beleg',
   'Subtotal'                    => 'Zwischensumme',
   'To'                          => 'An',
   'Year'                        => 'Jahr',

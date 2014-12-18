@@ -1,24 +1,10 @@
 #=====================================================================
-# SQL-Ledger Accounting
-# Copyright (C) 2002
+# SQL-Ledger ERP
+# Copyright (C) 2006
 #
 #  Author: DWS Systems Inc.
-#     Web: http://www.sql-ledger.org
+#     Web: http://www.sql-ledger.com
 #
-# Contributors:
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #======================================================================
 #
 # mailer package
@@ -26,6 +12,12 @@
 #======================================================================
 
 package Mailer;
+
+$userspath = "users";
+# to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
+if (-f "$userspath/carp_debug.inc") {
+#  eval { require "$userspath/carp_debug.inc"; };
+}
 
 sub new {
   my ($type) = @_;
@@ -44,7 +36,7 @@ sub send {
   $domain =~ s/(.*?\@|>)//g;
   my $msgid = "$boundary\@$domain";
   
-  $self->{charset} = "ISO-8859-1" unless $self->{charset};
+  $self->{charset} ||= "ISO-8859-1";
 
   if ($out) {
     open(OUT, $out) or return "$out : $!";
@@ -52,7 +44,7 @@ sub send {
     open(OUT, ">-") or return "STDOUT : $!";
   }
 
-  $self->{contenttype} = "text/plain" unless $self->{contenttype};
+  $self->{contenttype} ||= "text/plain";
   
   my %h;
   for (qw(from to cc bcc)) {
@@ -64,8 +56,15 @@ sub send {
  
   $h{cc} = "Cc: $h{cc}\n" if $self->{cc};
   $h{bcc} = "Bcc: $h{bcc}\n" if $self->{bcc};
-  $h{notify} = "Disposition-Notification-To: $h{from}\n" if $self->{notify};
   $h{subject} = ($self->{subject} =~ /([\x00-\x1F]|[\x7B-\xFFFF])/) ? "Subject: =?$self->{charset}?B?".&encode_base64($self->{subject},"")."?=" : "Subject: $self->{subject}";
+  
+  if ($self->{notify}) {
+    if ($self->{notify} =~ /\@/) {
+      $h{notify} = "Disposition-Notification-To: $self->{notify}\n";
+    } else {
+      $h{notify} = "Disposition-Notification-To: $h{from}\n";
+    }
+  }
   
   print OUT qq|From: $h{from}
 To: $h{to}
@@ -97,6 +96,8 @@ $self->{message}
 	close(OUT);
 	return "$attachment : $!";
       }
+
+      binmode(IN);
       
       my $filename = $attachment;
       # strip path

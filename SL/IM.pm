@@ -13,6 +13,12 @@
 
 package IM;
 
+$userspath = "users";
+# to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
+if (-f "$userspath/carp_debug.inc") {
+#  eval { require "$userspath/carp_debug.inc"; };
+}
+
 sub sales_invoice_links {
     my ( $self, $myconfig, $form ) = @_;
 
@@ -478,7 +484,7 @@ sub taxrates {
     my $query = qq|SELECT c.accno, t.rate
               FROM chart c
 	      JOIN tax t ON (c.id = t.chart_id)
-	      WHERE c.link LIKE '%$form->{ARAP}_tax%'
+	      WHERE c.link LIKE '%$form->{ARAP}\\_tax%'
 	      AND (t.validto >= ? OR t.validto IS NULL)
 	      ORDER BY accno, validto|;
     my $sth = $dbh->prepare($query);
@@ -938,7 +944,7 @@ sub import_item {
     my ($defaultcurrency) = $dbh->selectrow_array($query);
 
     $query = qq|SELECT accno FROM chart
-              WHERE link LIKE '%IC_tax%'|;
+              WHERE link LIKE '%IC\\_tax%'|;
     my $tth = $dbh->prepare($query) || $form->dberror($query);
     $tth->execute || $form->dberror($query);
 
@@ -1241,6 +1247,49 @@ sub import_coa {
 
 }
 
+sub import_generic {
+    my ( $self, $myconfig, $form ) = @_;
+
+    my $reportid = $form->{dbs}->query('SELECT reportid FROM report WHERE reportcode = ?', $form->{reportcode})->list;
+
+    my $newform = new Form;
+
+    $query = qq|SELECT * FROM reportvars
+              WHERE reportid = $reportid
+	      AND reportvariable LIKE ?|;
+    my $sth = $form->{dbh}->prepare($query) || $form->dberror($query);
+
+    $form->{dbs}->query('delete from generic_import') or die($form->{dbs}->error);
+
+    for my $i ( 1 .. $form->{rowcount} ) {
+        if ( $form->{"ndx_$i"} ) {
+
+           for ( keys %$newform ) { delete $newform->{$_} }
+
+           $sth->execute("%\\_$i");
+           while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+               $ref->{reportvariable} =~ s/_(\d+)//;
+               if ( $1 == $i ) {
+                   $newform->{ $ref->{reportvariable} } = $ref->{reportvalue};
+               }
+           }
+           $sth->finish;
+
+           $form->{dbs}->query('
+               INSERT INTO generic_import (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                $newform->{c1}, $newform->{c2}, $newform->{c3}, $newform->{c4}, $newform->{c5}, 
+                $newform->{c6}, $newform->{c7}, $newform->{c8}, $newform->{c9}, $newform->{c10},
+                $newform->{c11}, $newform->{c12}, $newform->{c13}, $newform->{c14}, $newform->{c15},
+                $newform->{c16}, $newform->{c17}, $newform->{c18}, $newform->{c19}, $newform->{c20}
+           );
+        }
+        $i++;
+    }
+    $form->{dbs}->commit;
+}
+
+
 sub import_group {
     my ( $self, $myconfig, $form ) = @_;
 
@@ -1338,13 +1387,14 @@ sub prepare_import_data {
     my $j = 0;
 
     my @d = split /\n/, $form->{data};
-    shift @d if !$form->{mapfile};
+    shift @d if !$form->{mapfile} and $form->{type} ne 'generic';
 
     my @dl;
 
     for (@d) {
 
         @dl = &dataline($form);
+
         if ($#dl) {
             $i++;
             for ( keys %{ $form->{ $form->{type} } } ) {
@@ -1555,12 +1605,12 @@ sub dataline {
     my $chr    = "";
     my $m      = 0;
 
-    chomp;
-
     if ( $form->{tabdelimited} ) {
         @dl = split /\t/, $_;
+        unshift @dl, "";
     }
     else {
+
         if ( $form->{stringsquoted} ) {
             foreach $chr ( split //, $_ ) {
                 if ( $chr eq '"' ) {
@@ -1586,10 +1636,10 @@ sub dataline {
         }
         else {
             @dl = split /$form->{delimiter}/, $_;
+            unshift @dl, "";
         }
     }
 
-    unshift @dl, "";
     return @dl;
 
 }
@@ -1728,12 +1778,6 @@ sub reconcile_payments {
     $dbh->disconnect;
 
 }
-
-#=================================================
-#
-# Following code has been added by Ledger123.com
-#
-#=================================================
 
 sub partscustomer {
     my ( $self, $myconfig, $form ) = @_;
@@ -1881,16 +1925,14 @@ sub transactions {
                 $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
             }
 
+            $ath->execute("$a[$form->{$form->{type}}->{account}{ndx}]");
+            my $ref = $ath->fetchrow_hashref(NAME_lc);
+            $form->{"account_description_$i"} = $ref->{description};
+
             if ( $form->{vc} eq 'customer' ) {
-                $ath->execute("$a[$form->{$form->{type}}->{incomeaccount}{ndx}]");
-                my $ref = $ath->fetchrow_hashref(NAME_lc);
-                $form->{"account_description_$i"} = $ref->{description};
                 $cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
             }
             else {
-                $ath->execute("$a[$form->{$form->{type}}->{expenseaccount}{ndx}]");
-                my $ref = $ath->fetchrow_hashref(NAME_lc);
-                $form->{"account_description_$i"} = $ref->{description};
                 $cth->execute("$a[$form->{$form->{type}}->{vendornumber}{ndx}]");
             }
             while ( $ref = $cth->fetchrow_hashref(NAME_lc) ) {
@@ -1986,62 +2028,6 @@ sub gl {
     $pth->finish;
     $cth->finish;
     $dbh->disconnect;
-}
-
-sub import_generic {
-    my ( $self, $myconfig, $form ) = @_;
-
-    my $reportid = $form->{dbs}->query( 'SELECT reportid FROM report WHERE reportcode = ?', $form->{reportcode} )->list;
-
-    my $newform = new Form;
-
-    $query = qq|SELECT * FROM reportvars
-              WHERE reportid = $reportid
-	      AND reportvariable LIKE ?|;
-    my $sth = $form->{dbh}->prepare($query) || $form->dberror($query);
-
-    $form->{dbs}->query('delete from generic_import') or die( $form->{dbs}->error );
-
-    for my $i ( 1 .. $form->{rowcount} ) {
-        if ( $form->{"ndx_$i"} ) {
-
-            for ( keys %$newform ) { delete $newform->{$_} }
-
-            $sth->execute("%\\_$i");
-            while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
-                $ref->{reportvariable} =~ s/_(\d+)//;
-                if ( $1 == $i ) {
-                    $newform->{ $ref->{reportvariable} } = $ref->{reportvalue};
-                }
-            }
-            $sth->finish;
-
-            $form->{dbs}->query('
-               INSERT INTO generic_import (
-                    a0, b0, c0, d0, e0, f0, g0, h0, i0, j0, k0, l0, m0, n0, o0, p0, q0, r0, s0, t0, u0, v0, w0, x0, y0, z0,
-                    aa, ab, ac, ad, ae, af, ag, ah, ai, aj, ak, al, am, an, ao, ap, aq, ar, as0, at, au, av, aw, ax, ay, az
-               )
-               VALUES (
-               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-               )',
-                $newform->{a0}, $newform->{b0}, $newform->{c0}, $newform->{d0}, $newform->{e0},
-                $newform->{f0}, $newform->{g0}, $newform->{h0}, $newform->{i0}, $newform->{j0},
-                $newform->{k0}, $newform->{l0}, $newform->{m0}, $newform->{n0}, $newform->{o0},
-                $newform->{p0}, $newform->{q0}, $newform->{r0}, $newform->{s0}, $newform->{t0},
-                $newform->{u0}, $newform->{v0}, $newform->{w0}, $newform->{x0}, $newform->{y0},
-                $newform->{z0},
-                $newform->{aa}, $newform->{ab}, $newform->{ac}, $newform->{ad}, $newform->{ae},
-                $newform->{af}, $newform->{ag}, $newform->{ah}, $newform->{ai}, $newform->{aj},
-                $newform->{ak}, $newform->{al}, $newform->{am}, $newform->{an}, $newform->{ao},
-                $newform->{ap}, $newform->{aq}, $newform->{ar}, $newform->{as0}, $newform->{at},
-                $newform->{au}, $newform->{av}, $newform->{aw}, $newform->{ax}, $newform->{ay},
-                $newform->{az} 
-            );
-        }
-        $i++;
-    }
-    $form->{dbs}->commit;
 }
 
 1;

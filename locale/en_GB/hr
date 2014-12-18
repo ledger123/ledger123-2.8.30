@@ -1,13 +1,17 @@
+$self{charset} = 'UTF-8';
+
 $self{texts} = {
   'AP'                          => 'Purchases',
-  'Administrator'               => 'Administrator',
 };
 
 $self{subs} = {
   'acc_menu'                    => 'acc_menu',
+  'access_control'              => 'access_control',
   'add'                         => 'add',
   'add_deduction'               => 'add_deduction',
   'add_employee'                => 'add_employee',
+  'add_transaction'             => 'add_transaction',
+  'add_wage'                    => 'add_wage',
   'continue'                    => 'continue',
   'deduction_footer'            => 'deduction_footer',
   'deduction_header'            => 'deduction_header',
@@ -23,6 +27,7 @@ $self{subs} = {
   'js_menu'                     => 'js_menu',
   'list_employees'              => 'list_employees',
   'menubar'                     => 'menubar',
+  'preview'                     => 'preview',
   'save'                        => 'save',
   'save_as_new'                 => 'save_as_new',
   'save_deduction'              => 'save_deduction',

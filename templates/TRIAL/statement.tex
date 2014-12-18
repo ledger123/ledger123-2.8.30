@@ -1,0 +1,68 @@
+%% First Choice Internet
+%% Account Statement, English
+%% B.Plagge 2005-07-02
+%% B.Plagge 2009-08-29 - modified letterhead
+%% B.Plagge 2009-12-16 - account info in separate file
+%% B.Plagge 2014-06-30 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_cust_en.tex%>
+\vspace*{0.5cm}
+
+\parbox[t]{.80\textwidth}{
+\textbf{SHIP TO} \\
+<%include shipto_en.tex%>
+}
+
+\hfill \\
+
+\vspace{1.2cm}
+
+\centerline{\large\bf{S T A T E M E N T}}
+\normalsize
+
+\vspace{0.5cm}
+Currency: \textbf{<%currency%>}. \\
+-
+\vspace{0.5cm}
+
+\begin{longtable}{|ll @{\extracolsep\fill} llrrrr|} \hline
+  \textbf{Invoice} & \textbf{Order No} & \textbf{Date} & \textbf{Due Date} & 
+  \textbf{Current}  & \textbf{30} & \textbf{60} & \textbf{90+} \\     
+  \hline
+\endfirsthead
+  \multicolumn{7}{l}{\emph{Continued from previous page ...}} \\
+  \hline
+  \textbf{Invoice} & \textbf{Order No} & \textbf{Date} & \textbf{Due Date} & 
+  \textbf{Current} & \textbf{30} & \textbf{60} & \textbf{90+} \\ 
+  \hline
+\endhead
+  \hline \multicolumn{7}{r}{\emph{Continued on next page ...}}
+\endfoot
+  \hline
+	\multicolumn{5}{|r} \text{<%c0total%> & <%c30total%> & <%c60total%> & <%c90total%>} \\
+  \hline
+\endlastfoot
+<%foreach invnumber%>
+  <%invnumber%> & <%ordnumber%> & <%invdate%> & <%duedate%> & 
+  <%c0%> & <%c30%> & <%c60%> & <%c90%> \\
+<%end invnumber%>
+\end{longtable}
+
+\vspace{0.5cm}
+
+\hfill
+\begin{tabularx}{.4\textwidth}{Xr@{}}
+  \textbf{Total Outstanding} & \textbf{<%total%>} 
+\end{tabularx}
+
+\vfill
+
+<%include account_info_en.tex%>
+\vspace{0.5cm}
+<%include footer_en.tex%>
+\end{CJK}
+\end{document}

@@ -1,0 +1,53 @@
+%% First Choice Internet
+%% POS Invoice, Japanese
+%% B.Plagge 2010-03-04
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni} 
+
+<%company align=center width=40%>
+<%address align=center width=40%>
+
+ 金入れ: <%till align=left width=3%>        Phone#: <%tel%>
+
+担当者: <%employee%>
+
+<%invtime%><%invnumber align=right width=16%>
+
+  数量 品名・テキスト                 金額
+<%foreach number%>
+<%qty align=right width=5%> <%description align=left width=24 offset=6%> <%linetotal align=right width=9%>
+      <%number%> @ <%sellprice%>/<%unit%>
+<%end number%>
+
+件数:      <%totalqty%>
+<%if taxincluded%>
+                         ---------------
+                        合計: <%invtotal align=right width=9%>
+<%end taxincluded%>
+<%if not taxincluded%>
+                            ------------
+                        小計: <%subtotal align=right width=9%>
+<%end taxincluded%>
+<%foreach tax%>
+<%taxdescription align=right width=23%> @ <%taxrate align=right width=2%>%: <%tax align=right width=9%>
+<%end tax%>
+<%foreach payment%>
+              お預り金額: <%payment align=right width=9%> <%currency%>
+<%end payment%>
+<%if change%>
+                     おつり: <%change align=right width=9%>
+<%end change%>
+<%if total%>
+                     残金額: <%total align=right width=9%>
+<%end total%>
+<%if discount%>
+
+<%discount%> % Discount applied
+<%end discount%>
+
+   ご利用頂きましてどうも有難う御座います
+
+<%if taxincluded%>
+価格は税込です。
+<%end taxincluded%>

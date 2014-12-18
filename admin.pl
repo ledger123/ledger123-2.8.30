@@ -1,27 +1,12 @@
 #!/usr/bin/perl
 #
 ######################################################################
-# SQL-Ledger Accounting
-# Copyright (C) 2001
+# SQL-Ledger ERP
+# Copyright (C) 2006
 #
-#  Author: Dieter Simader
-#   Email: dsimader@sql-ledger.org
-#     Web: http://www.sql-ledger.org
+#  Author: DWS Systems Inc.
+#     Web: http://www.sql-ledger.com
 #
-#  Contributors:
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #######################################################################
 #
 # this script sets up the terminal and runs the scripts
@@ -35,9 +20,20 @@
 $userspath = "users";
 $spool = "spool";
 $templates = "templates";
+$images = "images";
 $memberfile = "users/members";
 $sendmail = "| /usr/sbin/sendmail -t";
-%printer = ( Printer => 'lpr' );
+%printer = ();
+
+#bp 2014/11 we need latex and environment variables - used to be in sql-ledger.conf
+if (-f "./sql-ledger-sys.conf") {
+  eval { require "./sql-ledger-sys.conf"; };
+}
+#
+# to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
+if (-f "$userspath/carp_debug.inc") {
+#  eval { require "$userspath/carp_debug.inc"; };
+}
 ########## end ###########################################
 
 
@@ -77,16 +73,23 @@ if (grep !/^\Q$form{script}\E/, @scripts) {
   exit;
 }
 
-if (-e "$userspath/nologin" && $script ne 'admin.pl') {
+if (-f "$userspath/nologin.LCK" && $script ne 'admin.pl') {
   print "Content-Type: text/html\n\n" if $ENV{HTTP_USER_AGENT};
-  print "\nLogin disabled!\n";
+  if (-s "$userspath/nologin.LCK") {
+    open(FH, "$userspath/nologin.LCK");
+    $message = <FH>;
+    close(FH);
+    print "\n$message\n";
+  } else {
+    print "\nLogin disabled!\n";
+  }
   exit;
 }
 
 
 if ($form{path}) {
   $form{path} =~ s/%2f/\//gi;
-  $form{path} =~ s/\.\.\///g;
+  $form{path} =~ s/\.\.//g;
 
   if ($form{path} !~ /^bin\//) {
     print "Content-Type: text/html\n\n" if $ENV{HTTP_USER_AGENT};
@@ -119,7 +122,7 @@ if ($form{path}) {
 
   if ($form{terminal}) {
     $form{terminal} =~ s/%2f/\//gi;
-    $form{terminal} =~ s/\.\.\///g;
+    $form{terminal} =~ s/\.\.//g;
 
     $ARGV[0] = "path=bin/$form{terminal}&script=$script";
     map { $ARGV[0] .= "&${_}=$form{$_}" } keys %form;
@@ -134,5 +137,6 @@ if ($form{path}) {
 
 }
 
+1;
 # end of main
 

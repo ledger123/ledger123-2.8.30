@@ -1,0 +1,21 @@
+%% First Choice Internet
+%% Transport Partner, Japanese
+%% B.Plagge 2010-04-27
+〒 <%transportzipcode%> \\
+<%transportstate%><%transportcity%><%transportaddress1%> \\
+<%transportaddress2%> \\
+<%transportname%> 御中 \\
+<%transportcountry%> \\
+
+\vspace{.5cm}
+<%if transportcontact%><%transportcontact%><%end transportcontact%>
+<%if not transportcontact%>\hspace{0.1cm} <%end transportcontact%>
+
+<%if transportphone%>Tel: <%transportphone%><%end transportphone%>
+<%if not transportphone%>\hspace{0.1cm}<%end transportphone%>
+
+<%if transportfax%>Fax: <%transportfax%><%end transportfax%>
+<%if not transportfax%>\hspace{0.1cm}<%end transportfax%>
+
+<%if transportemail%>メール: <%transportemail%><%end transportemail%>
+<%if not transportemail%>\hspace{0.1}<%end transportemail%>

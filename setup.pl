@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 #
 ######################################################################
-# SQL-Ledger, Accounting Software Installer
-# Copyright (c) 2002, Dieter Simader
+# SQL-Ledger ERP Installer
+# Copyright (c) 2007, DWS Systems Inc.
 #
-#     Web: http://www.sql-ledger.org
+#     Web: http://www.sql-ledger.com
 #
 #######################################################################
 
@@ -18,28 +18,16 @@ use $0 from the command line";
 }
 
 $lynx = `lynx -version`;      # if LWP is not installed use lynx
+$wget = `wget --version 2>&1`;
 $gzip = `gzip -V 2>&1`;            # gz decompression utility
 $tar = `tar --version 2>&1`;       # tar archiver
 $latex = `latex -version`;
 
-%checkversion = ( www => 3, abacus => 4, pluto => 5, neptune => 8 );
+%checkversion = ( www => 1, abacus => 2 );
 
 %source = (
-	    1 => { url => "http://voxel.dl.sourceforge.net/sourceforge/sql-ledger", site => "New York, U.S.A", locale => us },
-            2 => { url => "http://easynews.dl.sourceforge.net/sourceforge/sql-ledger", site => "Arizona, U.S.A", locale => us },
-	    3 => { url => "http://www.sql-ledger.com/source", site => "California, U.S.A", locale => us },
-            4 => { url => "http://abacus.sql-ledger.com/source", site => "Toronto, Canada", locale => ca },
-	    5 => { url => "http://pluto.sql-ledger.com/source", site => "Edmonton, Canada", locale => ca },
-	    6 => { url => "http://ufpr.dl.sourceforge.net/sourceforge/sql-ledger", site =>"Brazil", locale => br },
-	    7 => { url => "http://surfnet.dl.sourceforge.net/sourceforge/sql-ledger", site => "The Netherlands", locale => nl },
-	    8 => { url => "http://neptune.sql-ledger.com/source", site => "Ireland", locale => ie },
-	    9 => { url => "http://kent.dl.sourceforge.net/sourceforge/sql-ledger", site => "U.K", locale => uk },
-	    10 => { url => "http://ovh.dl.sourceforge.net/sourceforge/sql-ledger", site => "France", locale => fr },
-	    11 => { url => "http://mesh.dl.sourceforge.net/sourceforge/sql-ledger", site => "Germany", locale => de },
-	    12 => { url => "http://citkit.dl.sourceforge.net/sourceforge/sql-ledger", site => "Russia", locale => ru },
-	    13 => { url => "http://optusnet.dl.sourceforge.net/sourceforge/sql-ledger", site => "Sydney, Australia", locale => au },
-	    14 => { url => "http://nchc.dl.sourceforge.net/sourceforge/sql-ledger", site => "Taiwan", locale => tw },
-	    15 => { url => "http://jaist.dl.sourceforge.net/sourceforge/sql-ledger", site => "Japan", locale => jp }
+	    1 => { url => "http://www.sql-ledger.com/source", site => "www.sql-ledger.com", locale => us },
+            2 => { url => "http://abacus.sql-ledger.com/source", site => "abacus.sql-ledger.com", locale => ca },
 	  );
 
 $userspath = "users";         # default for new installation
@@ -55,8 +43,8 @@ $newinstall = 1;
 eval { require LWP::Simple; };
 $lwp = !($@);
 
-unless ($lwp || $lynx || $filename) {
-  die "You must have either lynx or LWP installed or specify a filename.
+unless ($lwp || $wget || $lynx || $filename) {
+  die "You must have either lynx, wget or LWP installed or specify a filename.
 perl $0 <filename>\n";
 }
 
@@ -120,8 +108,9 @@ if (!$newinstall) {
   
 }
 
+
 if ($version && $latest_version) {
-  if ($version lt $latest_version) {
+  if (calcversion($version) < calcversion($latest_version)) {
     $install .= "\n(u)pgrade to $latest_version\n";
   }
 }
@@ -134,7 +123,7 @@ $install .= "\n(d)ownload $latest_version (no installation)" unless $filename;
   print qq|
 
 
-               SQL-Ledger Accounting Installation
+               SQL-Ledger ERP Installation
 
 
 
@@ -163,22 +152,6 @@ if ($a !~ /d/) {
   
 }
 
-if ($a ne 'f') {
-  system("tput clear");
-
-  # choose site
-  foreach $item (sort { $a <=> $b } keys %source) {
-    $i++;
-    print qq|$i. $source{$item}{site}\n|;
-  }
-
-  $site = "1";
-
-  print qq|\nChoose Location [$site] : |;
-  $b = <STDIN>;
-  chomp $b;
-  $site = $b if $b;
-}
 
 if ($a eq 'd') {
   &download;
@@ -198,6 +171,20 @@ exit;
 # end main
 
 
+sub calcversion {
+  my $v = shift;
+
+  @v = split /\./, $v;
+
+  for (0 .. 2) {
+    $v[$_] = 1000 + $v[$_];
+  }
+
+  return join '', @v;
+
+}
+
+
 sub download {
 
   &get_source_code;
@@ -207,7 +194,7 @@ sub download {
 
 sub get_latest_version {
   
-  print "Checking for latest version number .... ";
+  print "Checking for latest version number ....\n";
 
   if ($filename) {
     print "skipping, filename supplied\n";
@@ -215,33 +202,59 @@ sub get_latest_version {
   }
 
   if ($lwp) {
-    foreach $source (qw(pluto www abacus neptune)) {
+    $found = 0;
+    foreach $source (qw(www abacus)) {
       $url = $source{$checkversion{$source}}{url};
-      print "\n$source{$checkversion{$source}}{site} ... ";
+      print "$source{$checkversion{$source}}{site} ... ";
 
       $latest_version = LWP::Simple::get("$url/latest_version");
       
       if ($latest_version) {
+	$found = 1;
 	last;
       } else {
-	print "not found";
+	print "not found\n";
       }
     }
+    
+    if (! $found) {
+      $lwp = 0;
+      &get_latest_version;
+    }
+    
+  } elsif ($wget) {
+    $found = 0;
+    foreach $source (qw(www abacus)) {
+      $url = $source{$checkversion{$source}}{url};
+      print "$source{$checkversion{$source}}{site} ... ";
+      if ($latest_version = `wget -q -O - $url/latest_version`) {
+	$found = 1;
+	last;
+      } else {
+	print "not found\n";
+      }
+    }
+    
+    if (! $found) {
+      $wget = 0;
+      &get_latest_version;
+    }
+    
   } else {
     if (!$lynx) {
-      print "\nYou must have either lynx or LWP installed";
+      print "\nYou must have either wget, lynx or LWP installed";
       exit 1;
     }
 
-    foreach $source (qw(pluto www abacus neptune)) {
+    foreach $source (qw(www abacus)) {
       $url = $source{$checkversion{$source}}{url};
-      print "\n$source{$checkversion{$source}}{site} ... ";
+      print "$source{$checkversion{$source}}{site} ... ";
       $ok = `lynx -dump -head $url/latest_version`;
       if ($ok = ($ok =~ s/HTTP.*?200 //)) {
 	$latest_version = `lynx -dump $url/latest_version`;
 	last;
       } else {
-	print "not found";
+	print "not found\n";
       }
     }
     die unless $ok;
@@ -249,7 +262,6 @@ sub get_latest_version {
 
   if ($latest_version) {
     print "ok\n";
-    1;
   }
 
 }
@@ -260,7 +272,6 @@ sub get_source_code {
   $err = 0;
 
   @order = ();
-  push @order, $site;
   
   for (sort { $a <=> $b } keys %source) {
     push @order, $_;
@@ -280,6 +291,11 @@ sub get_source_code {
       if ($lwp) {
 	$err = LWP::Simple::getstore("$source{$key}{url}/$latest_version", "$latest_version");
 	$err -= 200;
+      } elsif ($wget) {
+	$ok = `wget -Sqc $source{$key}{url}/$latest_version`;
+	if ($ok =~ /HTTP.*?(20|416)/) {
+	  $err = 0;
+	}
       } else {
 	$ok = `lynx -dump -head $source{$key}{url}/$latest_version`;
 	$err = !($ok =~ s/HTTP.*?200 //);
@@ -304,7 +320,7 @@ sub get_source_code {
   if ($err) {
     die "Cannot get $latest_version";
   } else {
-    print "ok!\n";
+    print "ok\n";
   }
 
   $latest_version;
@@ -414,26 +430,14 @@ Webserver directives were written to
       if (!$confd) {
 	if (!(`grep "^# SQL-Ledger" $httpd`)) {
 
-	  open(FH, ">>$httpd");
-
-	  print FH qq|
+	  print qq|Please add
 
 # SQL-Ledger
 Include $httpddir/$filename
-|;
-	  close(FH);
-	  
-	}
-      }
 
-      if (!$>) {
-	# send SIGHUP to httpd
-	if ($f = `find /var -type f -name 'httpd.pid'`) {
-	  $pid = `cat $f`;
-	  chomp $pid;
-	  if ($pid) {
-	    system("kill -s HUP $pid");
-	  }
+to your httpd configuration file and restart the web server.
+|;
+	  
 	}
       }
     }
@@ -526,7 +530,7 @@ sub decompress {
 sub create_lockfile {
 
   if (-d "$userspath") {
-    open(FH, ">$userspath/nologin");
+    open(FH, ">$userspath/nologin.LCK");
     close(FH);
   }
   
@@ -543,6 +547,6 @@ sub cleanup {
 }
 
 
-sub remove_lockfile { unlink "$userspath/nologin" if (-f "$userspath/nologin") };
+sub remove_lockfile { unlink "$userspath/nologin.LCK" if (-f "$userspath/nologin.LCK") };
 
 

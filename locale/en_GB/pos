@@ -1,6 +1,6 @@
+$self{charset} = 'UTF-8';
+
 $self{texts} = {
-  'Customer'                    => 'Debtor',
-  'Customer missing!'           => 'Debtor missing!',
 };
 
 $self{subs} = {

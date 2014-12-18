@@ -11,6 +11,7 @@ $self{texts} = {
   'Currency'                    => 'Валюта',
   'Current'                     => 'Поточний',
   'Customer'                    => 'Клієнт',
+  'Customer Number'             => 'Номер клієнта',
   'Customer missing!'           => 'Не вказаний клієнт!',
   'Delete'                      => 'Видалити',
   'Department'                  => 'Відділ',
@@ -36,6 +37,7 @@ $self{texts} = {
   'Receipts'                    => 'Квитанції',
   'Record in'                   => 'Внести в',
   'Remaining'                   => 'Залишилось',
+  'Sales Invoice'               => 'Рахунок-фактура',
   'Salesperson'                 => 'Торговець/представник',
   'Screen'                      => 'Екран',
   'Source'                      => 'Джерело',
@@ -46,6 +48,7 @@ $self{texts} = {
   'Trade Discount'              => 'Торгова знижка',
   'Unit'                        => 'Одиниця',
   'Update'                      => 'Оновити',
+  'Warehouse'                   => 'Склад',
   'Year'                        => 'Рік',
 };
 
@@ -73,6 +76,7 @@ $self{subs} = {
   'Виставити'          => 'post',
   'Надрукувати'      => 'print',
   'Надрукувати_і_виставити' => 'print_and_post',
+  'Рахунок_фактура' => 'sales_invoice',
   'Оновити'              => 'update',
 };
 

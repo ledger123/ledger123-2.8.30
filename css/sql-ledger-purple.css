@@ -176,6 +176,15 @@ h2.error {
   font-size: 14px;
 }
 
+h2.dberror {
+  color: red;
+  font-size: 14px;
+}
+
+/* bp 2014/11 added */
+.strong {
+  font-weight: bold;
+}
 
 /* media stuff */
 

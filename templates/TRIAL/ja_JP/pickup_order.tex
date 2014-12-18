@@ -1,0 +1,87 @@
+%% First Choice Internet
+%% Pick List, Japanese
+%% B.Plagge 2006-03-19
+%% B.Plagge 2009-08-29 - modified letterhead
+%% B.Plagge 2014-07-08 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_transport_ja.tex%>
+\vspace*{1.0cm}
+
+<%include vendor_contact_ja.tex%>
+
+\hfill \\
+
+\vspace{1.2cm}
+
+\centerline{\textbf{ピックアップ依頼}}
+\normalsize
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
+  \textbf{受注番号} & \textbf{配送日} & \textbf{要求日付} & \textbf{担当者}
+  <%if warehouse%>
+  & \textbf{創庫}
+  <%end warehouse%>
+  & \textbf{出荷ポイント} & \textbf{出荷場所} \\ [0.5em]
+  \hline
+  
+  <%ordnumber%> & <%transportdate%>
+  <%if shippingdate%>
+  & <%shippingdate%>
+  <%end shippingdate%>
+  <%if not shippingdate%>
+  & <%transdate%>
+  <%end shippingdate%>
+  & <%employee%>
+  <%if warehouse%>
+  & <%warehouse%>
+  <%end warehouse%>
+  & <%shippingpoint%> & <%shipvia%> \\
+  \hline
+\end{tabularx}
+  
+\vspace{0.5cm}
+	受注通貨: \textbf{<%currency%>}.
+　　支払い条件: <%invdescription%>
+}
+\vspace{0.5cm}
+ 
+\begin{longtable}{|ll p{4.5cm} @{\extracolsep\fill} llrlr|} \hline
+  \textbf{明細} & \textbf{品番} & \textbf{品名・テキスト} & \textbf{バッチ番} &
+        \textbf{出荷日} & \textbf{数量} & \textbf{出荷}  & \textbf{単位} \\
+  \hline
+\endfirsthead
+  \multicolumn{7}{l}{\emph{前のページから続ける ...}} \\
+  \hline
+  \textbf{明細} & \textbf{品番} & \textbf{品名・テキスト} & \textbf{バッチ番} &
+        \textbf{出荷日} & \textbf{数量} & \textbf{出荷}  & \textbf{単位} \\
+  \hline
+\endhead
+   \hline \multicolumn{7}{r}{\emph{次おページ御覧下さい ...}} \\
+\endfoot
+  \hline
+\endlastfoot
+<%foreach number%>
+  <%runningnumber%> & <%number%> & <%description%> & <%serialnumber%> & 
+  <%deliverydate%> & <%qty%> & <%ship%> & <%unit%> \\
+<%end number%>
+\end{longtable}
+
+\parbox{\textwidth}{
+\vspace{0.5cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+}
+
+\vfill
+<%include footer_ja.tex%>
+\end{CJK}
+\end{document}

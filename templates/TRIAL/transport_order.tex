@@ -1,0 +1,80 @@
+%% First Choice Internet
+%% Transport Order, English
+%% B.Plagge 2010-04-27 
+%% B.Plagge 2014-06-30 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_transport_en.tex%>
+\vspace*{0.5cm}
+
+\parbox[t]{.80\textwidth}{
+\textbf{SHIP TO} \\
+<%include shipto_en.tex%>
+}
+
+\vspace{1.2cm}
+
+\centerline{\large\bf{T R A N S P O R T}\hspace{5mm}O R D E R}}
+\normalsize
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
+  \textbf{Order No} & \textbf{Transport Date} & \textbf{Shipping Date} & \textbf{Contact}
+  <%if warehouse%>
+  & \textbf{Warehouse}
+  <%end warehouse%>
+    & \textbf{Shipping Point} & \textbf{Ship via} \\ [0.5em]
+  \hline
+  <%ordnumber%> & <%orddate%> & <%reqdate%> & <%employee%>
+  <%if warehouse%>
+  & <%warehouse%>
+  <%end warehouse%>  
+    & <%shippingpoint%> & <%shipvia%> \\
+  \hline
+\end{tabularx}
+
+\vspace{0.5cm}
+	Prices in: \textbf{<%currency%>}.
+<%if terms%> - Terms:<%terms%> days<%end terms%>
+<%if orddescription%> - <%orddescription%><%end orddescription%>
+}
+\vspace{0.5cm}  
+
+\begin{longtable}{|ll p{4.5cm} @{\extracolsep\fill} lrlr|} \hline
+  \textbf{Item} & \textbf{Number} & \textbf{Description} & \textbf{Serial No} &
+        \textbf{Qty} & \textbf{Ship}  & \textbf{Unit} \\
+  \hline
+\endfirsthead
+  \multicolumn{6}{l}{\emph{Continued from previous page ...}} \\
+  \hline
+  \textbf{Item} & \textbf{Number} & \textbf{Description} & \textbf{Serial No} &
+        \textbf{Qty} & \textbf{Ship}  & \textbf{Unit} \\
+  \hline
+\endhead
+   \hline \multicolumn{6}{r}{\emph{Continued on next page ...}} \\
+\endfoot
+  \hline
+\endlastfoot
+<%foreach number%>
+  <%runningnumber%> & <%number%> & <%description%> & <%serialnumber%> & 
+  <%qty%> & <%ship%> & <%unit%> \\
+<%end number%>
+\end{longtable}
+
+\parbox{\textwidth}{
+\vspace{0.5cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+}
+
+\vfill
+<%include footer_en.tex%>
+\end{CJK}
+\end{document}

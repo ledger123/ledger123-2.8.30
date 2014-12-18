@@ -1,0 +1,28 @@
+$self{charset} = 'UTF-8';
+
+$self{texts} = {
+};
+
+$self{subs} = {
+  'acc_trans'                   => 'acc_trans',
+  'ap'                          => 'ap',
+  'ar'                          => 'ar',
+  'chart'                       => 'chart',
+  'customer'                    => 'customer',
+  'end_table'                   => 'end_table',
+  'invoice'                     => 'invoice',
+  'menu'                        => 'menu',
+  'parts'                       => 'parts',
+  'partsgroup'                  => 'partsgroup',
+  'print_col_titles{
+'          => 'print_col_titles{
+',
+  'print_menu_link'             => 'print_menu_link',
+  'print_report'                => 'print_report',
+  'print_title'                 => 'print_title',
+  'start_table'                 => 'start_table',
+  'vendor'                      => 'vendor',
+};
+
+1;
+

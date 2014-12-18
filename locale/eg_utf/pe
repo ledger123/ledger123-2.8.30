@@ -1,6 +1,7 @@
 $self{charset} = 'UTF-8';
 
 $self{texts} = {
+  'Account'                     => 'حساب',
   'Accounting Menu'             => 'قائمة الحسابات',
   'Active'                      => 'فعال',
   'Add'                         => 'اضافة',
@@ -12,6 +13,7 @@ $self{texts} = {
   'Continue'                    => 'تابع',
   'Current'                     => 'الحالي',
   'Customer'                    => 'العميل',
+  'Customer Number'             => 'رقم العميل',
   'Customer missing!'           => 'عميل غير موجود',
   'Customer not on file!'       => ' عميل غير موجود في الملف',
   'Date'                        => 'التاريخ',
@@ -37,6 +39,7 @@ $self{texts} = {
   'Notes'                       => 'ملاحظات',
   'Nothing selected!'           => 'لم يتم الاختيار',
   'Number'                      => 'الرقم',
+  'POS'                         => 'نقطة بيع',
   'Pricegroup'                  => 'مجموعة سعرية',
   'Pricegroups'                 => 'مجموعات سعرية',
   'Project'                     => 'مشروع',
@@ -57,6 +60,7 @@ $self{texts} = {
   'Update'                      => 'تعديل',
   'Updated'                     => 'معدل',
   'Vendor'                      => 'المورد',
+  'Vendor Number'               => 'رقم المورد',
   'Vendor not on file!'         => 'مورد غير موجود في الملف',
   'Weight'                      => 'وزن',
 };

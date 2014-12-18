@@ -1,41 +1,35 @@
-######################################################################
-# SQL-Ledger, Accounting
-# Copyright (c) 2002
+#=====================================================================
+# SQL-Ledger ERP
+# Copyright (c) DWS Systems Inc.
 #
 #  Author: DWS Systems Inc.
-#     Web: http://www.sql-ledger.org
+#     Web: http://www.sql-ledger.com
 #
+#======================================================================
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# common routines used in is, ir, oe, ic
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#######################################################################
-#
-# common routines used in is, ir, oe
-#
-#######################################################################
+#======================================================================
+
+# to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
+if (-f "$userspath/carp_debug.inc") {
+#  eval { require "$userspath/carp_debug.inc"; };
+}
 
 # any custom scripts for this one
-if (-f "$form->{path}/custom_io.pl") {
-  eval { require "$form->{path}/custom_io.pl"; };
+if ( -f "$form->{path}/custom_io.pl" ) {
+    eval { require "$form->{path}/custom_io.pl"; };
 }
-if (-f "$form->{path}/$form->{login}_io.pl") {
-  eval { require "$form->{path}/$form->{login}_io.pl"; };
+if ( -f "$form->{path}/$form->{login}_io.pl" ) {
+    eval { require "$form->{path}/$form->{login}_io.pl"; };
 }
+
+require "$form->{path}/js.pl";
 
 
 1;
-# end of main
 
+# end of main
 
 # this is for our long dates
 # $locale->text('January')
@@ -65,298 +59,445 @@ if (-f "$form->{path}/$form->{login}_io.pl") {
 # $locale->text('Nov')
 # $locale->text('Dec')
 
-
 sub display_row {
-  my $numrows = shift;
+    my $numrows = shift;
 
-  @column_index = qw(runningnumber partnumber description qty);
+    &partnumber_partdescription_autocomplete;
+    &pg_autocomplete;
 
-  if ($form->{type} eq "sales_order") {
-    push @column_index, "ship";
-    $column_data{ship} = qq|<th class=listheading align=center width="auto">|.$locale->text('Ship').qq|</th>|;
-  }
-  if ($form->{type} eq "purchase_order") {
-    push @column_index, "ship";
-    $column_data{ship} = qq|<th class=listheading align=center width="auto">|.$locale->text('Recd').qq|</th>|;
-  }
+    @column_index = qw(runningnumber partnumber description lineitemdetail qty);
 
-  for (qw(projectnumber partsgroup)) {
-    $form->{"select$_"} = $form->unescape($form->{"select$_"}) if $form->{"select$_"};
-  }
-      
-  if ($form->{language_code} ne $form->{oldlanguage_code}) {
-    # rebuild partsgroup
-    $l{language_code} = $form->{language_code};
-    $l{searchitems} = 'nolabor' if $form->{vc} eq 'customer';
-    
-    $form->get_partsgroup(\%myconfig, \%l);
-    if (@ { $form->{all_partsgroup} }) {
-      $form->{selectpartsgroup} = "<option>\n";
-      foreach $ref (@ { $form->{all_partsgroup} }) {
-	if ($ref->{translation}) {
-	  $form->{selectpartsgroup} .= qq|<option value="$ref->{partsgroup}--$ref->{id}">$ref->{translation}\n|;
-	} else {
-	  $form->{selectpartsgroup} .= qq|<option value="$ref->{partsgroup}--$ref->{id}">$ref->{partsgroup}\n|;
-	}
-      }
+    if ( $form->{type} eq "sales_order" ) {
+        push @column_index, "ship";
+        $column_data{ship} = qq|<th class=listheading align=center width="auto">| . $locale->text('Ship') . qq|</th>|;
     }
-    $form->{oldlanguage_code} = $form->{language_code};
+    if ( $form->{type} eq "purchase_order" ) {
+        push @column_index, "ship";
+        $column_data{ship} = qq|<th class=listheading align=center width="auto">| . $locale->text('Recd') . qq|</th>|;
+    }
+
+    if ( $form->{language_code} ne $form->{oldlanguage_code} ) {
+
+        # rebuild partsgroup
+        $l{language_code} = $form->{language_code};
+        $l{searchitems} = 'nolabor' if $form->{vc} eq 'customer';
+
+        $form->get_partsgroup( \%myconfig, \%l );
+        if ( @{ $form->{all_partsgroup} } ) {
+            $form->{selectpartsgroup} = "\n";
+            foreach $ref ( @{ $form->{all_partsgroup} } ) {
+                if ( $ref->{translation} ) {
+                    $form->{selectpartsgroup} .= qq|$ref->{translation}--$ref->{id}\n|;
+                }
+                else {
+                    $form->{selectpartsgroup} .= qq|$ref->{partsgroup}--$ref->{id}\n|;
+                }
+            }
+            $form->{selectpartsgroup} = $form->escape( $form->{selectpartsgroup}, 1 );
+        }
+        $form->{oldlanguage_code} = $form->{language_code};
+    }
+
+    push @column_index, qw(unit sellprice discount linetotal);
+
+    my $colspan = $#column_index + 1;
+
+    $form->{invsubtotal} = 0;
+    for ( split / /, $form->{taxaccounts} ) { $form->{"${_}_base"} = 0 }
+
+    $column_data{runningnumber} = qq|<th class=listheading nowrap>| . $locale->text('Item') . qq|</th>|;
+    $column_data{partnumber}    = qq|<th class=listheading nowrap>| . $locale->text('Number') . qq|</th>|;
+    $column_data{description}   = qq|<th class=listheading nowrap>| . $locale->text('Description') . qq|</th>|;
+    $column_data{qty}           = qq|<th class=listheading nowrap>| . $locale->text('Qty') . qq|</th>|;
+    $column_data{unit}          = qq|<th class=listheading nowrap>| . $locale->text('Unit') . qq|</th>|;
+    $column_data{sellprice}     = qq|<th class=listheading nowrap>| . $locale->text('Price') . qq|</th>|;
+    $column_data{discount}      = qq|<th class=listheading>%</th>|;
+    $column_data{linetotal}     = qq|<th class=listheading nowrap>| . $locale->text('Extended') . qq|</th>|;
+    $column_data{bin}           = qq|<th class=listheading nowrap>| . $locale->text('Bin') . qq|</th>|;
+    $column_data{onhand}        = qq|<th class=listheading nowrap>| . $locale->text('OH') . qq|</th>|;
+
+    $form->{allbox} = ( $form->{allbox} ) ? "checked" : "";
+    $column_data{lineitemdetail} = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll();"></th>|;
+
+    $form->hide_form(qw(weightunit));
+
+    print qq|
+<script language="javascript">
+<!--
+
+function CheckAll(v) {
+
+  var frm = document.forms[0]
+  var el = frm.elements
+  var re = /lineitemdetail_/;
+
+  for (i = 0; i < el.length; i++) {
+    if (el[i].type == 'checkbox' && re.test(el[i].name)) {
+      el[i].checked = frm.allbox.checked
+    }
   }
-      
+}
+// -->
+</script>
 
-  push @column_index, qw(unit sellprice discount linetotal);
-
-  my $colspan = $#column_index + 1;
-
-  $form->{invsubtotal} = 0;
-  for (split / /, $form->{taxaccounts}) { $form->{"${_}_base"} = 0 }
-  
-  $column_data{runningnumber} = qq|<th class=listheading nowrap>|.$locale->text('Item').qq|</th>|;
-  $column_data{partnumber} = qq|<th class=listheading nowrap>|.$locale->text('Number').qq|</th>|;
-  $column_data{description} = qq|<th class=listheading nowrap>|.$locale->text('Description').qq|</th>|;
-  $column_data{qty} = qq|<th class=listheading nowrap>|.$locale->text('Qty').qq|</th>|;
-  $column_data{unit} = qq|<th class=listheading nowrap>|.$locale->text('Unit').qq|</th>|;
-  $column_data{sellprice} = qq|<th class=listheading nowrap>|.$locale->text('Price').qq|</th>|;
-  $column_data{discount} = qq|<th class=listheading>%</th>|;
-  $column_data{linetotal} = qq|<th class=listheading nowrap>|.$locale->text('Extended').qq|</th>|;
-  $column_data{bin} = qq|<th class=listheading nowrap>|.$locale->text('Bin').qq|</th>|;
-  $column_data{onhand} = qq|<th class=listheading nowrap>|.$locale->text('OH').qq|</th>|;
-  
-  print qq|
   <tr>
     <td>
       <table width=100%>
 	<tr class=listheading>|;
 
-  for (@column_index) { print "\n$column_data{$_}" }
+    for (@column_index) { print "\n$column_data{$_}" }
 
-  print qq|
+    print qq|
         </tr>
 |;
 
+    $deliverydate    = $locale->text('Delivery Date');
+    $serialnumber    = $locale->text('Serial No.');
+    $projectnumber   = $locale->text('Project');
+    $orderxrefnumber = $locale->text('Order Number');
+    $poxrefnumber    = $locale->text('PO Number');
+    $group           = $locale->text('Group');
+    $groupcode       = $locale->text('Code');
+    $sku             = $locale->text('SKU');
+    $packagenumber   = $locale->text('Packaging');
+    $netweight       = $locale->text('N.W.');
+    $grossweight     = $locale->text('G.W.');
+    $volume          = $locale->text('Volume');
 
-  $deliverydate = $locale->text('Delivery Date');
-  $serialnumber = $locale->text('Serial No.');
-  $projectnumber = $locale->text('Project');
-  $group = $locale->text('Group');
-  $sku = $locale->text('SKU');
+    $delvar = 'deliverydate';
 
-  $delvar = 'deliverydate';
-  
-  if ($form->{type} =~ /_(order|quotation)$/) {
-    $reqdate = $locale->text('Required by');
-    $delvar = 'reqdate';
-  }
-
-  $exchangerate = $form->parse_amount(\%myconfig, $form->{exchangerate});
-  $exchangerate = ($exchangerate) ? $exchangerate : 1;
-
-  $spc = substr($myconfig{numberformat},-3,1);
-  for $i (1 .. $numrows) {
-    if ($spc eq '.') {
-      ($null, $dec) = split /\./, $form->{"sellprice_$i"};
-    } else {
-      ($null, $dec) = split /,/, $form->{"sellprice_$i"};
-    }
-    $dec = length $dec;
-    $decimalplaces = ($dec > 2) ? $dec : 2;
-
-    # undo formatting
-    for (qw(qty oldqty ship discount sellprice)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
-    
-    if ($form->{"qty_$i"} != $form->{"oldqty_$i"}) {
-      # check pricematrix
-      @a = split / /, $form->{"pricematrix_$i"};
-      if (scalar @a > 1) {
-	foreach $item (@a) {
-	  ($q, $p) = split /:/, $item;
-	  if (($p * 1) && ($form->{"qty_$i"} >= ($q * 1))) {
-	    ($dec) = ($p =~ /\.(\d+)/);
-	    $dec = length $dec;
-	    $decimalplaces = ($dec > 2) ? $dec : 2;
-	    $form->{"sellprice_$i"} = $form->round_amount($p / $exchangerate, $decimalplaces);
-	  }
-	}
-      }
-    }
-    
-    $discount = $form->round_amount($form->{"sellprice_$i"} * $form->{"discount_$i"}/100, $decimalplaces);
-    $linetotal = $form->round_amount($form->{"sellprice_$i"} - $discount, $decimalplaces);
-    $linetotal = $form->round_amount($linetotal * $form->{"qty_$i"}, 2);
-
-    
-    if (($rows = $form->numtextrows($form->{"description_$i"}, 46, 6)) > 1) {
-      $form->{"description_$i"} = $form->quote($form->{"description_$i"});
-      $column_data{description} = qq|<td><textarea name="description_$i" rows=$rows cols=46 wrap=soft>$form->{"description_$i"}</textarea></td>|;
-    } else {
-      $form->{"description_$i"} = $form->quote($form->{"description_$i"});
-      $column_data{description} = qq|<td><input name="description_$i" size=48 value="$form->{"description_$i"}"></td>|;
+    if ( $form->{type} =~ /_(order|quotation)$/ ) {
+        $reqdate = $locale->text('Required by');
+        $delvar  = 'reqdate';
     }
 
-    for (qw(partnumber sku unit)) { $form->{"${_}_$i"} = $form->quote($form->{"${_}_$i"}) }
-    
-    $skunumber = qq|
-                <p><b>$sku</b> $form->{"sku_$i"}| if ($form->{vc} eq 'vendor' && $form->{"sku_$i"});
+    $exchangerate = $form->parse_amount( \%myconfig, $form->{exchangerate} );
+    $exchangerate *= 1;
 
-    
-    if ($form->{selectpartsgroup}) {
-      if ($i < $numrows) {
-	$partsgroup = qq|
-	      <b>$group</b>
-	      <input type=hidden name="partsgroup_$i" value="$form->{"partsgroup_$i"}">|;
-	($form->{"partsgroup_$i"}) = split /--/, $form->{"partsgroup_$i"};
-	$partsgroup .= $form->{"partsgroup_$i"};
-	$partsgroup = "" unless $form->{"partsgroup_$i"};
-      }
-    }
-    
-    $delivery = qq|
+    $spc = substr( $myconfig{numberformat}, -3, 1 );
+    for $i ( 1 .. $numrows ) {
+        if ( $spc eq '.' ) {
+            ( $null, $dec ) = split /\./, $form->{"sellprice_$i"};
+        }
+        else {
+            ( $null, $dec ) = split /,/, $form->{"sellprice_$i"};
+        }
+
+        # undo formatting
+        for (qw(qty ship discount sellprice netweight grossweight volume)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+
+        if ( $form->{type} =~ /_order/ ) {
+            if ( $form->{"ship_$i"} != $form->{"oldship_$i"} || $form->{"qty_$i"} != $form->{"oldqty_$i"} ) {
+                $form->{"grossweight_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"};
+                $form->{"netweight_$i"}   = $form->{"weight_$i"} * $form->{"ship_$i"};
+            }
+        }
+        else {
+            if ( $form->{"qty_$i"} != $form->{"oldqty_$i"} ) {
+                $form->{"netweight_$i"} = $form->{"weight_$i"} * $form->{"qty_$i"};
+            }
+        }
+        $form->{"grossweight_$i"} = $form->format_amount( \%myconfig, $form->{"grossweight_$i"} );
+        $form->{"netweight_$i"}   = $form->format_amount( \%myconfig, $form->{"netweight_$i"} );
+
+        if ( $form->{"qty_$i"} != $form->{"oldqty_$i"} ) {
+
+            @f = split / /, $form->{"pricematrix_$i"};
+            if ( scalar @f > 1 ) {
+                foreach $item (@f) {
+                    ( $q, $p ) = split /:/, $item;
+                    if ( ( $p * 1 ) && ( $form->{"qty_$i"} >= ( $q * 1 ) ) ) {
+                        ($dec) = ( $p =~ /\.(\d+)/ );
+                        $dec = length $dec;
+                        # bp 2014/12 use maxpricedecimals
+                        $form->{"sellprice_$i"} = $form->round_amount( $p / $exchangerate, $form->{maxpricedecimals} );
+                    }
+                }
+            }
+        }
+
+        # bp 2011/02/28 - discount and unitprice in maxpricedecimals, linetotal with document precision
+        my $precision = $form->get_precision( \%myconfig, $form->{currency} );
+        $discount  = $form->round_amount( $form->{"sellprice_$i"} * $form->{"discount_$i"} / 100, $form->{maxpricedecimals} );
+        $unitprice = $form->round_amount( $form->{"sellprice_$i"} - $discount,                     $form->{maxpricedecimals} );
+        $linetotal = $form->round_amount( $unitprice * $form->{"qty_$i"},                           $precision );
+
+        # jquery autocomplete for new items on invoices / orders / quotes etc.
+        my $partnumber_css_id      = 'id="partnumber"'      if !$form->{"partnumber_$i"};
+        my $partdescription_css_id = 'id="partdescription"' if !$form->{"partnumber_$i"};
+
+        if ( ( $rows = $form->numtextrows( $form->{"description_$i"}, 46, 6 ) ) < 2 ) {
+            $rows = 1;
+        }
+
+        $form->{"description_$i"} = $form->quote( $form->{"description_$i"} );
+        $column_data{description} = qq|<td><textarea $partdescription_css_id name="description_$i" rows=$rows cols=46 wrap=soft>$form->{"description_$i"}</textarea></td>|;
+
+        $skunumber = qq|
+                <br><b>$sku</b> $form->{"sku_$i"}| if ( $form->{vc} eq 'vendor' && $form->{"sku_$i"} );
+
+        if ( $form->{selectpartsgroup} ) {
+            if ( $i < $numrows ) {
+                $partsgroup = qq|
+	        <tr>
+		  <td colspan=$colspan>
+		  <b>$group</b>| . $form->hide_form( "partsgroup_$i", "partsgroupcode_$i" );
+                ( $form->{"partsgroup_$i"} ) = split /--/, $form->{"partsgroup_$i"};
+                $partsgroup .= qq|$form->{"partsgroup_$i"} <b>$groupcode</b> $form->{"partsgroupcode_$i"}</td>
+		</tr>|;
+                $partsgroup = "" unless $form->{"partsgroup_$i"};
+            }
+        }
+
+        $delivery = qq|
           <td colspan=2 nowrap>
 	  <b>${$delvar}</b>
-	  <input name="${delvar}_$i" size=11 title="$myconfig{dateformat}" value="$form->{"${delvar}_$i"}"></td>
+	  <input name="${delvar}_$i" size=11 class=date title="$myconfig{dateformat}" value="$form->{"${delvar}_$i"}"></td>
 |;
 
-    $column_data{runningnumber} = qq|<td><input name="runningnumber_$i" size=3 value=$i></td>|;
-    $column_data{partnumber} = qq|<td><input name="partnumber_$i" size=15 value="$form->{"partnumber_$i"}" accesskey="$i" title="[Alt-$i]">$skunumber</td>|;
-    $column_data{qty} = qq|<td align=right><input name="qty_$i" title="$form->{"onhand_$i"}" size=5 value=|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|></td>|;
-    $column_data{ship} = qq|<td align=right><input name="ship_$i" size=5 value=|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|></td>|;
-    $column_data{unit} = qq|<td><input name="unit_$i" size=5 value="$form->{"unit_$i"}"></td>|;
-    $column_data{sellprice} = qq|<td align=right><input name="sellprice_$i" size=9 value=|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $decimalplaces).qq|></td>|;
-    $column_data{discount} = qq|<td align=right><input name="discount_$i" size=3 value=|.$form->format_amount(\%myconfig, $form->{"discount_$i"}).qq|></td>|;
-    $column_data{linetotal} = qq|<td align=right>|.$form->format_amount(\%myconfig, $linetotal, 2).qq|</td>|;
-    $column_data{bin} = qq|<td>$form->{"bin_$i"}</td>|;
-    $column_data{onhand} = qq|<td>$form->{"onhand_$i"}</td>|;
-    
-    print qq|
+        if ( $i < $numrows ) {
+            $zero     = "0";
+            $itemhref = qq| <a href="ic.pl?login=$form->{login}&path=$form->{path}&action=edit&id=$form->{"id_$i"}" target=_blank>?</a>|;
+        }
+        else {
+            $itemhref = "";
+            $zero     = "";
+        }
+
+        $column_data{runningnumber} = qq|<td><input name="runningnumber_$i" class="inputright" size="3" value="$i"></td>|;
+        $column_data{partnumber} =
+          qq|<td nowrap><input $partnumber_css_id name="partnumber_$i" size="15" value="| . $form->quote( $form->{"partnumber_$i"} ) . qq|" accesskey="$i" title="[$i]">$skunumber$itemhref</td>|;
+        $column_data{qty} = qq|<td><input name="qty_$i" class="inputright" title="$form->{"onhand_$i"}" size="5" value="| . $form->format_amount( \%myconfig, $form->{"qty_$i"} ) . qq|"></td>|;
+        $column_data{ship} = qq|<td><input name="ship_$i" class="inputright" size="5" value="| . $form->format_amount( \%myconfig, $form->{"ship_$i"} ) . qq|" READONLY></td>|;
+        $column_data{unit} = qq|<td><input name="unit_$i" size="5" maxlength="5" value="| . $form->quote( $form->{"unit_$i"} ) . qq|"></td>|;
+
+        $column_data{sellprice} = qq|<td><input name="sellprice_$i" class="inputright" size="11" value="|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $form->{maxpricedecimals}, $zero).qq|"></td>|;
+        $column_data{discount} = qq|<td><input name="discount_$i" class="inputright" size="3" value="| . $form->format_amount( \%myconfig, $form->{"discount_$i"} ) . qq|"></td>|;
+
+        # linetotal is rounded to the document currency precision
+        $column_data{linetotal} = qq|<td align=right>|.$form->format_amount(\%myconfig, $linetotal, $form->{precision}, $zero).qq|</td>|;
+        $column_data{bin}       = qq|<td>$form->{"bin_$i"}</td>|;
+        $column_data{onhand}    = qq|<td align="right">$form->{"onhand_$i"}</td>|;
+
+        $form->{"lineitemdetail_$i"} = ( $form->{allbox} )              ? 1         : $form->{"lineitemdetail_$i"};
+        $form->{"lineitemdetail_$i"} = ( $form->{"lineitemdetail_$i"} ) ? "checked" : "";
+        $column_data{lineitemdetail} = qq|<td><input name="lineitemdetail_$i" type="checkbox" class="checkbox" $form->{"lineitemdetail_$i"}></td>|;
+
+        print qq|
         <tr valign=top>|;
 
-    for (@column_index) {
-      print "\n$column_data{$_}";
-    }
-  
-    print qq|
+        for (@column_index) {
+            print "\n$column_data{$_}";
+        }
+
+        print qq|
         </tr>
-<input type=hidden name="oldqty_$i" value="$form->{"qty_$i"}">
 |;
 
-    for (qw(orderitems_id id bin weight listprice lastcost taxaccounts pricematrix sku onhand assembly inventory_accno_id income_accno_id expense_accno_id)) {
-      $form->hide_form("${_}_$i");
-    }
-  
-    $form->{selectprojectnumber} =~ s/ selected//;
-    $form->{selectprojectnumber} =~ s/(<option value="\Q$form->{"projectnumber_$i"}\E")/$1 selected/;
+        $form->{"oldqty_$i"}  = $form->{"qty_$i"};
+        $form->{"oldship_$i"} = $form->{"ship_$i"};
 
-    $project = qq|
+        $form->hide_form( map { "${_}_$i" }
+              qw(oldqty oldship orderitems_id id weight sell listprice lastcost taxaccounts pricematrix sku onhand bin assembly inventory_accno_id income_accno_id expense_accno_id) );
+
+        $project = qq|
                 <b>$projectnumber</b>
-		<select name="projectnumber_$i">$form->{selectprojectnumber}</select>
+		<select name="projectnumber_$i">|
+          . $form->select_option( $form->{selectprojectnumber}, $form->{"projectnumber_$i"}, 1 ) . qq|</select>
 | if $form->{selectprojectnumber};
 
-
-    if (($rows = $form->numtextrows($form->{"notes_$i"}, 46, 6)) > 1) {
-      $form->{"notes_$i"} = $form->quote($form->{"notes_$i"});
-      $notes = qq|<td><textarea name="notes_$i" rows=$rows cols=46 wrap=soft>$form->{"notes_$i"}</textarea></td>|;
-    } else {
-      $form->{"notes_$i"} = $form->quote($form->{"notes_$i"});
-      $notes = qq|<td><input name="notes_$i" size=48 value="$form->{"notes_$i"}"></td>|;
-    }
-	
-    $serial = qq|
-                <td colspan=6 nowrap><b>$serialnumber</b> <input name="serialnumber_$i" value="$form->{"serialnumber_$i"}"></td>| if $form->{type} !~ /_quotation/;
-		
-    if ($i == $numrows) {
-      $partsgroup = "";
-      if ($form->{selectpartsgroup}) {
-	$partsgroup = qq|
-	        <b>$group</b>
-		<select name="partsgroup_$i">$form->{selectpartsgroup}</select>
+        if ( $form->{type} !~ /_quotation/ ) {
+            $orderxref = qq|
+                <b>$orderxrefnumber</b>
+		<input name="ordernumber_$i" value="$form->{"ordernumber_$i"}">&nbsp;<a href=oe.pl?action=lookup_order&ordnumber=|
+              . $form->escape( $form->{"ordernumber_$i"}, 1 )
+              . qq|&vc=customer&path=$form->{path}&login=$form->{login} target=_blank>?</a>
+                <b>$poxrefnumber</b>
+		<input name="customerponumber_$i" value="$form->{"customerponumber_$i"}">&nbsp;<a href=oe.pl?action=lookup_order&ordnumber=|
+              . $form->escape( $form->{"customerponumber_$i"}, 1 )
+              . qq|&vc=vendor&path=$form->{path}&login=$form->{login} target=_blank>?</a>
 |;
-      }
+        }
 
-      $serial = "";
-      $project = "";
-      $delivery = "";
-      $notes = "";
-    }
+        if ( ( $rows = $form->numtextrows( $form->{"itemnotes_$i"}, 46, 6 ) ) < 2 ) {
+            $rows = 1;
+        }
 
-	
-    # print second and third row
-    print qq|
+        $form->{"itemnotes_$i"} = $form->quote( $form->{"itemnotes_$i"} );
+        $itemnotes = qq|<td><textarea name="itemnotes_$i" rows=$rows cols=46 wrap=soft>$form->{"itemnotes_$i"}</textarea></td>|;
+
+        $serial = qq|
+                <td colspan=6 nowrap><b>$serialnumber</b> <input name="serialnumber_$i" value="| . $form->quote( $form->{"serialnumber_$i"} ) . qq|"></td>| if $form->{type} !~ /_quotation/;
+
+        $package = qq|
+                <tr>
+		  <td colspan=$colspan>
+		  <b>$packagenumber</b>
+		  <input name="package_$i" size=20 value="| . $form->quote( $form->{"package_$i"} ) . qq|">
+		  <b>$netweight</b>
+		  <input name="netweight_$i" class="inputright" size="8" value="| . $form->format_amount( \%myconfig, $form->{"netweight_$i"} ) . qq|">
+		  <b>$grossweight</b>
+		  <input name="grossweight_$i" class="inputright" size="8" value="| . $form->format_amount( \%myconfig, $form->{"grossweight_$i"} ) . qq|"> ($form->{weightunit})
+		  <b>$volume</b>
+		  <input name="volume_$i" class="inputright" size="8" value="| . $form->format_amount( \%myconfig, $form->{"volume_$i"} ) . qq|">
+		  </td>
+		</tr>
+|;
+
+        if ( $i == $numrows ) {
+            $partsgroup = "";
+            if ( $pref{partsgroup_autocomplete} ) {
+                $partsgroup = qq|
+	        <tr>
+		  <td colspan=$colspan>
+		    <b>$group</b>
+		    <input name="partsgroup_$i" size=20 id="partsgroup">
+		    <input name="partsgroupcode_$i" size=10 id="partsgroupcode">
+		  </td>
+		</tr>
+|;
+            }
+            else {
+                if ( $form->{selectpartsgroup} ) {
+                    $partsgroup = qq|
+	        <tr>
+		  <td colspan=$colspan>
+		    <b>$group</b>
+		    <select name="partsgroup_$i">|
+                      . $form->select_option( $form->{selectpartsgroup}, undef, 1 ) . qq|</select>
+		    <input name="partsgroupcode_$i" size=10>
+		  </td>
+		</tr>
+|;
+                }
+            }
+
+            $serial    = "";
+            $project   = "";
+            $orderxref = "";
+            $delivery  = "";
+            $itemnotes = "";
+            $package   = "";
+        }
+
+        # print second and third row
+        if ( $form->{"lineitemdetail_$i"} ) {
+            print qq|
         <tr valign=top>
 	  $delivery
-	  $notes
+	  $itemnotes
 	  $serial
 	</tr>
         <tr valign=top>
 	  <td colspan=$colspan>
 	  $project
+	  $orderxref
+	  </td>
+	</tr>
+	$partsgroup
+	$package
+|;
+        }
+        else {
+            if ( $i == $numrows ) {
+                print qq|
+        <tr valign=top>
+	  <td colspan=$colspan>
 	  $partsgroup
 	  </td>
 	</tr>
+|;
+            }
+
+            $form->hide_form( map { "${_}_$i" } ( "$delvar", "itemnotes", "serialnumber", "ordernumber", "customerponumber", "projectnumber" ) );
+
+            $form->hide_form( map { "${_}_$i" } qw(package netweight grossweight volume) );
+        }
+
+        print qq|
 	<tr>
 	  <td colspan=$colspan><hr size=1 noshade></td>
 	</tr>
 |;
 
-    $skunumber = "";
-    
-    for (split / /, $form->{"taxaccounts_$i"}) {
-      $form->{"${_}_base"} += $linetotal;
-    }
-  
-    $form->{invsubtotal} += $linetotal;
-  }
+        $skunumber = "";
 
-  print qq|
+        for ( split / /, $form->{"taxaccounts_$i"} ) {
+            $form->{"${_}_base"} += $linetotal;
+        }
+
+        $form->{invsubtotal} += $linetotal;
+
+    }
+
+    print qq|
       </table>
     </td>
   </tr>
 |;
 
-  $form->hide_form(qw(audittrail));
-  
-  print qq|
+    $form->{oldcurrency} = $form->{currency};
+    $form->hide_form(qw(audittrail oldcurrency));
 
-<input type=hidden name=oldcurrency value=$form->{currency}>
+    $form->hide_form( map { "select$_" } qw(partsgroup projectnumber) );
 
-<input type=hidden name=selectpartsgroup value="|.$form->escape($form->{selectpartsgroup},1).qq|">
-<input type=hidden name=selectprojectnumber value="|.$form->escape($form->{selectprojectnumber},1).qq|">
-
-|;
- 
 }
-
 
 sub select_item {
 
-  if ($form->{vc} eq "vendor") {
-    @column_index = qw(ndx partnumber sku description partsgroup onhand sellprice);
-  } else {
-    @column_index = qw(ndx partnumber description partsgroup onhand sellprice);
+    if ( $form->{vc} eq "vendor" ) {
+        @column_index = qw(ndx partnumber sku description image partsgroup partsgroupcode onhand sellprice);
+    }
+    else {
+        @column_index = qw(ndx partnumber description image partsgroup partsgroupcode onhand sellprice);
+    }
+
+    $column_data{ndx}            = qq|<th class=listheading width=1%><input name="allbox_select" type=checkbox class=checkbox value="1" onChange="CheckAll();"></th>|;
+    $column_data{partnumber}     = qq|<th class=listheading>| . $locale->text('Number') . qq|</th>|;
+    $column_data{sku}            = qq|<th class=listheading>| . $locale->text('SKU') . qq|</th>|;
+    $column_data{description}    = qq|<th class=listheading>| . $locale->text('Description') . qq|</th>|;
+    $column_data{partsgroup}     = qq|<th class=listheading>| . $locale->text('Group') . qq|</th>|;
+    $column_data{partsgroupcode} = qq|<th class=listheading>| . $locale->text('Code') . qq|</th>|;
+    $column_data{sellprice}      = qq|<th class=listheading>| . $locale->text('Price') . qq|</th>|;
+    $column_data{onhand}         = qq|<th class=listheading>| . $locale->text('Qty') . qq|</th>|;
+    $column_data{image}          = qq|<th class=listheading>| . $locale->text('Image') . qq|</th>|;
+
+    $exchangerate = $form->{exchangerate} || 1;
+
+    $helpref = $form->{helpref};
+    $form->helpref( "select_item", $myconfig{countrycode} );
+
+    # list items with radio button on a form
+    $form->header;
+
+    $title = $locale->text('Select items');
+
+    print qq|
+<script language="javascript">
+<!--
+
+function CheckAll() {
+
+  var frm = document.forms[0]
+  var el = frm.elements
+  var re = /ndx_/;
+
+  for (i = 0; i < el.length; i++) {
+    if (el[i].type == 'checkbox' && re.test(el[i].name)) {
+      el[i].checked = frm.allbox_select.checked
+    }
   }
+}
+// -->
+</script>
 
-  $column_data{ndx} = qq|<th>&nbsp;</th>|;
-  $column_data{partnumber} = qq|<th class=listheading>|.$locale->text('Number').qq|</th>|;
-  $column_data{sku} = qq|<th class=listheading>|.$locale->text('SKU').qq|</th>|;
-  $column_data{description} = qq|<th class=listheading>|.$locale->text('Description').qq|</th>|;
-  $column_data{partsgroup} = qq|<th class=listheading>|.$locale->text('Group').qq|</th>|;
-  $column_data{sellprice} = qq|<th class=listheading>|.$locale->text('Price').qq|</th>|;
-  $column_data{onhand} = qq|<th class=listheading>|.$locale->text('Qty').qq|</th>|;
-  
-  $exchangerate = ($form->{exchangerate}) ? $form->{exchangerate} : 1;
-
-  # list items with radio button on a form
-  $form->header;
-
-  $title = $locale->text('Select items');
-
-  print qq|
 <body>
 
 <form method=post action="$form->{script}">
 
 <table width=100%>
   <tr>
-    <th class=listtop>$title</th>
+    <th class=listtop>$form->{helpref}$title</a></th>
   </tr>
   <tr height="5"></tr>
   <tr>
@@ -367,45 +508,46 @@ sub select_item {
       <table width=100%>
         <tr class=listheading>|;
 
-  for (@column_index) { print "\n$column_data{$_}" }
-  
-  print qq|
+    for (@column_index) { print "\n$column_data{$_}" }
+
+    print qq|
         </tr>
 |;
 
-  my $i = 0;
-  foreach $ref (@{ $form->{item_list} }) {
-    $i++;
+    my $i = 0;
+    foreach $ref ( @{ $form->{item_list} } ) {
+        $i++;
 
-    for (qw(sku partnumber description unit notes partsgroup)) {
-      $ref->{$_} = $form->quote($ref->{$_});
-    }
+        for (qw(sku partnumber description unit itemnotes partsgroup partsgroupcode)) { $ref->{$_} = $form->quote( $ref->{$_} ) }
 
-    $column_data{ndx} = qq|<td><input name="ndx_$i" class=checkbox type=checkbox value=$i></td>|;
-    
-    for (qw(partnumber sku description partsgroup)) { $column_data{$_} = qq|<td>$ref->{$_}&nbsp;</td>| }
-    
-    $column_data{sellprice} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{sellprice} / $exchangerate, 2, "&nbsp;").qq|</td>|;
-    $column_data{onhand} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{onhand}, '', "&nbsp;").qq|</td>|;
-    
-    $j++; $j %= 2;
-    print qq|
+        $column_data{ndx} = qq|<td><input name="ndx_$i" class=checkbox type=checkbox value=$i></td>|;
+
+        for (qw(partnumber sku description image partsgroup partsgroupcode)) { $column_data{$_} = qq|<td>$ref->{$_}&nbsp;</td>| }
+
+        $column_data{sellprice} = qq|<td align=right>| . $form->format_amount( \%myconfig, $ref->{sellprice} / $exchangerate, $form->{precision}, "&nbsp;" ) . qq|</td>|;
+        $column_data{onhand} = qq|<td align=right>| . $form->format_amount( \%myconfig, $ref->{onhand}, undef, "&nbsp;" ) . qq|</td>|;
+        $column_data{image} = qq|<td align=center><img src="$ref->{image}" border="0" height="32"></td>| if $ref->{image};
+
+        $j++;
+        $j %= 2;
+        print qq|
         <tr class=listrow$j>|;
 
-    for (@column_index) {
-      print "\n$column_data{$_}";
-    }
+        for (@column_index) { print "\n$column_data{$_}" }
 
-    print qq|
+        print qq|
         </tr>
 |;
 
-    for (qw(partnumber sku description partsgroup partsgroup_id bin weight sellprice listprice lastcost onhand unit assembly taxaccounts inventory_accno_id income_accno_id expense_accno_id pricematrix id notes)) {
-      print qq|<input type=hidden name="new_${_}_$i" value="$ref->{$_}">\n|;
+        for (
+            qw(partnumber sku description partsgroup partsgroupcode partsgroup_id bin weight sell sellprice listprice lastcost onhand unit assembly taxaccounts inventory_accno_id income_accno_id expense_accno_id pricematrix id itemnotes)
+          )
+        {
+            print qq|<input type=hidden name="new_${_}_$i" value="| . $form->quote( $ref->{$_} ) . qq|">\n|;
+        }
     }
-  }
-  
-  print qq|
+
+    print qq|
       </table>
     </td>
   </tr>
@@ -418,18 +560,18 @@ sub select_item {
 
 |;
 
-  # delete variables
-  for (qw(nextsub item_list)) { delete $form->{$_} }
+    # delete variables
+    for (qw(nextsub item_list)) { delete $form->{$_} }
 
-  $form->{action} = "item_selected";
-  
-  $form->hide_form;
-  
-  print qq|
-<input type=hidden name=nextsub value=item_selected>
+    $form->{action}  = "item_selected";
+    $form->{helpref} = $helpref;
+    $form->{nextsub} = "item_selected";
 
+    $form->hide_form;
+
+    print qq|
 <br>
-<input class=submit type=submit name=action value="|.$locale->text('Continue').qq|">
+<input class=submit type=submit name=action value="| . $locale->text('Continue') . qq|">
 </form>
 
 </body>
@@ -437,148 +579,161 @@ sub select_item {
 |;
 
 }
-
-
 
 sub item_selected {
 
-  $i = $form->{rowcount} - 1;
-  $i = $form->{assembly_rows} - 1 if ($form->{item} eq 'assembly');
-  $qty = ($form->{"qty_$form->{rowcount}"}) ? $form->{"qty_$form->{rowcount}"} : 1;
+    $i   = $form->{rowcount} - 1;
+    $i   = $form->{assembly_rows} - 1 if ( $form->{item} eq 'assembly' );
+    $qty = ( $form->{"qty_$form->{rowcount}"} ) ? $form->{"qty_$form->{rowcount}"} : 1;
 
-  for $j (1 .. $form->{lastndx}) {
-    
-    if ($form->{"ndx_$j"}) {
+    for $j ( 1 .. $form->{lastndx} ) {
 
-      $i++;
-  
-      $form->{"qty_$i"} = $qty;
-      $form->{"discount_$i"} = $form->{discount} * 100;
-      $form->{"reqdate_$i"} = $form->{reqdate} if $form->{type} !~ /_quotation/;
+        if ( $form->{"ndx_$j"} ) {
 
-      for (qw(id partnumber sku description sellprice listprice lastcost bin unit weight assembly taxaccounts pricematrix onhand notes inventory_accno_id income_accno_id expense_accno_id)) {
-	$form->{"${_}_$i"} = $form->{"new_${_}_$j"};
-      }
+            $i++;
 
-      $form->{"partsgroup_$i"} = qq|$form->{"new_partsgroup_$j"}--$form->{"new_partsgroup_id_$j"}|;
+            $form->{"qty_$i"} = $qty;
+            $form->{"discount_$i"} ||= $form->{discount} * 100;
+            $form->{"reqdate_$i"} = $form->{reqdate} if $form->{type} !~ /_quotation/;
 
-      ($dec) = ($form->{"sellprice_$i"} =~ /\.(\d+)/);
-      $dec = length $dec;
-      $decimalplaces1 = ($dec > 2) ? $dec : 2;
-      
-      ($dec) = ($form->{"lastcost_$i"} =~ /\.(\d+)/);
-      $dec = length $dec;
-      $decimalplaces2 = ($dec > 2) ? $dec : 2;
+            for (
+                qw(id partnumber sku description sell sellprice listprice lastcost bin unit partsgroupcode weight assembly taxaccounts pricematrix onhand itemnotes inventory_accno_id income_accno_id expense_accno_id)
+              )
+            {
+                $form->{"${_}_$i"} = $form->{"new_${_}_$j"};
 
-      # if there is an exchange rate adjust sellprice
-      if (($form->{exchangerate} * 1)) {
-	for (qw(sellprice listprice lastcost)) { $form->{"${_}_$i"} /= $form->{exchangerate} }
-        # don't format list and cost
-	$form->{"sellprice_$i"} = $form->round_amount($form->{"sellprice_$i"}, $decimalplaces1);
-      }
+                # armaghan following two assignments are for trf.pl
+                $form->{"parts_id_$i"} = $form->{"id_$i"};
+                $form->{"cost_$i"}     = $form->{"lastcost_$i"};
 
-      # this is for the assembly
-      if ($form->{item} eq 'assembly') {
-	$form->{"adj_$i"} = 1;
-	
-	for (qw(sellprice listprice weight)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
+            }
 
-	$form->{sellprice} += ($form->{"sellprice_$i"} * $form->{"qty_$i"});
-	$form->{weight} += ($form->{"weight_$i"} * $form->{"qty_$i"});
-      }
+            $form->{"netweight_$i"}   = $form->{"weight_$i"};
+            $form->{"grossweight_$i"} = $form->{"weight_$i"};
 
-      $amount = $form->{"sellprice_$i"} * (1 - $form->{"discount_$i"} / 100) * $form->{"qty_$i"};
-      for (split / /, $form->{"taxaccounts_$i"}) { $form->{"${_}_base"} += $amount }
-      if (!$form->{taxincluded}) {
-	for (split / /, $form->{"taxaccounts_$i"}) { $amount += ($form->{"${_}_base"} * $form->{"${_}_rate"}) }
-      }
+            $form->{"partsgroup_$i"} = qq|$form->{"new_partsgroup_$j"}--$form->{"new_partsgroup_id_$j"}|;
 
-      $form->{creditremaining} -= $amount;
+            # if there is an exchange rate adjust sellprice
+            $form->{exchangerate} *= 1;
+            if ( ( $form->{exchangerate} ) ) {
+                for (qw(sell sellprice listprice lastcost)) { $form->{"${_}_$i"} /= $form->{exchangerate} }
 
-      $form->{"runningnumber_$i"} = $i;
-  
-      # format amounts
-      if ($form->{item} ne 'assembly') {
-	for (qw(sellprice listprice)) { $form->{"${_}_$i"} = $form->format_amount(\%myconfig, $form->{"${_}_$i"}, $decimalplaces1) }
-	$form->{"lastcost_$i"} = $form->format_amount(\%myconfig, $form->{"lastcost_$i"}, $decimalplaces2);
-      }
-      $form->{"discount_$i"} = $form->format_amount(\%myconfig, $form->{"discount_$i"});
+                # don't format sell, list and cost
+                $form->{"sellprice_$i"} = $form->round_amount( $form->{"sellprice_$i"}, $form->{maxpricedecimals} );
+            }
 
+            # this is for the assembly
+            if ( $form->{item} eq 'assembly' ) {
+                $form->{"adj_$i"} = 1;
+
+                for (qw(sellprice listprice weight)) { $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
+
+                $form->{sellprice} += ( $form->{"sellprice_$i"} * $form->{"qty_$i"} );
+                $form->{weight}    += ( $form->{"weight_$i"} * $form->{"qty_$i"} );
+            }
+
+            $linetotal = $form->{"sellprice_$i"} * ( 1 - $form->{"discount_$i"} / 100 ) * $form->{"qty_$i"};
+            for ( split / /, $form->{"taxaccounts_$i"} ) { $form->{"${_}_base"} += $linetotal }
+            $amount = $linetotal;
+            if ( !$form->{taxincluded} ) {
+                for ( split / /, $form->{"taxaccounts_$i"} ) { $amount += $linetotal * $form->{"${_}_rate"} }
+            }
+
+            $ml = 1;
+            if ( $form->{type} =~ /invoice/ ) {
+                $ml = -1 if $form->{type} =~ /(debit|credit)_invoice/;
+            }
+
+            $form->{creditremaining} -= ($amount * $ml);
+
+            $form->{"runningnumber_$i"} = $i;
+
+            # format amounts
+            if ( $form->{item} ne 'assembly' ) {
+                for (qw(sell sellprice listprice)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $decimalplaces1 ) }
+                $form->{"lastcost_$i"} = $form->format_amount( \%myconfig, $form->{"lastcost_$i"}, $form->{maxpricedecimals} );
+            }
+            $form->{"discount_$i"} = $form->format_amount( \%myconfig, $form->{"discount_$i"} );
+            for (qw(weight netweight grossweight)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"} ) }
+        }
     }
-  }
 
-  $form->{rowcount} = $i;
-  $form->{assembly_rows} = $i if ($form->{item} eq 'assembly');
-  
-  $form->{focus} = "description_$i";
+    $form->{rowcount} = $i;
+    $form->{assembly_rows} = $i if ( $form->{item} eq 'assembly' );
 
-  # delete all the new_ variables
-  for $i (1 .. $form->{lastndx}) {
-    for (qw(id partnumber sku description sellprice listprice lastcost bin unit weight assembly taxaccounts pricematrix onhand notes inventory_accno_id income_accno_id expense_accno_id)) {
-      delete $form->{"new_${_}_$i"};
+    $i++;
+    $focus = "partnumber_$i";
+
+    # delete all the new_ variables
+    for $i ( 1 .. $form->{lastndx} ) {
+        for (qw(id partnumber sku description sell sellprice listprice lastcost bin unit weight assembly taxaccounts pricematrix onhand itemnotes inventory_accno_id income_accno_id expense_accno_id))
+        {
+            delete $form->{"new_${_}_$i"};
+        }
     }
-  }
-  
-  for (qw(ndx lastndx nextsub)) { delete $form->{$_} }
 
-  &display_form;
+    for (qw(ndx lastndx nextsub)) { delete $form->{$_} }
+
+    &display_form;
 
 }
 
-
 sub new_item {
 
-  if ($form->{language_code} && $form->{"description_$form->{rowcount}"}) {
-    $form->error($locale->text('Translation not on file!'));
-  }
-  
-  # change callback
-  $form->{old_callback} = $form->escape($form->{callback},1);
-  $form->{callback} = $form->escape("$form->{script}?action=display_form",1);
-
-  # delete action
-  delete $form->{action};
-
-  # save all other form variables in a previousform variable
-  if (!$form->{previousform}) {
-    foreach $key (keys %$form) {
-      # escape ampersands
-      $form->{$key} =~ s/&/%26/g;
-      $form->{previousform} .= qq|$key=$form->{$key}&|;
+    if ( $form->{language_code} && $form->{"description_$form->{rowcount}"} ) {
+        $form->error( $locale->text('Translation not on file!') );
     }
-    chop $form->{previousform};
-    $form->{previousform} = $form->escape($form->{previousform}, 1);
-  }
 
-  $i = $form->{rowcount};
-  for (qw(partnumber description)) { $form->{"${_}_$i"} = $form->quote($form->{"${_}_$i"}) }
+    # change callback
+    $form->{oldcallback} = $form->escape( $form->{callback}, 1 );
+    $form->{callback} = $form->escape( "$form->{script}?action=display_form", 1 );
 
-  %button = ('Add Part' => { ndx => 1, key => 'P', value => $locale->text('Add Part') },
-             'Add Service' => { ndx => 2, key => 'P', value => $locale->text('Add Service') }
-	    );
+    # delete action
+    delete $form->{action};
 
-  delete $button{'Add Part'} if $myconfig{acs} =~ /Goods \& Services--Add Part/;
-  delete $button{'Add Service'} if $myconfig{acs} =~ /Goods \& Services--Add Service/;
-  
-  $form->header;
+    # save all other form variables in a previousform variable
+    if ( !$form->{previousform} ) {
+        foreach $key ( keys %$form ) {
 
-  print qq|
+            # escape ampersands
+            $form->{$key} =~ s/&/%26/g;
+            $form->{previousform} .= qq|$key=$form->{$key}&|;
+        }
+        chop $form->{previousform};
+        $form->{previousform} = $form->escape( $form->{previousform}, 1 );
+    }
+
+    $i = $form->{rowcount};
+    for (qw(partnumber description)) { $form->{"${_}_$i"} = $form->quote( $form->{"${_}_$i"} ) }
+
+    %button = (
+        'Add Part'    => { ndx => 1, key => 'P', value => $locale->text('Add Part') },
+        'Add Service' => { ndx => 2, key => 'P', value => $locale->text('Add Service') }
+    );
+
+    delete $button{'Add Part'}    if $myconfig{acs} =~ /Goods \& Services--Add Part/;
+    delete $button{'Add Service'} if $myconfig{acs} =~ /Goods \& Services--Add Service/;
+
+    $form->header;
+
+    print qq|
 <body>
 
-<h2 class=error>|.$locale->text('Error!').qq|</h2>
-<h4 class=error>|.$locale->text('Item not on file!').qq|</h4>
+<h2 class=error>| . $locale->text('Error!') . qq|</h2>
+<h4 class=error>| . $locale->text('Item not on file!') . qq|</h4>
 
 <form method=post action=ic.pl>
 
-<input type=hidden name=partnumber value="$form->{"partnumber_$i"}">
-<input type=hidden name=description value="$form->{"description_$i"}">
 |;
 
-  $form->hide_form(qw(previousform rowcount path login sessionid));
+    for (qw(partnumber description)) { $form->{$_} = $form->{"${_}_$i"} }
+    $form->hide_form(qw(partnumber description previousform rowcount path login));
 
-  for (sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button) { $form->print_button(\%button, $_) }
-  
-  print qq|
+    for ( sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button ) {
+        $form->print_button( \%button, $_ );
+    }
+
+    print qq|
 </form>
 
 </body>
@@ -587,392 +742,562 @@ sub new_item {
 
 }
 
-
-
 sub display_form {
 
-  # if we have a display_form
-  if ($form->{display_form}) {
-    &{ "$form->{display_form}" };
-    exit;
-  }
-  
-  &form_header;
+    # if we have a display_form
+    if ( $form->{display_form} ) {
+        &{"$form->{display_form}"};
+        exit;
+    }
 
-  $numrows = ++$form->{rowcount};
-  $subroutine = "display_row";
+    &form_header;
 
-  if ($form->{item} eq 'part') {
-    # create makemodel rows
-    &makemodel_row(++$form->{makemodel_rows});
+    &partnumber_partdescription_autocomplete;
 
-    &vendor_row(++$form->{vendor_rows});
-    
-    $numrows = ++$form->{customer_rows};
-    $subroutine = "customer_row";
-  }
-  if ($form->{item} eq 'assembly') {
-    # create makemodel rows
-    &makemodel_row(++$form->{makemodel_rows});
-    
-    $numrows = ++$form->{customer_rows};
-    $subroutine = "customer_row";
-  }
-  if ($form->{item} eq 'service') {
-    &vendor_row(++$form->{vendor_rows});
-    
-    $numrows = ++$form->{customer_rows};
-    $subroutine = "customer_row";
-  }
-  if ($form->{item} eq 'labor') {
-    $numrows = 0;
-  }
+    $numrows    = ++$form->{rowcount};
+    $subroutine = "display_row";
 
-  # create rows
-  &{ $subroutine }($numrows) if $numrows;
+    if ( $form->{item} eq 'part' ) {
 
-  &form_footer;
+        # create makemodel rows
+        &makemodel_row( ++$form->{makemodel_rows} );
+
+        &alternate_part_row( ++$form->{alternate_part_rows} );
+
+        &vendor_row( ++$form->{vendor_rows} );
+
+        $numrows    = ++$form->{customer_rows};
+        $subroutine = "customer_row";
+    }
+    if ( $form->{item} eq 'assembly' ) {
+
+        # create makemodel rows
+        &makemodel_row( ++$form->{makemodel_rows} );
+
+        &alternate_part_row( ++$form->{alternate_part_rows} );
+
+        $numrows    = ++$form->{customer_rows};
+        $subroutine = "customer_row";
+    }
+    if ( $form->{item} eq 'service' ) {
+        &vendor_row( ++$form->{vendor_rows} );
+
+        $numrows    = ++$form->{customer_rows};
+        $subroutine = "customer_row";
+    }
+    if ( $form->{item} eq 'labor' ) {
+        $numrows = 0;
+    }
+
+    # create rows
+    &{$subroutine}($numrows) if $numrows;
+
+    &form_footer;
 
 }
-
-
 
 sub check_form {
-  
-  my @a = ();
-  my $count = 0;
-  my $i;
-  my $j;
-  my @flds = qw(id runningnumber partnumber description partsgroup qty ship unit sellprice discount oldqty orderitems_id bin weight listprice lastcost taxaccounts pricematrix sku onhand assembly inventory_accno_id income_accno_id expense_accno_id notes reqdate deliverydate serialnumber projectnumber);
 
-  # remove any makes or model rows
-  if ($form->{item} eq 'part') {
-    for (qw(listprice sellprice lastcost avgcost weight rop markup)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
-    
-    &calc_markup;
-    
-    @flds = qw(make model);
-    $count = 0;
-    @a = ();
-    for $i (1 .. $form->{makemodel_rows}) {
-      if (($form->{"make_$i"} ne "") || ($form->{"model_$i"} ne "")) {
-	push @a, {};
-	$j = $#a;
+    my @f     = ();
+    my $count = 0;
+    my $i;
+    my $j;
+    my @flds =
+      qw(id runningnumber partnumber description partsgroup partsgroupcode qty ship unit sell sellprice discount oldqty oldship orderitems_id bin weight listprice lastcost taxaccounts pricematrix sku onhand assembly inventory_accno_id income_accno_id expense_accno_id itemnotes reqdate deliverydate serialnumber ordernumber customerponumber projectnumber package netweight grossweight lineitemdetail );
 
-	for (@flds) { $a[$j]->{$_} = $form->{"${_}_$i"} }
-	$count++;
-      }
+    # bp 2014/11 get maxpricedecimals
+    my $dbh = $form->dbconnect(\%myconfig);
+    %res = $form->get_defaults($dbh, \@{['precision']});
+    $form->{defaultprecision} = $res{precision};
+
+    # remove any makes or model rows
+    if ( $form->{item} eq 'part' ) {
+        for (qw(listprice sellprice lastcost avgcost weight rop markup)) { $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
+
+        &calc_markup;
+
+        @flds  = qw(make model);
+        $count = 0;
+        @f     = ();
+        for $i ( 1 .. $form->{makemodel_rows} ) {
+            if ( ( $form->{"make_$i"} ne "" ) || ( $form->{"model_$i"} ne "" ) ) {
+                push @f, {};
+                $j = $#f;
+
+                for (@flds) { $f[$j]->{$_} = $form->{"${_}_$i"} }
+                $count++;
+            }
+        }
+
+        $form->redo_rows( \@flds, \@f, $count, $form->{makemodel_rows} );
+        $form->{makemodel_rows} = $count;
+
+        # remove any alternate item rows
+        @flds  = qw(alt_number alt_description);
+        $count = 0;
+        @f     = ();
+
+        for $i ( 1 .. $form->{alternate_part_rows} ) {
+            if ( ( $form->{"alt_number_$i"} ne "" ) || ( $form->{"alt_description_$i"} ne "" ) ) {
+                push @f, {};
+                $j = $#f;
+
+                for (@flds) { $f[$j]->{$_} = $form->{"${_}_$i"} }
+                $count++;
+            }
+        }
+
+        $form->redo_rows( \@flds, \@f, $count, $form->{alternate_part_rows} );
+        $form->{alternate_part_rows} = $count;
+
+        &check_vendor;
+        &check_customer;
+
     }
 
-    $form->redo_rows(\@flds, \@a, $count, $form->{makemodel_rows});
-    $form->{makemodel_rows} = $count;
+    if ( $form->{item} eq 'service' ) {
 
-    &check_vendor;
-    &check_customer;
-    
-  }
-  
-  if ($form->{item} eq 'service') {
-    
-    for (qw(sellprice listprice lastcost avgcost markup)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
-    
-    &calc_markup;
-    &check_vendor;
-    &check_customer;
-    
-  }
-  
-  if ($form->{item} eq 'assembly') {
+        for (qw(sellprice listprice lastcost avgcost markup)) { $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
 
-    if (!$form->{project_id}) {
-      $form->{sellprice} = 0;
-      $form->{listprice} = 0;
-      $form->{lastcost} = 0;
-      $form->{weight} = 0;
-    }
-    
-    for (qw(rop stock markup)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
-   
-    @flds = qw(id qty unit bom adj partnumber description sellprice listprice lastcost weight assembly runningnumber partsgroup);
-    $count = 0;
-    @a = ();
-    
-    for $i (1 .. ($form->{assembly_rows} - 1)) {
-      if ($form->{"qty_$i"}) {
-	push @a, {};
-	my $j = $#a;
+        &calc_markup;
+        &check_vendor;
+        &check_customer;
 
-        $form->{"qty_$i"} = $form->parse_amount(\%myconfig, $form->{"qty_$i"});
-
-	for (@flds) { $a[$j]->{$_} = $form->{"${_}_$i"} }
-
-        if (! $form->{project_id}) {
-	  for (qw(sellprice listprice weight lastcost)) { $form->{$_} += ($form->{"${_}_$i"} * $form->{"qty_$i"}) }
-	}
-	
-	$count++;
-      }
     }
 
-    if ($form->{markup} && $form->{markup} != $form->{oldmarkup}) {
-      $form->{sellprice} = 0;
-      &calc_markup;
+    if ( $form->{item} eq 'assembly' ) {
+
+        if ( !$form->{project_id} ) {
+            $form->{sellprice} = 0;
+            $form->{listprice} = 0;
+            $form->{lastcost}  = 0;
+            $form->{weight}    = 0;
+        }
+
+        for (qw(rop stock markup)) { $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
+
+        @flds  = qw(id qty unit bom adj partnumber description sellprice listprice lastcost weight assembly runningnumber);
+        $count = 0;
+        @f     = ();
+
+        for $i ( 1 .. ( $form->{assembly_rows} - 1 ) ) {
+            if ( $form->{"qty_$i"} ) {
+                push @f, {};
+                my $j = $#f;
+
+                $form->{"qty_$i"} = $form->parse_amount( \%myconfig, $form->{"qty_$i"} );
+
+                for (@flds) { $f[$j]->{$_} = $form->{"${_}_$i"} }
+
+                if ( !$form->{project_id} ) {
+                    for (qw(sellprice listprice weight lastcost)) { $form->{$_} += ( $form->{"${_}_$i"} * $form->{"qty_$i"} ) }
+                }
+
+                $count++;
+            }
+        }
+
+        if ( $form->{markup} && $form->{markup} != $form->{oldmarkup} ) {
+            $form->{sellprice} = 0;
+            &calc_markup;
+        }
+
+        for (qw(sellprice lastcost listprice)) { $form->{$_} = $form->round_amount( $form->{$_}, $form->{maxpricedecimals} ) }
+
+        $form->redo_rows( \@flds, \@f, $count, $form->{assembly_rows} );
+        $form->{assembly_rows} = $count;
+
+        $count = 0;
+        @flds  = qw(make model);
+        @f     = ();
+
+        for $i ( 1 .. ( $form->{makemodel_rows} ) ) {
+            if ( ( $form->{"make_$i"} ne "" ) || ( $form->{"model_$i"} ne "" ) ) {
+                push @f, {};
+                my $j = $#f;
+
+                for (@flds) { $f[$j]->{$_} = $form->{"${_}_$i"} }
+                $count++;
+            }
+        }
+
+        $form->redo_rows( \@flds, \@f, $count, $form->{makemodel_rows} );
+        $form->{makemodel_rows} = $count;
+
+        # remove any alternate item rows
+        @flds  = qw(alt_number alt_description);
+        $count = 0;
+        @f     = ();
+
+        for $i ( 1 .. $form->{alternate_part_rows} ) {
+            if ( ( $form->{"alt_number_$i"} ne "" ) || ( $form->{"alt_description_$i"} ne "" ) ) {
+                push @f, {};
+                $j = $#f;
+
+                for (@flds) { $f[$j]->{$_} = $form->{"${_}_$i"} }
+                $count++;
+            }
+        }
+
+        $form->redo_rows( \@flds, \@f, $count, $form->{alternate_part_rows} );
+        $form->{alternate_part_rows} = $count;
+
+        &check_customer;
+
     }
- 
-    for (qw(sellprice lastcost listprice)) { $form->{$_} = $form->round_amount($form->{$_}, 2) }
-    
-    $form->redo_rows(\@flds, \@a, $count, $form->{assembly_rows});
-    $form->{assembly_rows} = $count;
-    
-    $count = 0;
-    @flds = qw(make model);
-    @a = ();
-    
-    for $i (1 .. ($form->{makemodel_rows})) {
-      if (($form->{"make_$i"} ne "") || ($form->{"model_$i"} ne "")) {
-	push @a, {};
-	my $j = $#a;
 
-	for (@flds) { $a[$j]->{$_} = $form->{"${_}_$i"} }
-	$count++;
-      }
+    if ( $form->{type} ) {
+
+        # this section applies to invoices and orders
+        # remove any empty numbers
+
+        $focus = "partnumber_1";
+
+        $count = 0;
+        @f     = ();
+        if ( $form->{rowcount} ) {
+            for $i ( 1 .. $form->{rowcount} - 1 ) {
+                if ( $form->{"partnumber_$i"} ) {
+                    push @f, {};
+                    my $j = $#f;
+
+                    for (@flds) { $f[$j]->{$_} = $form->{"${_}_$i"} }
+                    $count++;
+                }
+            }
+
+            $form->redo_rows( \@flds, \@f, $count, $form->{rowcount} );
+            $form->{rowcount} = $count;
+
+            # undo formatting
+            for (qw(oldinvtotal oldpaidtotal creditremaining)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}, $form->{$_}) }
+
+            if ( $form->{type} =~ /invoice/ ) {
+                if ( $form->{type} =~ /(debit|credit)_invoice/ ) {
+                  $form->{creditremaining} -= ($form->{oldinvtotal} - $form->{oldtotalpaid});
+                  $form->{creditremaining} += &invoicetotal;
+                 }
+                else {
+                  $form->{creditremaining} += ($form->{oldinvtotal} - $form->{oldtotalpaid});
+                  $amount = &invoicetotal;
+                  $form->{creditremaining} -= $amount;
+                }
+            }
+            else {
+
+                $form->{creditremaining} += ($form->{oldinvtotal} - $form->{oldtotalpaid});
+                $amount = &invoicetotal;
+                $form->{creditremaining} -= $amount;
+            }
+
+            $count++;
+            $focus = "partnumber_$count";
+
+        }
+
+        $count = 0;
+        @f     = ();
+        @flds  = qw(referenceid referencedescription);
+        for $i ( 1 .. $form->{reference_rows} ) {
+            if ( $form->{"referenceid_$i"} ) {
+                push @f, {};
+                my $j = $#f;
+
+                for (@flds) { $f[$j]->{$_} = $form->{"${_}_$i"} }
+                $count++;
+            }
+        }
+        $form->redo_rows( \@flds, \@f, $count, $form->{reference_rows} );
+        $form->{reference_rows} = $count + 1;
+
     }
 
-    $form->redo_rows(\@flds, \@a, $count, $form->{makemodel_rows});
-    $form->{makemodel_rows} = $count;
-
-    &check_customer;
-  
-  }
-  
-  if ($form->{type}) {
-
-    # this section applies to invoices and orders
-    # remove any empty numbers
-    
-    $count = 0;
-    @a = ();
-    if ($form->{rowcount}) {
-      for $i (1 .. $form->{rowcount} - 1) {
-	if ($form->{"partnumber_$i"}) {
-	  push @a, {};
-	  my $j = $#a;
-
-	  for (@flds) { $a[$j]->{$_} = $form->{"${_}_$i"} }
-	  $count++;
-	}
-      }
-      
-      $form->redo_rows(\@flds, \@a, $count, $form->{rowcount});
-      $form->{rowcount} = $count;
-
-      $form->{creditremaining} -= &invoicetotal;
-      
-    }
-  }
-
-  &display_form;
+    &display_form;
 
 }
-
 
 sub calc_markup {
 
-  if ($form->{markup}) {
-    if ($form->{markup} != $form->{oldmarkup}) {
-      if ($form->{lastcost}) {
-	$form->{sellprice} = $form->{lastcost} * (1 + $form->{markup}/100);
-	$form->{sellprice} = $form->round_amount($form->{sellprice}, 2);
-      } else {
-	$form->{lastcost} = $form->{sellprice} / (1 + $form->{markup}/100);
-	$form->{lastcost} = $form->round_amount($form->{lastcost}, 2);
-      }
+    # bp 2014/11 get maxpricedecimals
+    my $dbh = $form->dbconnect(\%myconfig);
+    %res = $form->get_defaults($dbh, \@{['maxpricedecimals']});
+    my $form->{maxpricedecimals} = $res{maxpricedecimals};
+
+    if ( $form->{markup} ) {
+        if ( $form->{markup} != $form->{oldmarkup} ) {
+            if ( $form->{lastcost} ) {
+                $form->{sellprice} = $form->{lastcost} * ( 1 + $form->{markup} / 100 );
+                $form->{sellprice} = $form->round_amount( $form->{sellprice}, $form-{maxpricedecimals} );
+            }
+            else {
+                $form->{lastcost} = $form->{sellprice} / ( 1 + $form->{markup} / 100 );
+                $form->{lastcost} = $form->round_amount( $form->{lastcost}, $form->{maxpricedecimals} );
+            }
+        }
     }
-  } else {
-    if ($form->{lastcost}) {
-      $form->{markup} = $form->round_amount(((1 - $form->{sellprice} / $form->{lastcost}) * 100), 1);
+    else {
+        if ( $form->{lastcost} ) {
+            $form->{markup} = $form->round_amount( ( ( 1 - $form->{sellprice} / $form->{lastcost} ) * 100 ), 1 );
+        }
+        $form->{markup} = "" if $form->{markup} == 0;
     }
-    $form->{markup} = "" if $form->{markup} == 0;
-  }
 
 }
-
 
 sub invoicetotal {
 
-  $form->{oldinvtotal} = 0;
-  # add all parts and deduct paid
-  for (split / /, $form->{taxaccounts}) { $form->{"${_}_base"} = 0 }
+    $exchangerate = $form->parse_amount( \%myconfig, $form->{exchangerate} );
+    $exchangerate *= 1;
 
-  my ($amount, $sellprice, $discount, $qty);
-  
-  for $i (1 .. $form->{rowcount}) {
-    $sellprice = $form->parse_amount(\%myconfig, $form->{"sellprice_$i"});
-    $discount = $form->parse_amount(\%myconfig, $form->{"discount_$i"});
-    $qty = $form->parse_amount(\%myconfig, $form->{"qty_$i"});
+    # add all parts and deduct paid
+    for ( split / /, $form->{taxaccounts} ) { $form->{"${_}_base"} = 0 }
 
-    $amount = $sellprice * (1 - $discount / 100) * $qty;
-    for (split / /, $form->{"taxaccounts_$i"}) { $form->{"${_}_base"} += $amount }
-    $form->{oldinvtotal} += $amount;
-  }
+    my $amount;
+    my $sellprice;
+    my $discount;
+    my $qty;
 
-  if (!$form->{taxincluded}) {
-    for (split / /, $form->{taxaccounts}) { $form->{oldinvtotal} += ($form->{"${_}_base"} * $form->{"${_}_rate"}) }
-  }
-  
-  $form->{oldtotalpaid} = 0;
-  for $i (1 .. $form->{paidaccounts}) {
-    $form->{oldtotalpaid} += $form->{"paid_$i"};
-  }
-  
-  # return total
-  ($form->{oldinvtotal} - $form->{oldtotalpaid});
+    $form->{oldinvtotal} = 0;
+
+    for $i ( 1 .. $form->{rowcount} ) {
+
+        $qty = $form->parse_amount( \%myconfig, $form->{"qty_$i"} );
+
+        $spc = substr( $myconfig{numberformat}, -3, 1 );
+        if ( $spc eq '.' ) {
+            ( $null, $dec ) = split /\./, $form->{"sellprice_$i"};
+        }
+        else {
+            ( $null, $dec ) = split /,/, $form->{"sellprice_$i"};
+        }
+#        $dec = length $dec;
+#        $decimalplaces = ( $dec > $form->{precision} ) ? $dec : $form->{precision};
+
+        if ( $qty != $form->{"oldqty_$i"} ) {
+
+            # check pricematrix
+            @f = split / /, $form->{"pricematrix_$i"};
+            if ( scalar @f > 1 ) {
+                foreach $item (@f) {
+                    ( $q, $p ) = split /:/, $item;
+                    if ( ( $p * 1 ) && ( $qty >= ( $q * 1 ) ) ) {
+                        $form->{"sellprice_$i"} = $form->format_amount( \%myconfig, $p / $exchangerate, $form->{maxpricedecimals} );
+                    }
+                }
+            }
+        }
+
+        if ( $form->{vc} eq 'customer' ) {
+            $form->{"sell_$i"} = $form->{"sellprice_$i"};
+        }
+
+        $sellprice = $form->round_amount( $form->parse_amount( \%myconfig, $form->{"sellprice_$i"} ) * ( 1 - $form->{"discount_$i"} / 100 ), $form->{maxpricedecimals} );
+        $amount = $form->round_amount( $sellprice * $qty, $form->{precision} );
+        for ( split / /, $form->{"taxaccounts_$i"} ) { $form->{"${_}_base"} += $form->round_amount( $amount, $form->{precision} ) }
+        $form->{oldinvtotal} += $form->round_amount( $amount, $form->{precision} );
+    }
+
+    if ( $form->{taxincluded} ) {
+        $netamount = $form->{oldinvtotal};
+        for ( split / /, $form->{taxaccounts} ) { $netamount -= ( $form->{"${_}_base"} * $form->{"${_}_rate"} ) }
+        $form->{cd_available} = $form->round_amount( $netamount * $form->{cashdiscount} / 100, $form->{precision} );
+    }
+    else {
+        $form->{cd_available} = $form->round_amount( $form->{oldinvtotal} * $form->{cashdiscount} / 100, $form->{precision} );
+        for ( split / /, $form->{taxaccounts} ) { $form->{oldinvtotal} += $form->round_amount( $form->{"${_}_base"} * $form->{"${_}_rate"}, $form->{precision} ) }
+    }
+
+    $totalpaid = 0;
+    for $i ( 1 .. $form->{paidaccounts} ) {
+        $totalpaid += $form->{"paid_$i"};
+    }
+
+    # return total
+    return ( $form->{oldinvtotal} - $totalpaid );
 
 }
-
 
 sub validate_items {
-  
-  # check if items are valid
-  if ($form->{rowcount} == 1) {
-    &update;
-    exit;
-  }
-    
-  for $i (1 .. $form->{rowcount} - 1) {
-    $form->isblank("partnumber_$i", $locale->text('Number missing in Row') . " $i");
-  }
+
+    # check if items are valid
+    if ( $form->{rowcount} == 1 ) {
+        &update;
+        exit;
+    }
+
+    for $i ( 1 .. $form->{rowcount} - 1 ) {
+        $form->isblank( "partnumber_$i", $locale->text('Number missing in Row') . " $i" );
+    }
 
 }
-
-
 
 sub purchase_order {
-  
-  $form->{title} = $locale->text('Add Purchase Order');
-  $form->{vc} = 'vendor';
-  $form->{type} = 'purchase_order';
-  $buysell = 'sell';
 
-  &create_form;
+    if ( $form->{type} eq 'request_quotation' ) {
+        $form->{closed} = 1;
+        OE->save( \%myconfig, \%$form );
+    }
+
+    $form->{title}    = $locale->text('Add Purchase Order');
+    $form->{vc}       = 'vendor';
+    $form->{type}     = 'purchase_order';
+    $form->{formname} = 'purchase_order';
+
+    &create_form;
 
 }
 
- 
 sub sales_order {
 
-  $form->{title} = $locale->text('Add Sales Order');
-  $form->{vc} = 'customer';
-  $form->{type} = 'sales_order';
-  $buysell = 'buy';
+    if ( $form->{type} eq 'sales_quotation' ) {
+        $form->{closed} = 1;
+        OE->save( \%myconfig, \%$form );
+    }
 
-  &create_form;
+    $form->{title}    = $locale->text('Add Sales Order');
+    $form->{vc}       = 'customer';
+    $form->{type}     = 'sales_order';
+    $form->{formname} = 'sales_order';
+
+    &create_form;
 
 }
-
 
 sub rfq {
-  
-  $form->{title} = $locale->text('Add Request for Quotation');
-  $form->{vc} = 'vendor';
-  $form->{type} = 'request_quotation';
-  $buysell = 'sell';
- 
-  &create_form;
-  
-}
 
+    if ( $form->{type} eq 'purchase_order' ) {
+        $form->{closed} = 1;
+        OE->save( \%myconfig, \%$form );
+    }
+
+    $form->{title}    = $locale->text('Add Request for Quotation');
+    $form->{vc}       = 'vendor';
+    $form->{type}     = 'request_quotation';
+    $form->{formname} = 'request_quotation';
+
+    &create_form;
+
+}
 
 sub quotation {
 
-  $form->{title} = $locale->text('Add Quotation');
-  $form->{vc} = 'customer';
-  $form->{type} = 'sales_quotation';
-  $buysell = 'buy';
+    if ( $form->{type} eq 'sales_order' ) {
+        $form->{closed} = 1;
+        OE->save( \%myconfig, \%$form );
+    }
 
-  &create_form;
+    $form->{title}    = $locale->text('Add Quotation');
+    $form->{vc}       = 'customer';
+    $form->{type}     = 'sales_quotation';
+    $form->{formname} = '';
+
+    &create_form;
 
 }
-
 
 sub create_form {
 
-  for (qw(id printed emailed queued)) { delete $form->{$_} }
- 
-  $form->{script} = 'oe.pl';
+    for (qw(id subject message cc bcc printed emailed queued audittrail recurring)) { delete $form->{$_} }
 
-  $form->{shipto} = 1;
+    $form->{script} = 'oe.pl';
 
-  $form->{rowcount}-- if $form->{rowcount};
-  $form->{rowcount} = 0 if ! $form->{"$form->{vc}_id"};
+    $form->{shipto} = 1;
 
-  do "$form->{path}/$form->{script}";
+    $form->{rowcount}-- if $form->{rowcount};
+    $form->{rowcount} = 0 if !$form->{"$form->{vc}_id"};
 
-  for ("$form->{vc}", "currency") { $form->{"select$_"} = "" }
-  
-  for (qw(currency employee department intnotes notes language_code taxincluded)) { $temp{$_} = $form->{$_} }
+    do "$form->{path}/$form->{script}";
 
-  &order_links;
+    for ( "$form->{vc}", "currency" ) { $form->{"select$_"} = "" }
 
-  for (keys %temp) { $form->{$_} = $temp{$_} if $temp{$_} }
+    for (qw(currency employee department intnotes notes language_code taxincluded)) { $temp{$_} = $form->{$_} }
 
-  $form->{exchangerate} = "";
-  $form->{forex} = "";
-  if ($form->{currency} ne $form->{defaultcurrency}) {
-    $form->{exchangerate} = $exchangerate if ($form->{forex} = ($exchangerate = $form->check_exchangerate(\%myconfig, $form->{currency}, $form->{transdate}, $buysell)));
-  }
+    &order_links;
 
-  &prepare_order;
+    $form->{reqdate} = $form->add_date( \%myconfig, $form->{transdate}, $form->{terms}, 'days' );
 
-  &display_form;
+    for ( keys %temp ) { $form->{$_} = $temp{$_} if $temp{$_} }
+
+    $form->{exchangerate} = $form->check_exchangerate( \%myconfig, $form->{currency}, $form->{transdate} ) || 1;
+
+    for $i ( 1 .. $form->{rowcount} ) {
+        $form->{"discount_$i"} = $form->format_amount( \%myconfig, $form->{"discount_$i"} );
+        for (qw(netweight grossweight volume)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"} ) }
+
+        for (qw(sellprice listprice)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{maxpricedecimals} ) }
+
+        ($dec) = ( $form->{"lastcost_$i"} =~ /\.(\d+)/ );
+        $dec = length $dec;
+        $decimalplaces = ( $dec > $form->{precision} ) ? $dec : $form->{precision};
+
+        $form->{"lastcost_$i"} = $form->format_amount( \%myconfig, $form->{"lastcost_$i"}, $form->{maxpricedecimals} );
+
+        for (qw(qty ship)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"} ) }
+        $form->{"oldqty_$i"} = $form->{"qty_$i"};
+    }
+
+    &prepare_order;
+
+    &display_form;
 
 }
 
-
-
 sub e_mail {
 
-  $bcc = qq|<input type=hidden name=bcc value="$form->{bcc}">|;
-  if ($myconfig{role} =~ /(admin|manager)/) {
+    if ( $form->{formname} =~ /(transport|pickup)_order/ ) {
+        $form->isblank( "transportemail", $locale->text('No email address specified for transport partner') );
+        $form->{email} = $form->{transportemail};
+        $form->{cc}    = $form->{transportcc};
+        $form->{bcc}   = $form->{transportbcc} if $form->{transportbcc};
+    }
+
     $bcc = qq|
- 	  <th align=right nowrap=true>|.$locale->text('Bcc').qq|</th>
-	  <td><input name=bcc size=30 value="$form->{bcc}"></td>
-|;
-  }
+          <th align=right nowrap=true>| . $locale->text('Bcc') . qq|</th>
+          <td><input name=bcc size=30 value="$form->{bcc}"></td>
+ |;
 
-  if ($form->{formname} =~ /(pick|packing|bin)_list/) {
-    $form->{email} = $form->{shiptoemail} if $form->{shiptoemail};
-  }
+    if ( $form->{formname} =~ /(pick|packing|bin)_list/ ) {
+        $form->{email} = $form->{shiptoemail} if $form->{shiptoemail};
+    }
 
-  $name = $form->{$form->{vc}};
-  $name =~ s/--.*//g;
-  $title = $locale->text('E-mail')." $name";
-  
-  $form->header;
+    $name = $form->{ $form->{vc} };
+    $name =~ s/--.*//g;
+    $title = $locale->text('E-mail') . " $name";
 
-  print qq|
+    $form->{invtotal} = $form->format_amount( \%myconfig, $form->{oldinvtotal}, $form->{precision} );
+
+    ( $form->{warehouse}, $form->{warehouse_id} ) = split /--/, $form->{warehouse};
+
+    AA->company_details( \%myconfig, \%$form );
+
+    $form->{warehouse} = "$form->{warehouse}--$form->{warehouse_id}" if $form->{warehouse_id};
+
+    $form->header;
+
+    print qq|
 <body>
 
 <form method=post action="$form->{script}">
 
 <table width=100%>
   <tr class=listtop>
-    <th class=listtop>$title</th>
+    <th class=listtop>$form->{helpref}$title</a></th>
   </tr>
   <tr height="5"></tr>
   <tr>
     <td>
       <table width=100%>
 	<tr>
-	  <th align=right nowrap>|.$locale->text('E-mail').qq|</th>
+	  <th align=right nowrap>| . $locale->text('E-mail') . qq| <font color=red>*</font></th>
 	  <td><input name=email size=30 value="$form->{email}"></td>
-	  <th align=right nowrap>|.$locale->text('Cc').qq|</th>
+	  <th align=right nowrap>| . $locale->text('Cc') . qq|</th>
 	  <td><input name=cc size=30 value="$form->{cc}"></td>
 	</tr>
 	<tr>
-	  <th align=right nowrap>|.$locale->text('Subject').qq|</th>
-	  <td><input name=subject size=30 value="$form->{subject}"></td>
-	  $bcc
+	  <th align=right nowrap>| . $locale->text('Subject') . qq|</th>
+	  <td><input name=subject size=30 value="| . $form->quote( $form->{subject} ) . qq|"></td>
+ 	  <th align=right nowrap=true>| . $locale->text('Bcc') . qq|</th>
+	  <td><input name=bcc size=30 value="$form->{bcc}"></td>
 	</tr>
       </table>
     </td>
@@ -981,7 +1306,7 @@ sub e_mail {
     <td>
       <table width=100%>
 	<tr>
-	  <th align=left nowrap>|.$locale->text('Message').qq|</th>
+	  <th align=left nowrap>| . $locale->text('Message') . qq|</th>
 	</tr>
 	<tr>
 	  <td><textarea name=message rows=15 cols=60 wrap=soft>$form->{message}</textarea></td>
@@ -993,17 +1318,19 @@ sub e_mail {
     <td>
 |;
 
-  $form->{oldmedia} = $form->{media};
-  $form->{media} = "email";
-  $form->{format} = "pdf";
-  
-  &print_options;
-  
-  for (qw(email cc bcc subject message formname sendmode format language_code action nextsub)) { delete $form->{$_} }
-  
-  $form->hide_form;
+    for (qw(media format)) { $form->{"old$_"} = $form->{$_} }
+    $form->{media}  = "email";
+    $form->{format} = "pdf";
 
-  print qq|
+    &print_options;
+
+    for (qw(email cc bcc subject message formname sendmode format language_code action nextsub)) { delete $form->{$_} }
+
+    $form->{nextsub} = "send_email";
+
+    $form->hide_form;
+
+    print qq|
     </td>
   </tr>
   <tr>
@@ -1011,10 +1338,8 @@ sub e_mail {
   </tr>
 </table>
 
-<input type=hidden name=nextsub value=send_email>
-
 <br>
-<input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
+<input name=action class=submit type=submit value="| . $locale->text('Continue') . qq|">
 </form>
 
 </body>
@@ -1023,85 +1348,72 @@ sub e_mail {
 
 }
 
-
 sub send_email {
 
-  $old_form = new Form;
-  
-  for (keys %$form) { $old_form->{$_} = $form->{$_} }
-  $old_form->{media} = $old_form->{oldmedia};
-  
-  &print_form($old_form);
-  
-}
-  
+    $oldform = new Form;
 
- 
+    for ( keys %$form )    { $oldform->{$_} = $form->{$_} }
+    for (qw(media format)) { $oldform->{$_} = $form->{"old$_"} }
+    for ( 1 .. $oldform->{paidaccounts} ) { $oldform->{"paid_$_"} = $form->parse_amount( \%myconfig, $form->{"paid_$_"} ) }
+
+    &print_form($oldform);
+
+}
+
 sub print_options {
 
-  $form->{sendmode} = "attachment";
-  $form->{copies} = 1 unless $form->{copies};
-  
-  $form->{SM}{$form->{sendmode}} = "selected";
-  
-  if ($form->{selectlanguage}) {
-    $form->{"selectlanguage"} = $form->unescape($form->{"selectlanguage"});
-    $form->{"selectlanguage"} =~ s/ selected//;
-    $form->{"selectlanguage"} =~ s/(<option value="\Q$form->{language_code}\E")/$1 selected/;
+    $form->{sendmode} = "attachment";
 
-    $lang = qq|<select name=language_code>$form->{selectlanguage}</select>
-    <input type=hidden name=oldlanguage_code value=$form->{oldlanguage_code}>
-    <input type=hidden name=selectlanguage value="|.$form->escape($form->{selectlanguage},1).qq|">|;
-  }
+    $form->{SM}{ $form->{sendmode} } = "selected";
 
-  $form->{selectformname} = $form->unescape($form->{selectformname});
-  $form->{selectformname} =~ s/ selected//;
-  $form->{selectformname} =~ s/(<option value="\Q$form->{formname}\E")/$1 selected/;
-
-  $type = qq|<select name=formname>$form->{selectformname}</select>
-  <input type=hidden name=selectformname value="|.$form->escape($form->{selectformname},1).qq|">|;
-
-  
-  if ($form->{media} eq 'email') {
-    $media = qq|<select name=sendmode>
-	    <option value=attachment $form->{SM}{attachment}>|.$locale->text('Attachment').qq|
-	    <option value=inline $form->{SM}{inline}>|.$locale->text('In-line').qq|</select>|;
-  } else {
-    $media = qq|<select name=media>
-	    <option value="screen">|.$locale->text('Screen');
- 
-    if (%printer && $latex) {
-      for (sort keys %printer) { $media .= qq|
-            <option value="$_">$_| }
+    if ( $form->{selectlanguage} ) {
+        $lang = qq|<select name="language_code">| . $form->select_option( $form->{selectlanguage}, $form->{language_code}, undef, 1 ) . qq|</select>|;
+        $form->hide_form(qw(oldlanguage_code selectlanguage));
     }
+
+    $type = qq|<select name="formname">| . $form->select_option( $form->{selectformname}, $form->{formname}, undef, 1 ) . qq|</select>|;
+    $form->hide_form(qw(selectformname));
+
+    if ( $form->{media} eq 'email' ) {
+        $media = qq|<select name="sendmode">
+	    <option value="attachment" $form->{SM}{attachment}>| . $locale->text('Attachment') . qq|
+	    <option value="inline" $form->{SM}{inline}>| . $locale->text('In-line') . qq|</select>|;
+
+    }
+    else {
+        $media = qq|<select name=media>
+	    <option value="screen">| . $locale->text('Screen');
+
+        if ( $form->{selectprinter} && $latex ) {
+            for ( split /\n/, $form->unescape( $form->{selectprinter} ) ) {
+                $media .= qq|
+            <option value="$_">$_|;
+            }
+        }
+        $media .= qq|
+            <option value="queue">| . $locale->text('Queue');
+        $media .= qq|</select>|;
+
+        # set option selected
+        $media =~ s/(<option value="\Q$form->{media}\E")/$1 selected/;
+
+    }
+
+    $selectformat = qq|<option value="html">| . $locale->text('html') . qq|
+<option value="xml">| . $locale->text('XML') . qq|
+<option value="txt">| . $locale->text('Text');
+
     if ($latex) {
-      $media .= qq|
-            <option value="queue">|.$locale->text('Queue');
+        $selectformat .= qq|
+<option value="ps">| . $locale->text('Postscript') . qq|
+<option value="pdf">| . $locale->text('PDF');
     }
-    $media .= qq|</select>|;
 
-    # set option selected
-    $media =~ s/(<option value="\Q$form->{media}\E")/$1 selected/;
- 
-  }
+    $format = qq|<select name=format>$selectformat</select>|;
+    $format =~ s/(<option value="\Q$form->{format}\E")/$1 selected/;
 
-
-  $form->{selectformat} = qq|<option value="html">html\n|;
-#	    <option value="txt">|.$locale->text('Text');
-
-  if ($latex) {
-    $form->{selectformat} .= qq|
-            <option value="postscript">|.$locale->text('Postscript').qq|
-	    <option value="pdf">|.$locale->text('PDF');
-  }
-	
-  $format = qq|<select name=format>$form->{selectformat}</select>|;
-  $format =~ s/(<option value="\Q$form->{format}\E")/$1 selected/;
-  $format .= qq|
-  <input type=hidden name=selectformat value="|.$form->escape($form->{selectformat},1).qq|">|;
-  
-  print qq|
-<table width=100%>
+    print qq|
+<table>
   <tr>
     <td>$type</td>
     <td>$lang</td>
@@ -1109,560 +1421,741 @@ sub print_options {
     <td>$media</td>
 |;
 
-  if (%printer && $latex && $form->{media} ne 'email') {
-    print qq|
-    <td nowrap>|.$locale->text('Copies').qq|
-    <input name=copies size=2 value=$form->{copies}></td>
+    if ( $latex && $form->{media} ne 'email' ) {
+        print qq|
+    <td nowrap>| . $locale->text('Copies') . qq|
+    <input name="copies" class="inputright" size="2" value="$form->{copies}"></td>
 |;
-  }
-
-# $locale->text('Printed')
-# $locale->text('E-mailed')
-# $locale->text('Queued')
-# $locale->text('Scheduled')
-
-  %status = ( printed => 'Printed',
-              emailed => 'E-mailed',
-	      queued  => 'Queued',
-	      recurring => 'Scheduled' );
-
-  print qq|<td align=right width=90%>|;
-
-  for (qw(printed emailed queued recurring)) {
-    if ($form->{$_} =~ /$form->{formname}/) {
-      print $locale->text($status{$_}).qq|<br>|;
     }
-  }
 
-  print qq|
+    # $locale->text('Printed')
+    # $locale->text('E-mailed')
+    # $locale->text('Queued')
+    # $locale->text('Scheduled')
+
+    %status = (
+        printed   => 'Printed',
+        emailed   => 'E-mailed',
+        queued    => 'Queued',
+        recurring => 'Scheduled'
+    );
+
+    print qq|<td align=right width=90%>|;
+
+    for (qw(printed emailed queued)) {
+        if ( $form->{$_} =~ /$form->{formname}/ ) {
+            print $locale->text( $status{$_} ) . qq|<br>|;
+        }
+    }
+    if ( $form->{recurring} ) {
+        print $locale->text( $status{recurring} ) . qq|<br>|;
+    }
+
+    print qq|
     </td>
-  </tr>
-|;
-
-  $form->{groupprojectnumber} = "checked" if $form->{groupprojectnumber};
-  $form->{grouppartsgroup} = "checked" if $form->{grouppartsgroup};
-
-  for (qw(runningnumber partnumber description bin)) { $sortby{$_} = "checked" if $form->{sortby} eq $_ }
-  
-  print qq|
-  <tr>
-    <td colspan=3>|.$locale->text('Group by').qq| ->
-    <input name=groupprojectnumber type=checkbox class=checkbox $form->{groupprojectnumber}>
-    |.$locale->text('Project').qq|
-    <input name=grouppartsgroup type=checkbox class=checkbox $form->{grouppartsgroup}>
-    |.$locale->text('Group').qq|
-    </td>
-
-    <td colspan=3>|.$locale->text('Sort by').qq| ->
-    <input name=sortby type=radio class=radio value=runningnumber $sortby{runningnumber}>
-    |.$locale->text('Item').qq|
-    <input name=sortby type=radio class=radio value=partnumber $sortby{partnumber}>
-    |.$locale->text('Number').qq|
-    <input name=sortby type=radio class=radio value=description $sortby{description}>
-    |.$locale->text('Description').qq|
-    <input name=sortby type=radio class=radio value=bin $sortby{bin}>
-    |.$locale->text('Bin').qq|
-    </td>
-    
   </tr>
 </table>
 |;
 
+    $form->{groupprojectnumber} = "checked" if $form->{groupprojectnumber};
+    $form->{grouppartsgroup}    = "checked" if $form->{grouppartsgroup};
+
+    for (qw(runningnumber partnumber description bin)) { $sortby{$_} = "checked" if $form->{sortby} eq $_ }
+
+    if ( $form->{media} eq 'email' ) {
+        $form->hide_form(qw(groupprojectnumber grouppartsgroup sortby));
+    }
+    else {
+        print qq|
+    <tr>
+      <td>
+	<table>
+	  <tr>
+	    <th>| . $locale->text('Group by') . qq| -></th>
+	    <td><input name=groupprojectnumber type=checkbox class=checkbox $form->{groupprojectnumber}></td>
+	    <td>| . $locale->text('Project') . qq|</td>
+	    <td><input name=grouppartsgroup type=checkbox class=checkbox $form->{grouppartsgroup}></td>
+	    <td>| . $locale->text('Group') . qq|</td>
+
+	    <td width=20></td>
+
+	    <th><b>| . $locale->text('Sort by') . qq| -></th>
+	    <td><input name=sortby type=radio class=radio value=runningnumber $sortby{runningnumber}></td>
+	    <td>| . $locale->text('Item') . qq|</td>
+	    <td><input name=sortby type=radio class=radio value=partnumber $sortby{partnumber}></td>
+	    <td>| . $locale->text('Number') . qq|</td>
+	    <td><input name=sortby type=radio class=radio value=description $sortby{description}></td>
+	    <td>| . $locale->text('Description') . qq|</td>
+	    <td><input name=sortby type=radio class=radio value=bin $sortby{bin}></td>
+	    <td>| . $locale->text('Bin') . qq|</td>
+	  </tr>
+	</table>
+      </td>
+    </tr>
+|;
+    }
+
 }
-
-
 
 sub print {
 
-  # if this goes to the printer pass through
-  if ($form->{media} !~ /(screen|email)/) {
-    $form->error($locale->text('Select txt, postscript or PDF!')) if ($form->{format} !~ /(txt|postscript|pdf)/);
+    # if this goes to the printer pass through
+    if ( $form->{media} !~ /(screen|email)/ ) {
 
-    $old_form = new Form;
-    for (keys %$form) { $old_form->{$_} = $form->{$_} }
-    
-  }
-   
-  &print_form($old_form);
+        $oldform = new Form;
+        for ( keys %$form ) { $oldform->{$_} = $form->{$_} }
+
+    }
+
+    &print_form($oldform);
 
 }
-
 
 sub print_form {
-  my ($old_form) = @_;
+    my ($oldform) = @_;
 
-  $inv = "inv";
-  $due = "due";
+    $inv = "inv";
+    $due = "due";
 
-  $numberfld = "sinumber";
+    $numberfld = "sinumber";
 
-  $display_form = ($form->{display_form}) ? $form->{display_form} : "display_form";
+    $display_form = ( $form->{display_form} ) ? $form->{display_form} : "display_form";
 
-  if ($form->{formname} eq "invoice") {
-    $form->{label} = $locale->text('Invoice');
-  }
-  if ($form->{formname} eq 'sales_order') {
-    $inv = "ord";
-    $due = "req";
-    $form->{label} = $locale->text('Sales Order');
-    $numberfld = "sonumber";
-    $order = 1;
-  }
-  if ($form->{formname} eq 'work_order') {
-    $inv = "ord";
-    $due = "req";
-    $form->{label} = $locale->text('Work Order');
-    $numberfld = "sonumber";
-    $order = 1;
-  }
-  if ($form->{formname} eq 'packing_list') {
-    # we use the same packing list as from an invoice
-    $form->{label} = $locale->text('Packing List');
-
-    if ($form->{type} ne 'invoice') {
-      $inv = "ord";
-      $due = "req";
-      $numberfld = "sonumber";
-      $order = 1;
-
-      $filled = 0;
-      for ($i = 1; $i < $form->{rowcount}; $i++) {
-	if ($form->{"ship_$i"}) {
-	  $filled = 1;
-	  last;
-	}
-      }
-      if (!$filled) {
-	for (1 .. $form->{rowcount}) { $form->{"ship_$_"} = $form->{"qty_$_"} }
-      }
-    }
-  }
-  if ($form->{formname} eq 'pick_list') {
-    $form->{label} = $locale->text('Pick List');
-    if ($form->{type} ne 'invoice') {
-      $inv = "ord";
-      $due = "req";
-      $order = 1;
-      $numberfld = "sonumber";
-    }
-  }
-  if ($form->{formname} eq 'purchase_order') {
-    $inv = "ord";
-    $due = "req";
-    $form->{label} = $locale->text('Purchase Order');
-    $numberfld = "ponumber";
-    $order = 1;
-  }
-  if ($form->{formname} eq 'bin_list') {
-    $inv = "ord";
-    $due = "req";
-    $form->{label} = $locale->text('Bin List');
-    $numberfld = "ponumber";
-    $order = 1;
-  }
-  if ($form->{formname} eq 'sales_quotation') {
-    $inv = "quo";
-    $due = "req";
-    $form->{label} = $locale->text('Quotation');
-    $numberfld = "sqnumber";
-    $order = 1;
-  }
-  if ($form->{formname} eq 'request_quotation') {
-    $inv = "quo";
-    $due = "req";
-    $form->{label} = $locale->text('Quotation');
-    $numberfld = "rfqnumber";
-    $order = 1;
-  }
-
-  &validate_items;
- 
-  $form->{"${inv}date"} = $form->{transdate};
-
-  $form->isblank("email", $locale->text('E-mail address missing!')) if ($form->{media} eq 'email');
-  $form->isblank("${inv}date", $locale->text($form->{label} .' Date missing!'));
-
-  # get next number
-  if (! $form->{"${inv}number"}) {
-    $form->{"${inv}number"} = $form->update_defaults(\%myconfig, $numberfld);
-    if ($form->{media} eq 'screen') {
-      &update;
-      exit;
-    }
-  }
-
-
-# $locale->text('Invoice Number missing!')
-# $locale->text('Invoice Date missing!')
-# $locale->text('Packing List Number missing!')
-# $locale->text('Packing List Date missing!')
-# $locale->text('Order Number missing!')
-# $locale->text('Order Date missing!')
-# $locale->text('Quotation Number missing!')
-# $locale->text('Quotation Date missing!')
-
-  &{ "$form->{vc}_details" };
-
-  @a = ();
-  foreach $i (1 .. $form->{rowcount}) {
-    push @a, ("partnumber_$i", "description_$i", "projectnumber_$i", "partsgroup_$i", "serialnumber_$i", "bin_$i", "unit_$i", "notes_$i");
-  }
-  for (split / /, $form->{taxaccounts}) { push @a, "${_}_description" }
-
-  $ARAP = ($form->{vc} eq 'customer') ? "AR" : "AP";
-  push @a, $ARAP;
-  
-  # format payment dates
-  for $i (1 .. $form->{paidaccounts} - 1) {
-    if (exists $form->{longformat}) {
-      $form->{"datepaid_$i"} = $locale->date(\%myconfig, $form->{"datepaid_$i"}, $form->{longformat});
-    }
-    
-    push @a, "${ARAP}_paid_$i", "source_$i", "memo_$i";
-  }
-  
-  $form->format_string(@a);
-  
-  ($form->{employee}) = split /--/, $form->{employee};
-  ($form->{warehouse}, $form->{warehouse_id}) = split /--/, $form->{warehouse};
-  
-  # this is a label for the subtotals
-  $form->{groupsubtotaldescription} = $locale->text('Subtotal') if not exists $form->{groupsubtotaldescription};
-  delete $form->{groupsubtotaldescription} if $form->{deletegroupsubtotal};
-
-  $duedate = $form->{"${due}date"};
-  
-  # create the form variables
-  if ($order) {
-    OE->order_details(\%myconfig, \%$form);
-  } else {
-    IS->invoice_details(\%myconfig, \%$form);
-  }
-
-  if (exists $form->{longformat}) {
-    $form->{"${due}date"} = $duedate;
-    for ("${inv}date", "${due}date", "shippingdate", "transdate") { $form->{$_} = $locale->date(\%myconfig, $form->{$_}, $form->{longformat}) }
-  }
-  
-  @a = qw(name address1 address2 city state zipcode country contact phone fax email);
- 
-  $shipto = 1;
-  # if there is no shipto fill it in from billto
-  foreach $item (@a) {
-    if ($form->{"shipto$item"}) {
-      $shipto = 0;
-      last;
-    }
-  }
-
-  if ($shipto) {
-    if ($form->{formname} eq 'purchase_order' || $form->{formname} eq 'request_quotation') {
-	$form->{shiptoname} = $myconfig{company};
-	$form->{shiptoaddress1} = $myconfig{address};
-	$form->{shiptoaddress1} =~ s/\\n/\n/g;
-    } else {
-      if ($form->{formname} !~ /bin_list/) {
-	for (@a) { $form->{"shipto$_"} = $form->{$_} }
-      }
-    }
-  }
-
-  # some of the stuff could have umlauts so we translate them
-  push @a, qw(contact shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptocontact shiptoemail shippingpoint shipvia notes intnotes employee warehouse);
-
-  push @a, ("${inv}number", "${inv}date", "${due}date");
-  
-  for (qw(company address tel fax businessnumber)) { $form->{$_} = $myconfig{$_} }
-  $form->{address} =~ s/\\n/\n/g;
-
-  for (qw(name email)) { $form->{"user$_"} = $myconfig{$_} }
-
-  push @a, qw(company address tel fax businessnumber username useremail);
-
-  for (qw(notes intnotes)) { $form->{$_} =~ s/^\s+//g }
-  
-  # before we format replace <%var%>
-  for (qw(notes intnotes message)) { $form->{$_} =~ s/<%(.*?)%>/$form->{$1}/g }
-
-  $form->format_string(@a);
-
-
-  $form->{templates} = "$myconfig{templates}";
-  $form->{IN} = "$form->{formname}.$form->{format}";
-
-  if ($form->{format} =~ /(postscript|pdf)/) {
-    $form->{IN} =~ s/$&$/tex/;
-  }
-
-
-  $form->{pre} = "<body bgcolor=#ffffff>\n<pre>" if $form->{format} eq 'txt';
-
-  if ($form->{media} !~ /(screen|queue|email)/) {
-    $form->{OUT} = "| $printer{$form->{media}}";
-    
-    $form->{OUT} =~ s/<%(fax)%>/<%$form->{vc}$1%>/;
-    $form->{OUT} =~ s/<%(.*?)%>/$form->{$1}/g;
-
-    if ($form->{printed} !~ /$form->{formname}/) {
-    
-      $form->{printed} .= " $form->{formname}";
-      $form->{printed} =~ s/^ //;
-
-      $form->update_status(\%myconfig);
+    if ( !( $form->{copies} = abs( $form->{copies} ) ) ) {
+        $form->{copies} = 1;
     }
 
-    $old_form->{printed} = $form->{printed} if defined %$old_form;
+    for (qw(name email)) { $form->{"user$_"} = $myconfig{$_} }
 
-    %audittrail = ( tablename	=> ($order) ? 'oe' : lc $ARAP,
-                    reference	=> $form->{"${inv}number"},
-		    formname	=> $form->{formname},
-		    action	=> 'printed',
-		    id		=> $form->{id} );
- 
-    $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail) if defined %$old_form;
-    
-  }
+    if ( $form->{formname} eq 'invoice' ) {
+        $form->{label} = $locale->text('Invoice');
+    }
+    if ( $form->{formname} eq 'vendor_invoice' ) {
+        $form->{label} = $locale->text('Invoice');
+        $numberfld = "vinumber";
+    }
+    if ( $form->{formname} eq 'debit_invoice' ) {
+        $form->{label} = $locale->text('Debit Invoice');
+    }
+    if ( $form->{formname} eq 'credit_invoice' ) {
+        $form->{label} = $locale->text('Credit Invoice');
+    }
+    if ( $form->{formname} eq 'transfer' ) {
+        $form->{label} = $locale->text('Inventory Transfer');
+    }
+    if ( $form->{formname} eq 'sales_order' ) {
+        $inv           = "ord";
+        $due           = "req";
+        $form->{label} = $locale->text('Sales Order');
+        $numberfld     = "sonumber";
+        $order         = 1;
+    }
+    if ( $form->{formname} eq 'work_order' ) {
+        $inv           = "ord";
+        $due           = "req";
+        $form->{label} = $locale->text('Work Order');
+        $numberfld     = "sonumber";
+        $order         = 1;
+    }
+    if ( $form->{formname} eq 'packing_list' ) {
 
+        # we use the same packing list as from an invoice
+        $form->{label} = $locale->text('Packing List');
 
-  if ($form->{media} eq 'email') {
-    $form->{subject} = qq|$form->{label} $form->{"${inv}number"}| unless $form->{subject};
-
-    $form->{plainpaper} = 1;
-    $form->{OUT} = "$sendmail";
-
-    if ($form->{emailed} !~ /$form->{formname}/) {
-      $form->{emailed} .= " $form->{formname}";
-      $form->{emailed} =~ s/^ //;
-
-      # save status
-      $form->update_status(\%myconfig);
+        if ( $form->{type} =~ /invoice/ ) {
+            $numberfld = "vinumber" if $form->{vc} eq 'vendor';
+        }
+        else {
+            $inv       = "ord";
+            $due       = "req";
+            $numberfld = "sonumber";
+            $order     = 1;
+        }
+    }
+    if ( $form->{formname} eq 'pick_list' ) {
+        $form->{label} = $locale->text('Pick List');
+        if ( $form->{type} =~ /invoice/ ) {
+            $numberfld = "vinumber" if $form->{vc} eq 'vendor';
+        }
+        else {
+            $inv       = "ord";
+            $due       = "req";
+            $order     = 1;
+            $numberfld = "sonumber";
+        }
+    }
+    if ( $form->{formname} eq 'purchase_order' ) {
+        $inv           = "ord";
+        $due           = "req";
+        $form->{label} = $locale->text('Purchase Order');
+        $numberfld     = "ponumber";
+        $order         = 1;
+    }
+    if ( $form->{formname} eq 'barcode' ) {
+        if ( $form->{type} =~ /invoice/ ) {
+            $numberfld = "vinumber" if $form->{vc} eq 'vendor';
+        }
+        elsif ( $form->{type} =~ /order/ ) {
+            $inv           = "ord";
+            $due           = "req";
+            $form->{label} = $locale->text('Barcode');
+            $numberfld     = "ponumber";
+            $order         = 1;
+        }
+    }
+    if ( $form->{formname} eq 'bin_list' ) {
+        $form->{label} = $locale->text('Bin List');
+        if ( $form->{type} =~ /invoice/ ) {
+            $numberfld = "vinumber" if $form->{vc} eq 'vendor';
+        }
+        else {
+            $inv       = "ord";
+            $due       = "req";
+            $numberfld = "ponumber";
+            $order     = 1;
+        }
+    }
+    if ( $form->{formname} eq 'sales_quotation' ) {
+        $inv           = "quo";
+        $due           = "req";
+        $form->{label} = $locale->text('Quotation');
+        $numberfld     = "sqnumber";
+        $order         = 1;
+    }
+    if ( $form->{formname} eq 'request_quotation' ) {
+        $inv           = "quo";
+        $due           = "req";
+        $form->{label} = $locale->text('Quotation');
+        $numberfld     = "rfqnumber";
+        $order         = 1;
     }
 
-    $now = scalar localtime;
-    $cc = $locale->text('Cc').qq|: $form->{cc}\n| if $form->{cc};
-    $bcc = $locale->text('Bcc').qq|: $form->{bcc}\n| if $form->{bcc};
-    
-    if (defined %$old_form) {
-      $old_form->{intnotes} = qq|$old_form->{intnotes}\n\n| if $old_form->{intnotes};
-      $old_form->{intnotes} .= qq|[email]\n|
-      .$locale->text('Date').qq|: $now\n|
-      .$locale->text('To').qq|: $form->{email}\n${cc}${bcc}|
-      .$locale->text('Subject').qq|: $form->{subject}\n|;
+    if ( $form->{formname} eq 'transfer' ) {
+        $inv           = "trf";
+        $due           = "req";
+        $form->{label} = $locale->text('Transfer');
+        $numberfld     = "trfnumber";
 
-      $old_form->{intnotes} .= qq|\n|.$locale->text('Message').qq|: |;
-      $old_form->{intnotes} .= ($form->{message}) ? $form->{message} : $locale->text('sent');
-
-      $old_form->{message} = $form->{message};
-      $old_form->{emailed} = $form->{emailed};
-
-      $old_form->{format} = "postscript" if $myconfig{printer};
-      $old_form->{media} = $myconfig{printer};
-
-      $old_form->save_intnotes(\%myconfig, ($order) ? 'oe' : lc $ARAP);
-    }
-    
-    %audittrail = ( tablename	=> ($order) ? 'oe' : lc $ARAP,
-                    reference	=> $form->{"${inv}number"},
-		    formname	=> $form->{formname},
-		    action	=> 'emailed',
-		    id		=> $form->{id} );
- 
-    $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail) if defined %$old_form;
-  }
-
-
-  if ($form->{media} eq 'queue') {
-    %queued = split / /, $form->{queued};
-
-    if ($filename = $queued{$form->{formname}}) {
-      $form->{queued} =~ s/$form->{formname} $filename//;
-      unlink "$spool/$filename";
-      $filename =~ s/\..*$//g;
-    } else {
-      $filename = time;
-      $filename .= $$;
+        # followings are stubs for company_details
+        $form->{vc}          = "customer";
+        $form->{customer_id} = 0;
     }
 
-    $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
-    $form->{OUT} = ">$spool/$filename";
+    if ( $form->{formname} eq 'delivery_list' ) {
+        $inv           = "ord";
+        $due           = "req";
+        $form->{label} = $locale->text('Delivery List');
+        $numberfld     = "sonumber";
+        $order         = 1;
+    }
+    if ( $form->{formname} eq 'transport_order' ) {
+        $form->{label} = $locale->text('Transport Order');
+        $inv           = "ord";
+        $due           = "req";
+        $numberfld     = "sonumber";
+        $order         = 1;
+    }
+    if ( $form->{formname} eq 'pickup_order' ) {
+        $inv           = "ord";
+        $due           = "req";
+        $form->{label} = $locale->text('Pickup Order');
+        $numberfld     = "ponumber";
+        $order         = 1;
+    }
 
-    $form->{queued} .= " $form->{formname} $filename";
-    $form->{queued} =~ s/^ //;
+    # send transport/pickup orders to different mail address if specified
+    if ( $form->{type} =~ /(transport|pickup)_order/ ) {
+        $form->{email} = $form->{transportemail} if $form->{transportemail};
+        $form->{cc}  = $form->{transportcc}  unless $form->{cc};
+        $form->{bcc} = $form->{transportbcc} unless $form->{bcc};
+    }
 
-    # save status
-    $form->update_status(\%myconfig);
+    &validate_items;
 
-    $old_form->{queued} = $form->{queued};
+    $form->{"${inv}date"} = $form->{transdate};
 
-    %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
-                    reference   => $form->{"${inv}number"},
-		    formname    => $form->{formname},
-		    action      => 'queued',
-		    id          => $form->{id} );
+    $form->isblank( "email", "$form->{$form->{vc}} : " . $locale->text('E-mail address missing!') ) if ( $form->{media} eq 'email' );
+    $form->isblank( "${inv}date", $locale->text( $form->{label} . ' Date missing!' ) );
 
-    $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
+    # get next number
+    if ( !$form->{"${inv}number"} ) {
+        $form->{"${inv}number"} ||= '-';
+        if ( $form->{media} ne 'screen' ) {
+            $form->{"${inv}number"} = $form->update_defaults( \%myconfig, $numberfld );
+        }
+    }
 
-  }
+    # $locale->text('Invoice Number missing!')
+    # $locale->text('Invoice Date missing!')
+    # $locale->text('Packing List Number missing!')
+    # $locale->text('Packing List Date missing!')
+    # $locale->text('Order Number missing!')
+    # $locale->text('Order Date missing!')
+    # $locale->text('Quotation Number missing!')
+    # $locale->text('Quotation Date missing!')
+    # $locale->text('Delivery Number missing!')
+    # $locale->text('Delivery List Date missing!')
+    # $locale->text('Transport Order Number missing!')
+    # $locale->text('Transport Order Date missing!')
+    # $locale->text('Pickup Order Number missing!')
+    # $locale->text('Pickup Order Date missing!')
 
+    AA->company_details( \%myconfig, \%$form );
 
-  $form->format_string("email", "cc", "bcc");
- 
-  $form->{fileid} = $form->{"${inv}number"};
-  $form->{fileid} =~ s/(\s|\W)+//g;
-  
-  $form->parse_template(\%myconfig, $userspath);
+    @f = ();
+    foreach $i ( 1 .. $form->{rowcount} ) {
+        push @f, map { "${_}_$i" } qw(partnumber description projectnumber partsgroup partsgroupcode serialnumber ordernumber customerponumber bin unit itemnotes package);
+    }
+    for ( split / /, $form->{taxaccounts} ) { push @f, "${_}_description" }
 
-  # if we got back here restore the previous form
-  if (defined %$old_form) {
-    
-    $old_form->{"${inv}number"} = $form->{"${inv}number"};
-    
-    # restore and display form
-    for (keys %$old_form) { $form->{$_} = $old_form->{$_} }
-    delete $form->{pre};
-    
+    $ARAP = ( $form->{vc} eq 'customer' ) ? "AR" : "AP";
+    push @f, $ARAP;
+
+    # format payment dates
+    for $i ( 1 .. $form->{paidaccounts} - 1 ) {
+        if ( exists $form->{longformat} ) {
+            $form->{"datepaid_$i"} = $locale->date( \%myconfig, $form->{"datepaid_$i"}, $form->{longformat} );
+        }
+
+        push @f, "${ARAP}_paid_$i", "source_$i", "memo_$i";
+    }
+    $form->format_string(@f);
+
+    for (qw(employee warehouse paymentmethod)) { ( $form->{$_}, $form->{"${_}_id"} ) = split /--/, $form->{$_} }
+
+    # this is a label for the subtotals
+    $form->{groupsubtotaldescription} = $locale->text('Subtotal') if not exists $form->{groupsubtotaldescription};
+    delete $form->{groupsubtotaldescription} if $form->{deletegroupsubtotal};
+
+    $duedate = $form->{"${due}date"};
+
+    # create the form variables
+    if ( $form->{formname} eq 'transfer' ) {
+        Trf->transfer_details( \%myconfig, \%$form );
+    }
+    else {
+        if ($order) {
+            OE->order_details( \%myconfig, \%$form );
+        }
+        else {
+            if ( $form->{vc} eq 'customer' ) {
+                IS->invoice_details( \%myconfig, \%$form );
+            }
+            else {
+                IR->invoice_details( \%myconfig, \%$form );
+            }
+        }
+    }
+
+    if ( $form->{formname} eq 'remittance_voucher' ) {
+        $form->isblank( "dcn", qq|$form->{"${ARAP}_paid_$form->{paidaccounts}"} : | . $locale->text('DCN missing!') );
+        $form->isblank( "rvc", qq|$form->{"${ARAP}_paid_$form->{paidaccounts}"} : | . $locale->text('RVC missing!') );
+    }
+
+    $form->fdld( \%myconfig, \%$locale );
+
+    if ( exists $form->{longformat} ) {
+        for ( "${inv}date", "${due}date", "shippingdate", "transdate", "transportdate" ) { $form->{$_} = $locale->date( \%myconfig, $form->{$_}, $form->{longformat} ) }
+    }
+
+    @f = qw(email name address1 address2 city state zipcode country contact phone fax);
+
+    $fillshipto = 1;
+
+    # check for shipto
+    foreach $item (@f) {
+        if ( $form->{"shipto$item"} ) {
+            $fillshipto = 0;
+            last;
+        }
+    }
+
+    if ($fillshipto) {
+        $fillshipto = 0;
+        $fillshipto = 1 if $form->{formname} =~ /(credit_invoice|purchase_order|request_quotation|bin_list)/;
+        $fillshipto = 1 if ( $form->{type} eq 'invoice' && $form->{vc} eq 'vendor' );
+
+        $form->{shiptophone}   = $form->{tel};
+        $form->{shiptofax}     = $form->{fax};
+        $form->{shiptocontact} = $form->{employee};
+
+        if ($fillshipto) {
+            if ( $form->{warehouse} ) {
+                $form->{shiptoname} = $form->{company};
+                for (qw(address1 address2 city state zipcode country)) {
+                    $form->{"shipto$_"} = $form->{"warehouse$_"};
+                }
+            }
+            else {
+
+                # fill in company address
+                $form->{shiptoname}     = $form->{company};
+                $form->{shiptoaddress1} = $form->{address};
+            }
+        }
+        else {
+            for (@f)            { $form->{"shipto$_"} = $form->{$_} }
+            for (qw(phone fax)) { $form->{"shipto$_"} = $form->{"$form->{vc}$_"} }
+        }
+    }
+
+    # remove email
+    shift @f;
+
+    # some of the stuff could have umlauts so we translate them
+    push @f, qw(contact shippingpoint shipvia notes intnotes employee warehouse paymentmethod);
+    push @f, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact email phone fax);
+    push @a, map { "transport$_" } qw(name address1 address2 city state zipcode country contact email cc bcc phone fax);
+    push @f, qw(firstname lastname salutation contacttitle occupation mobile);
+
+    push @f, ( "${inv}number", "${inv}date", "${due}date", "${inv}description" );
+
+    push @f, qw(company address tel fax businessnumber username useremail dcn rvc);
+
+    for (qw(notes intnotes)) { $form->{$_} =~ s/^\s+//g }
+
+    # before we format replace <%var%>
+    for ( "${inv}description", "notes", "intnotes", "message" ) { $form->{$_} =~ s/<%(.*?)%>/$fld = lc $1; $form->{$fld}/ge }
+
+    $form->format_string(@f);
+
+    $form->{templates} = "$templates/$myconfig{dbname}";
+    $form->{IN}        = "$form->{formname}.$form->{format}";
+
+    if ( $form->{format} =~ /(ps|pdf)/ ) {
+        $form->{IN} =~ s/$&$/tex/;
+    }
+
+    $form->{pre} = "<body bgcolor=#ffffff>\n<pre>" if $form->{format} eq 'txt';
+
+    if ( $form->{media} !~ /(screen|queue|email)/ ) {
+
+        # bp 2014/11 print spool file, check for spool file -form: 'sales_order 14231231.ps'
+        @queued = split / /, $form->{queued};
+        $filename = $queued[1];
+        $form->{tmpfile} = "$spool/$myconfig{dbname}/$filename";
+
+        if ( $filename =~ /(ps|pdf)/ ) {
+          $form->{format} = $1;
+          if ( $filename =~ /pdf/ ) {
+            # convert to ps pdftops or pdf2ps, the 2nd is Ghostscript
+            $ret = system("pdftops -level3 $form->{tmpfile} -q");
+            $ret = $ret >> 8;
+            $form->error($locale->text('Failed to convert PDF file to PostScript. Error (pdftops): ').'$ret\n') if ($?);
+            # delete the pdf file and change tmpfile and format
+            unlink "$form->{tmpfile}";
+            $form->{tmpfile} =~ s/pdf/ps/;
+            $form->{format} =~ s/pdf/ps/;
+          }
+        }
+
+        $form->{OUT} = qq~| $form->{"$form->{media}_printer"}~;
+        $form->{OUT} =~ s/<%(fax)%>/<%$form->{vc}$1%>/;
+        $form->{OUT} =~ s/<%(.*?)%>/$form->{$1}/g;
+
+        #bp 2014/11 call process_tex
+        $form->process_tex($form->{OUT});
+
+        # delete the spool file after printing
+        unlink "$form->{tmpfile}";
+
+        if ( $form->{printed} !~ /$form->{formname}/ ) {
+            $form->{printed} .= " $form->{formname}";
+            $form->{printed} =~ s/^ //;
+        }
+        $form->{queued} = '';
+        $form->update_status( \%myconfig );
+
+        %audittrail = (
+            tablename => ($order) ? 'oe' : lc $ARAP,
+            reference => $form->{"${inv}number"},
+            formname  => $form->{formname},
+            action    => 'printed',
+            id        => $form->{id}
+        );
+
+        if (%$oldform) {
+            $oldform->{printed} = $form->{printed};
+            $oldform->{audittrail} .= $form->audittrail( "", \%myconfig, \%audittrail );
+        }
+
+    }
+
+    if ( $form->{media} eq 'email' ) {
+
+        $form->{subject} = qq|$form->{label} $form->{"${inv}number"}| unless $form->{subject};
+
+        $form->{plainpaper} = 1;
+        $form->{OUT}        = "$sendmail";
+
+        if ( $form->{emailed} !~ /$form->{formname}/ ) {
+            $form->{emailed} .= " $form->{formname}";
+            $form->{emailed} =~ s/^ //;
+
+            # save status
+            $form->update_status( \%myconfig );
+        }
+
+        $now = scalar localtime;
+        $cc  = $locale->text('Cc') . qq|: $form->{cc}\n|;
+        $bcc = $locale->text('Bcc') . qq|: $form->{bcc}\n|;
+
+        %audittrail = (
+            tablename => ($order) ? 'oe' : lc $ARAP,
+            reference => $form->{"${inv}number"},
+            formname  => $form->{formname},
+            action    => 'emailed',
+            id        => $form->{id}
+        );
+
+        if (%$oldform) {
+            $oldform->{intnotes} = qq|$oldform->{intnotes}\n\n| if $oldform->{intnotes};
+            $oldform->{intnotes} .= qq|[email]\n| . $locale->text('Date') . qq|: $now\n| . $locale->text('To') . qq|: ${email}\n${cc}${bcc}|
+
+              . $locale->text('Subject') . qq|: $form->{subject}\n|;
+
+            $oldform->{intnotes} .= qq|\n| . $locale->text('Message') . qq|: |;
+            $oldform->{intnotes} .= ( $form->{message} ) ? $form->{message} : $locale->text('sent');
+
+            $oldform->{message} = $form->{message};
+            $oldform->{emailed} = $form->{emailed};
+
+            $oldform->save_intnotes( \%myconfig, ($order) ? 'oe' : lc $ARAP );
+
+            $oldform->{audittrail} .= $form->audittrail( "", \%myconfig, \%audittrail );
+        }
+
+    }
+
+    if ( $form->{media} eq 'queue' ) {
+
+        %queued = split / /, $form->{queued};
+
+        if ( $filename = $queued{ $form->{formname} } ) {
+            $form->{queued} =~ s/$form->{formname} $filename//;
+            unlink "$spool/$myconfig{dbname}/$filename";
+            $filename =~ s/\..*$//g;
+        }
+        else {
+            $filename = time;
+            $filename .= int rand 10000;
+        }
+
+        $filename .= ".$form->{format}";
+
+        $form->{OUT} = ">$spool/$myconfig{dbname}/$filename";
+
+        $form->{queued} .= " $form->{formname} $filename";
+        $form->{queued} =~ s/^ //;
+
+        # save status
+        $form->update_status( \%myconfig );
+
+        %audittrail = (
+            tablename => ($order) ? 'oe' : lc $ARAP,
+            reference => $form->{"${inv}number"},
+            formname  => $form->{formname},
+            action    => 'queued',
+            id        => $form->{id}
+        );
+
+        if (%$oldform) {
+            $oldform->{queued} = $form->{queued};
+            $oldform->{audittrail} .= $form->audittrail( "", \%myconfig, \%audittrail );
+        }
+
+    }
+
+    $form->{fileid} = $form->{"${inv}number"};
+    $form->{fileid} =~ s/(\s|\W)+//g;
+
+    $form->format_string(qw(email cc bcc));
+
+    if ( $form->{tmpfile} !~ /(ps|pdf)/ ) {
+      # bp 2014/11 no parsing required ps and pdf files (in the queue directory)
+     $form->parse_template( \%myconfig, $userspath ) if $form->{copies};
+    }
+
+    # if we got back here restore the previous form
+    if (%$oldform) {
+
+        $oldform->{"${inv}number"} = $form->{"${inv}number"};
+        $oldform->{dcn} = $form->{dcn};
+
+        # restore and display form
+        for ( keys %$oldform ) { $form->{$_} = $oldform->{$_} }
+        delete $form->{pre};
+
+        $form->{rowcount}--;
+
+        &{"$display_form"};
+
+    }
+
+}
+
+sub transport {
+
+    $title = $form->{title};
+    $form->{title} = $locale->text('Transport Partner Address');
+
+    # get details for name
+    AA->transport( \%myconfig, \%$form );
+
+    for ( keys %temp ) { $form->{$_} = $temp{$_} }
+
+    $vcname = $locale->text('Name');
+
     $form->{rowcount}--;
 
-    for (qw(exchangerate creditlimit creditremaining)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
-    
-    for $i (1 .. $form->{paidaccounts}) {
-      for (qw(paid exchangerate)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
+    %transport = (
+        address1 => { i => 2,  label => $locale->text('Address') },
+        address2 => { i => 3,  label => '' },
+        city     => { i => 4,  label => $locale->text('City') },
+        state    => { i => 5,  label => $locale->text('State/Province') },
+        zipcode  => { i => 6,  label => $locale->text('Zip/Postal Code') },
+        country  => { i => 7,  label => $locale->text('Country') },
+        contact  => { i => 8,  label => $locale->text('Contact') },
+        phone    => { i => 9,  label => $locale->text('Phone') },
+        fax      => { i => 10, label => $locale->text('Fax') },
+        email    => { i => 11, label => $locale->text('E-mail') },
+        cc       => { i => 11, label => $locale->text('cc') },
+        bcc      => { i => 11, label => $locale->text('bcc') }
+    );
+
+    $form->header;
+
+    @a = qw(name address1 address2 city state zipcode country contact phone fax email cc bcc);
+
+    $filltransport = 1;
+
+    # check for already entered transport data
+    foreach $item (@a) {
+        if ( $form->{"transport$item"} ) {
+            $filltransport = 0;
+            last;
+        }
     }
 
-    &{ "$display_form" };
+    # we fill from transport company record (AA.pm)
+    if ($filltransport) {
+        foreach $item ( @{ $form->{transport} } ) {
+            foreach $it (@a) {
+                $form->{"transport$it"} = $item->{"transport$it"};
+            }
+        }
+    }
 
-  }
-
-}
-
-
-sub customer_details {
-
-  IS->customer_details(\%myconfig, \%$form);
-
-}
-
-
-sub vendor_details {
-
-  IR->vendor_details(\%myconfig, \%$form);
-
-}
-
-
-sub ship_to {
-
-  $title = $form->{title};
-  $form->{title} = $locale->text('Ship to');
-
-  for (qw(exchangerate creditlimit creditremaining)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
-  for (1 .. $form->{paidaccounts}) { $form->{"paid_$_"} = $form->parse_amount(\%myconfig, $form->{"paid_$_"}) }
-
-  # get details for name
-  &{ "$form->{vc}_details" };
-
-  $number = ($form->{vc} eq 'customer') ? $locale->text('Customer Number') : $locale->text('Vendor Number');
-
-  $nextsub = ($form->{display_form}) ? $form->{display_form} : "display_form";
-
-  $form->{rowcount}--;
-
-  $form->header;
-
-  print qq|
+    print qq|
 <body>
 
 <form method=post action=$form->{script}>
 
 <table width=100%>
   <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
     <td>
-      <table>
-	<tr class=listheading>
-	  <th class=listheading colspan=2 width=50%>|.$locale->text('Billing Address').qq|</th>
-	  <th class=listheading width=50%>|.$locale->text('Shipping Address').qq|</th>
-	</tr>
-	<tr height="5"></tr>
-	<tr>
-	  <th align=right nowrap>$number</th>
-	  <td>$form->{"$form->{vc}number"}</td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('Company Name').qq|</th>
-	  <td>$form->{name}</td>
-	  <td><input name=shiptoname size=35 maxlength=64 value="$form->{shiptoname}"></td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('Address').qq|</th>
-	  <td>$form->{address1}</td>
-	  <td><input name=shiptoaddress1 size=35 maxlength=32 value="$form->{shiptoaddress1}"></td>
-	</tr>
-	<tr>
-	  <th></th>
-	  <td>$form->{address2}</td>
-	  <td><input name=shiptoaddress2 size=35 maxlength=32 value="$form->{shiptoaddress2}"></td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('City').qq|</th>
-	  <td>$form->{city}</td>
-	  <td><input name=shiptocity size=35 maxlength=32 value="$form->{shiptocity}"></td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('State/Province').qq|</th>
-	  <td>$form->{state}</td>
-	  <td><input name=shiptostate size=35 maxlength=32 value="$form->{shiptostate}"></td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('Zip/Postal Code').qq|</th>
-	  <td>$form->{zipcode}</td>
-	  <td><input name=shiptozipcode size=10 maxlength=10 value="$form->{shiptozipcode}"></td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('Country').qq|</th>
-	  <td>$form->{country}</td>
-	  <td><input name=shiptocountry size=35 maxlength=32 value="$form->{shiptocountry}"></td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('Contact').qq|</th>
-	  <td>$form->{contact}</td>
-	  <td><input name=shiptocontact size=35 maxlength=64 value="$form->{shiptocontact}"></td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('Phone').qq|</th>
-	  <td>$form->{"$form->{vc}phone"}</td>
-	  <td><input name=shiptophone size=20 value="$form->{shiptophone}"></td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('Fax').qq|</th>
-	  <td>$form->{"$form->{vc}fax"}</td>
-	  <td><input name=shiptofax size=20 value="$form->{shiptofax}"></td>
-	</tr>
-	<tr>
-	  <th align=right nowrap>|.$locale->text('E-mail').qq|</th>
-	  <td>$form->{email}</td>
-	  <td><input name=shiptoemail size=35 value="$form->{shiptoemail}"></td>
-	</tr>
+      <table width=100%>
+        <tr>
+         <th class=listheading colspan=3>$form->{name}</a></th>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$vcname</th>
+         <td><input name=transportname size=35 maxlength=64 value="| . $form->quote( $form->{transportname} ) . qq|"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{address1}{label}</th>
+         <td><input name=transportaddress1 size=35 maxlength=32 value="| . $form->quote( $form->{transportaddress1} ) . qq|"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <td></td>
+         <td><input name=transportaddress2 size=35 maxlength=32 value="| . $form->quote( $form->{transportaddress2} ) . qq|"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{city}{label}</th>
+         <td><input name=transportcity size=35 maxlength=32 value="| . $form->quote( $form->{transportcity} ) . qq|"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{state}{label}</th>
+         <td><input name=transportstate size=35 maxlength=32 value="| . $form->quote( $form->{transportstate} ) . qq|"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{zipcode}{label}</th>
+         <td><input name=transportzipcode size=10 maxlength=10 value="| . $form->quote( $form->{transportzipcode} ) . qq|"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{country}{label}</th>
+         <td><input name=transportcountry size=35 maxlength=32 value="| . $form->quote( $form->{transportcountry} ) . qq|"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{contact}{label}</th>
+         <td><input name=transportcontact size=35 maxlength=64 value="| . $form->quote( $form->{transportcontact} ) . qq|"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{phone}{label}</th>
+         <td><input name=transportphone size=20 value="$form->{transportphone}"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{fax}{label}</th>
+         <td><input name=transportfax size=20 value="$form->{transportfax}"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{email}{label}</th>
+         <td><input name=transportemail size=35 value="$form->{transportemail}"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{cc}{label}</th>
+         <td><input name=transportcc size=35 value="$form->{transportcc}"></td>
+       </tr>
+       <tr>
+         <td></td>
+         <th align=right nowrap>$transport{bcc}{label}</th>
+         <td><input name=transportbcc size=35 value="$form->{transportbcc}"></td>
+       </tr>
+|;
+
+    print qq|
       </table>
     </td>
   </tr>
 </table>
-
-<input type=hidden name=nextsub value=$nextsub>
 |;
 
-  # delete shipto
-  for (qw(action nextsub)) { delete $form->{$_} }
-  for (qw(name address1 address2 city state zipcode country contact phone fax email)) { delete $form->{"shipto$_"} }
-  $form->{title} = $title;
-  
-  $form->hide_form;
+    # delete transport
+    for (qw(action all_transport)) { delete $form->{$_} }
+    for (qw(name address1 address2 city state zipcode country contact phone fax email cc bcc)) {
+        delete $form->{"transport$_"};
+        $form->{flds} .= "$_ ";
+    }
+    chop $form->{flds};
 
-  print qq|
+    $form->{title} = $title;
+
+    $form->{nextsub} = "transport_selected";
+
+    $form->hide_form;
+
+    print qq|
 
 <hr size=3 noshade>
 
 <br>
-<input class=submit type=submit name=action value="|.$locale->text('Continue').qq|">
+<input class=submit type=submit name=action value="| . $locale->text('Continue') . qq|">
 </form>
 
 </body>
@@ -1671,4 +2164,232 @@ sub ship_to {
 
 }
 
+sub transport_selected {
+
+    $display_form = $form->{display_form} || "display_form";
+
+    for $i ( 1 .. $form->{transport_rows} ) {
+        if ( $form->{"ndx_$i"} ) {
+            for ( split / /, $form->{flds} ) { $form->{"transport$_"} = $form->{"transport${_}_$i"} }
+            last;
+        }
+    }
+    &{"$display_form"};
+
+}
+
+sub ship_to {
+
+    $title = $form->{title};
+    $form->{title} = $locale->text('Shipping Address');
+
+    for (qw(exchangerate creditlimit creditremaining)) { $form->{$_}        = $form->parse_amount( \%myconfig, $form->{$_} ) }
+    for ( 1 .. $form->{paidaccounts} )                 { $form->{"paid_$_"} = $form->parse_amount( \%myconfig, $form->{"paid_$_"} ) }
+    for (qw(dcn rvc))                                  { $temp{$_}          = $form->{$_} }
+
+    # get details for name
+    AA->ship_to( \%myconfig, \%$form );
+
+    for ( keys %temp ) { $form->{$_} = $temp{$_} }
+
+    $helpref = $form->{helpref};
+
+    $vcname = $locale->text('Name');
+
+    if ( $form->{vc} eq 'customer' ) {
+
+        if ( $form->{type} eq 'invoice' ) {
+            $form->helpref( "sales_invoice_ship_to", $myconfig{countrycode} );
+        }
+        else {
+            $form->helpref( "$form->{type}_ship_to", $myconfig{countrycode} );
+        }
+
+    }
+    else {
+
+        if ( $form->{type} eq 'invoice' ) {
+            $form->helpref( "vendor_invoice_ship_to", $myconfig{countrycode} );
+        }
+        else {
+            $form->helpref( "$form->{type}_ship_to", $myconfig{countrycode} );
+        }
+
+    }
+
+    $form->{rowcount}--;
+
+    %shipto = (
+        address1 => { i => 2,  label => $locale->text('Address') },
+        address2 => { i => 3,  label => '' },
+        city     => { i => 4,  label => $locale->text('City') },
+        state    => { i => 5,  label => $locale->text('State/Province') },
+        zipcode  => { i => 6,  label => $locale->text('Zip/Postal Code') },
+        country  => { i => 7,  label => $locale->text('Country') },
+        contact  => { i => 8,  label => $locale->text('Contact') },
+        phone    => { i => 9,  label => $locale->text('Phone') },
+        fax      => { i => 10, label => $locale->text('Fax') },
+        email    => { i => 11, label => $locale->text('E-mail') }
+    );
+
+    $form->header;
+
+    print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{helpref}$form->{title}</a></th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+	<tr>
+	  <th class=listheading colspan=3>$form->{name}</a></th>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$vcname</th>
+	  <td><input name=shiptoname size=35 maxlength=64 value="| . $form->quote( $form->{shiptoname} ) . qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{address1}{label}</th>
+	  <td><input name=shiptoaddress1 size=35 maxlength=32 value="| . $form->quote( $form->{shiptoaddress1} ) . qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <td></td>
+	  <td><input name=shiptoaddress2 size=35 maxlength=32 value="| . $form->quote( $form->{shiptoaddress2} ) . qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{city}{label}</th>
+	  <td><input name=shiptocity size=35 maxlength=32 value="| . $form->quote( $form->{shiptocity} ) . qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{state}{label}</th>
+	  <td><input name=shiptostate size=35 maxlength=32 value="| . $form->quote( $form->{shiptostate} ) . qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{zipcode}{label}</th>
+	  <td><input name=shiptozipcode size=10 maxlength=10 value="| . $form->quote( $form->{shiptozipcode} ) . qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{country}{label}</th>
+	  <td><input name=shiptocountry size=35 maxlength=32 value="| . $form->quote( $form->{shiptocountry} ) . qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{contact}{label}</th>
+	  <td><input name=shiptocontact size=35 maxlength=64 value="| . $form->quote( $form->{shiptocontact} ) . qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{phone}{label}</th>
+	  <td><input name=shiptophone size=20 value="$form->{shiptophone}"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{fax}{label}</th>
+	  <td><input name=shiptofax size=20 value="$form->{shiptofax}"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{email}{label}</th>
+	  <td><input name=shiptoemail size=35 value="$form->{shiptoemail}"></td>
+	</tr>
+
+|;
+
+    $i = 1;
+    for $ref ( @{ $form->{all_shipto} } ) {
+
+        print qq|
+	<tr>
+	  <td></td>
+	  <td><hr noshade></td>
+	  <td><hr noshade></td>
+	</tr>
+
+	<tr>
+	  <td><input name="ndx_$i" type=checkbox class=checkbox>
+	  <th align=right nowrap>$vcname</th>
+	  <td>$ref->{shiptoname}</td>
+	</tr>
+|;
+
+        for ( sort { $shipto{$a}{i} <=> $shipto{$b}{i} } keys %shipto ) {
+            print qq|
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>$shipto{$_}{label}</th>
+	  <td>$ref->{"shipto$_"}</td>
+	</tr>
+|;
+        }
+
+        for ( keys %$ref ) { $form->{"${_}_$i"} = $ref->{$_} }
+        $form->hide_form( map { "${_}_$i" } keys %$ref );
+
+        $i++;
+    }
+    $form->{shipto_rows} = $i - 1;
+
+    print qq|
+      </table>
+    </td>
+  </tr>
+</table>
+|;
+
+    # delete shipto
+    for (qw(action all_shipto)) { delete $form->{$_} }
+    for (qw(name address1 address2 city state zipcode country contact phone fax email)) {
+        delete $form->{"shipto$_"};
+        $form->{flds} .= "$_ ";
+    }
+    chop $form->{flds};
+
+    $form->{title} = $title;
+
+    $form->{helpref} = $helpref;
+    $form->{nextsub} = "shipto_selected";
+
+    $form->hide_form;
+
+    print qq|
+
+<hr size=3 noshade>
+
+<br>
+<input class=submit type=submit name=action value="| . $locale->text('Continue') . qq|">
+</form>
+
+</body>
+</html>
+|;
+
+}
+
+sub shipto_selected {
+
+    $display_form = $form->{display_form} || "display_form";
+
+    for $i ( 1 .. $form->{shipto_rows} ) {
+        if ( $form->{"ndx_$i"} ) {
+            for ( split / /, $form->{flds} ) { $form->{"shipto$_"} = $form->{"shipto${_}_$i"} }
+            last;
+        }
+    }
+
+    &{"$display_form"};
+
+}
 

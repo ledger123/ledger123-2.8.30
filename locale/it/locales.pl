@@ -24,7 +24,7 @@ $language =~ s/\((.*)\)/$1/;
 $charset = $1;
 
 opendir DIR, "$bindir" or die "$!";
-@progfiles = grep { /\.pl/; !/(_|^\.)/ } readdir DIR;
+@progfiles = grep { /\.pl/; !/(_|^\.|temp)/ } readdir DIR;
 seekdir DIR, 0;
 @customfiles = grep /_/, readdir DIR;
 closedir DIR;
@@ -56,7 +56,9 @@ if (-f "all") {
 if (-f 'missing') {
   unlink "missing";
 }
-  
+
+#goto NEW;
+
 foreach $file (@progfiles) {
   
   %locale = ();
@@ -186,6 +188,7 @@ $self{subs} = {
       
     }
   }
+}
 
   
   # redo the all file
@@ -225,7 +228,60 @@ $self{texts} = {
     
   }
 
+
+#####################
+# combine admin and menu
+%{$self{texts}} = ();
+do "menu";
+%menu = %{$self{texts}};
+
+%{$self{texts}} = ();
+do "admin";
+%admin = %{$self{texts}};
+
+for (keys %menu) {
+  $self{texts}{$_} ||= $menu{$_};
 }
+open FH, ">admin" or die "$! : admin";
+
+if ($self{charset}) {
+  print FH qq|\$self{charset} = '|.$self{charset}.qq|';\n\n|;
+}
+
+print FH q|$self{texts} = {
+|;
+
+  foreach $key (sort keys %{ $self{texts} }) {
+
+    $keytext = $key;
+    $keytext =~ s/'/\\'/g;
+    $keytext =~ s/\\$/\\\\/;
+ 
+    $text = $self{texts}{$key};
+    $text =~ s/'/\\'/g;
+    $text =~ s/\\$/\\\\/;
+    print FH qq|  '$keytext'|.(' ' x (27-length($keytext))).qq| => '$text',\n|;
+  }
+
+  print FH q|};
+|;
+
+  print FH q|
+$self{subs} = {
+|;
+
+  for (sort keys %{ $self{subs} }) {
+    print FH qq|  '$_'|.(' ' x (27-length($_))).qq| => '$self{subs}{$_}',\n|;
+  }
+  
+  print FH q|};
+  
+1;
+|;
+
+close FH;
+
+
 
 $per = sprintf("%.1f", ($count - $notext) / $count * 100);
 print "\n$language - ${per}%\n";
@@ -308,6 +364,12 @@ sub scanfile {
           if (/type=submit/i) {
 	    $submit{$string} = 1;
           }
+
+          # is it a value before $locale->
+          if (/value => \$locale/) {
+	    $submit{$string} = 1;
+          }
+
 	}
       }
 

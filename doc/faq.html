@@ -1,4 +1,26 @@
 <ul>
+
+<p><li><h4>Attempt to copy freed scalar</h4>
+Perl 5 with thread support has a bug.
+To get rid of panic errors and other issues the compiler can't handle,
+recompile perl without thread support.
+
+<p><li><h4>preamble.tex : No such file or directory</h4>
+templates are provided as is, some templates may have links to other files
+which are not included.
+The preample.tex file is simply a separate file which holds
+the header information for a template. Find a template with the header,
+that is everything up to \begin document, and put the stuff into a file
+called preamble.tex or simply cut and paste the header into the file and
+remove the <%include preamble.tex%> directive.
+
+<p><li><h4>wrong papersize</h4>
+If the papersize for postscript and PDF does not match set the proper
+size with texconfig-sys
+<pre>
+texconfig-sys pdftex paper letter
+</pre>
+
 <p><li><h4>Install Notes for Lighttpd</h4>
 <ol>
 <li>Make sure mod_cgi and mod_alias are in server.modules list
@@ -51,9 +73,9 @@ template1 and when SQL-Ledger tries to create them you'll get an error that
 the tables already exist.
 
 
-<p><li><h4>PostgreSQL 8.0+</h4>
-To use SQL-Ledger with 8.0+ you have to modify Pg-tables.sql The file
-is in the sql directory.
+<p><li><h4>PostgreSQL 8.0+ and SQL-Ledger v2.6.3 and older</h4>
+To use SQL-Ledger < v2.6.3 with 8.0+ you have to modify the Pg-tables.sql file.
+The file is in the sql directory.
 
 <pre>
 CREATE TABLE orderitems (
@@ -90,7 +112,7 @@ CREATE TABLE assembly (
 ) WITH OIDS;
 </pre>
 
-This change is only required for SQL-Ledger versions 2.6.3 and older.
+This change is only required for SQL-Ledger versions 2.6.3 and older!
 
 <p>If you already built a dataset without this change you will get
 an error when you try to save a PO or assembly.
@@ -338,8 +360,6 @@ the internal defaults are used which turn off $latex, hence no PDF option.
 <a href=http://techdocs.postgresql.org/guides/InstallingOnWindows>Postgres</a>
 or Oracle, DBI and the appropriate DBD
 module
-<br>if you can't compile DBD-Pg here is a precompiled
-<a href=http://www.edmund-mergl.de/export/>DBD-Pg module</a>
 <li>download the latest version of <a href=/cgi-bin/nav.pl?page=source/index.html&title=Download>SQL-Ledger</a>
 <li>extract the files to c:\apache\sql-ledger
 <li>run 'perl shebang' to change the first line of the scripts. If perl
@@ -652,9 +672,7 @@ can be changed by setting the language in your Preferences.
 
 <p>
 <hr>
-<a name=security>
 <h1>SQL-Ledger security</h1>
-</a>
 
 <ul>
 <li>The security features built into SQL-Ledger provide password

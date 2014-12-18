@@ -11,6 +11,18 @@ SELECT nextval ('orderitemsid');
 CREATE SEQUENCE jcitemsid;
 SELECT nextval ('jcitemsid');
 --
+CREATE SEQUENCE addressid;
+SELECT nextval ('addressid');
+--
+CREATE SEQUENCE assemblyid;
+SELECT nextval ('assemblyid');
+--
+CREATE SEQUENCE inventoryid;
+SELECT nextval ('inventoryid');
+--
+CREATE SEQUENCE contactid;
+SELECT nextval ('contactid');
+--
 CREATE TABLE makemodel (
   parts_id int,
   make text,
@@ -24,7 +36,10 @@ CREATE TABLE gl (
   transdate date DEFAULT current_date,
   employee_id int,
   notes text,
-  department_id int default 0
+  department_id int DEFAULT 0,
+  approved bool DEFAULT 't',
+  curr char(3),
+  exchangerate float
 );
 --
 CREATE TABLE chart (
@@ -44,33 +59,11 @@ CREATE TABLE gifi (
 );
 --
 CREATE TABLE defaults (
-  inventory_accno_id int,
-  income_accno_id int,
-  expense_accno_id int,
-  fxgain_accno_id int,
-  fxloss_accno_id int,
-  sinumber text,
-  sonumber text,
-  yearend varchar(5),
-  weightunit varchar(5),
-  businessnumber text,
-  version varchar(8),
-  curr text,
-  closedto date,
-  revtrans bool DEFAULT 'f',
-  ponumber text,
-  sqnumber text,
-  rfqnumber text,
-  audittrail bool default 'f',
-  vinumber text,
-  employeenumber text,
-  partnumber text,
-  customernumber text,
-  vendornumber text,
-  glnumber text,
-  projectnumber text
+  fldname text,
+  fldvalue text
 );
-INSERT INTO defaults (version) VALUES ('2.6.12');
+--
+INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '3.0.0');
 --
 CREATE TABLE acc_trans (
   trans_id int,
@@ -78,20 +71,22 @@ CREATE TABLE acc_trans (
   amount float,
   transdate date DEFAULT current_date,
   source text,
-  cleared bool DEFAULT 'f',
+  approved bool DEFAULT 't',
   fx_transaction bool DEFAULT 'f',
   project_id int,
   memo text,
-  invoice_id int
+  id int,
+  cleared date,
+  vr_id int
 );
 --
 CREATE TABLE invoice (
-  id int DEFAULT nextval ( 'invoiceid' ),
+  id int DEFAULT nextval ( 'invoiceid' ) primary key,
   trans_id int,
   parts_id int,
   description text,
-  qty float4,
-  allocated float4,
+  qty float,
+  allocated float,
   sellprice float,
   fxsellprice float,
   discount float4,
@@ -100,43 +95,45 @@ CREATE TABLE invoice (
   project_id int,
   deliverydate date,
   serialnumber text,
-  notes text
+  itemnotes text,
+  lineitemdetail bool,
+  ordernumber text,
+  ponumber text
 );
 --
 CREATE TABLE customer (
-  id int default nextval('id'),
+  id int DEFAULT nextval('id') primary key,
   name varchar(64),
-  address1 varchar(32),
-  address2 varchar(32),
-  city varchar(32),
-  state varchar(32),
-  zipcode varchar(10),
-  country varchar(32),
   contact varchar(64),
   phone varchar(20),
   fax varchar(20),
   email text,
   notes text,
-  discount float4,
-  taxincluded bool default 'f',
-  creditlimit float default 0,
-  terms int2 default 0,
+  terms int2 DEFAULT 0,
+  taxincluded bool DEFAULT 'f',
   customernumber varchar(32),
   cc text,
   bcc text,
   business_id int,
   taxnumber varchar(32),
   sic_code varchar(6),
-  iban varchar(34),
-  bic varchar(11),
+  discount float4,
+  creditlimit float DEFAULT 0,
   employee_id int,
   language_code varchar(6),
   pricegroup_id int,
   curr char(3),
   startdate date,
-  enddate date
+  enddate date,
+  arap_accno_id int,
+  payment_accno_id int,
+  discount_accno_id int,
+  cashdiscount float4,
+  discountterms int2,
+  threshold float,
+  paymentmethod_id int,
+  remittancevoucher bool
 );
---
 --
 CREATE TABLE parts (
   id int DEFAULT nextval ( 'id' ),
@@ -147,13 +144,13 @@ CREATE TABLE parts (
   sellprice float,
   lastcost float,
   priceupdate date DEFAULT current_date,
-  weight float4,
-  onhand float4 DEFAULT 0,
+  weight float,
+  onhand float DEFAULT 0,
   notes text,
   makemodel bool DEFAULT 'f',
   assembly bool DEFAULT 'f',
   alternate bool DEFAULT 'f',
-  rop float4,
+  rop float,
   inventory_accno_id int,
   income_accno_id int,
   expense_accno_id int,
@@ -165,16 +162,21 @@ CREATE TABLE parts (
   microfiche text,
   partsgroup_id int,
   project_id int,
-  avgcost float
+  avgcost float,
+  tariff_hscode text,
+  countryorigin text,
+  barcode text,
+  toolnumber text
 );
 --
 CREATE TABLE assembly (
-  id int,
+  id int DEFAULT nextval('assemblyid'),
   parts_id int,
   qty float,
   bom bool,
-  adj bool
-) WITH OIDS;
+  adj bool,
+  aid int
+);
 --
 CREATE TABLE ar (
   id int DEFAULT nextval ( 'id' ),
@@ -197,10 +199,21 @@ CREATE TABLE ar (
   till varchar(20),
   quonumber text,
   intnotes text,
-  department_id int default 0,
+  department_id int DEFAULT 0,
   shipvia text,
   language_code varchar(6),
-  ponumber text
+  ponumber text,
+  approved bool DEFAULT 't',
+  cashdiscount float4,
+  discountterms int2,
+  waybill text,
+  warehouse_id int,
+  description text,
+  onhold bool DEFAULT 'f',
+  exchangerate float,
+  dcn text,
+  bank_id int,
+  paymentmethod_id int
 );
 --
 CREATE TABLE ap (
@@ -227,7 +240,18 @@ CREATE TABLE ap (
   language_code varchar(6),
   ponumber text,
   shippingpoint text,
-  terms int2 DEFAULT 0
+  terms int2 DEFAULT 0,
+  approved bool DEFAULT 't',
+  cashdiscount float4,
+  discountterms int2,
+  waybill text,
+  warehouse_id int,
+  description text,
+  onhold bool DEFAULT 'f',
+  exchangerate float,
+  dcn text,
+  bank_id int,
+  paymentmethod_id int
 );
 --
 CREATE TABLE partstax (
@@ -253,80 +277,86 @@ CREATE TABLE vendortax (
 );
 --
 CREATE TABLE oe (
-  id int default nextval('id'),
+  id int DEFAULT nextval('id'),
   ordnumber text,
-  transdate date default current_date,
+  transdate date DEFAULT current_date,
   vendor_id int,
   customer_id int,
-  amount float8,
-  netamount float8,
+  amount float,
+  netamount float,
   reqdate date,
   taxincluded bool,
   shippingpoint text,
   notes text,
   curr char(3),
   employee_id int,
-  closed bool default 'f',
-  quotation bool default 'f',
+  closed bool DEFAULT 'f',
+  quotation bool DEFAULT 'f',
   quonumber text,
   intnotes text,
-  department_id int default 0,
+  department_id int DEFAULT 0,
   shipvia text,
   language_code varchar(6),
   ponumber text,
-  terms int2 DEFAULT 0
+  terms int2 DEFAULT 0,
+  waybill text,
+  warehouse_id int,
+  description text,
+  aa_id int,
+  exchangerate float
 );
 --
 CREATE TABLE orderitems (
-  id int default nextval('orderitemsid'),
+  id int DEFAULT nextval('orderitemsid'),
   trans_id int,
   parts_id int,
   description text,
-  qty float4,
-  sellprice float8,
+  qty float,
+  sellprice float,
   discount float4,
   unit varchar(5),
   project_id int,
   reqdate date,
-  ship float4,
+  ship float,
   serialnumber text,
-  notes text
-) WITH OIDS;
+  itemnotes text,
+  lineitemdetail bool,
+  ordernumber text,
+  ponumber text
+);
 --
 CREATE TABLE exchangerate (
   curr char(3),
   transdate date,
-  buy float8,
-  sell float8
+  exchangerate float
 );
 --
-create table employee (
-  id int default nextval('id'),
+CREATE TABLE employee (
+  id int primary key DEFAULT nextval('id'),
   login text,
   name varchar(64),
-  address1 varchar(32),
-  address2 varchar(32),
-  city varchar(32),
-  state varchar(32),
-  zipcode varchar(10),
-  country varchar(32),
   workphone varchar(20),
+  workfax varchar(20),
+  workmobile varchar(20),
   homephone varchar(20),
-  startdate date default current_date,
+  homemobile varchar(20),
+  startdate date DEFAULT current_date,
   enddate date,
   notes text,
-  role varchar(20),
-  sales bool default 'f',
+  sales bool DEFAULT 'f',
   email text,
   ssn varchar(20),
-  iban varchar(34),
-  bic varchar(11),
-  managerid int,
   employeenumber varchar(32),
-  dob date
+  dob date,
+  payperiod int2,
+  apid int,
+  paymentid int,
+  paymentmethod_id int,
+  acsrole_id int,
+  acs text
 );
 --
-create table shipto (
+CREATE TABLE shipto (
   trans_id int,
   shiptoname varchar(64),
   shiptoaddress1 varchar(32),
@@ -342,21 +372,15 @@ create table shipto (
 );
 --
 CREATE TABLE vendor (
-  id int default nextval('id'),
+  id int DEFAULT nextval('id') primary key,
   name varchar(64),
-  address1 varchar(32),
-  address2 varchar(32),
-  city varchar(32),
-  state varchar(32),
-  zipcode varchar(10),
-  country varchar(32),
   contact varchar(64),
   phone varchar(20),
   fax varchar(20),
   email text,
   notes text,
-  terms int2 default 0,
-  taxincluded bool default 'f',
+  terms int2 DEFAULT 0,
+  taxincluded bool DEFAULT 'f',
   vendornumber varchar(32),
   cc text,
   bcc text,
@@ -365,46 +389,55 @@ CREATE TABLE vendor (
   taxnumber varchar(32),
   sic_code varchar(6),
   discount float4,
-  creditlimit float default 0,
-  iban varchar(34),
-  bic varchar(11),
+  creditlimit float DEFAULT 0,
   employee_id int,
   language_code varchar(6),
   pricegroup_id int,
   curr char(3),
   startdate date,
-  enddate date
+  enddate date,
+  arap_accno_id int,
+  payment_accno_id int,
+  discount_accno_id int,
+  cashdiscount float4,
+  discountterms int2,
+  threshold float,
+  paymentmethod_id int,
+  remittancevoucher bool
 );
 --
 CREATE TABLE project (
-  id int default nextval('id'),
+  id int DEFAULT nextval('id'),
   projectnumber text,
   description text,
   startdate date,
   enddate date,
   parts_id int,
-  production float default 0,
-  completed float default 0,
+  production float DEFAULT 0,
+  completed float DEFAULT 0,
   customer_id int
 );
 --
 CREATE TABLE partsgroup (
-  id int default nextval('id'),
-  partsgroup text
+  id int DEFAULT nextval('id'),
+  partsgroup text,
+  pos bool DEFAULT 't',
+  code text,
+  image text
 );
 --
 CREATE TABLE status (
   trans_id int,
   formname text,
-  printed bool default 'f',
-  emailed bool default 'f',
+  printed bool DEFAULT 'f',
+  emailed bool DEFAULT 'f',
   spoolfile text
 );
 --
 CREATE TABLE department (
-  id int default nextval('id'),
+  id int DEFAULT nextval('id'),
   description text,
-  role char(1) default 'P'
+  role char(1) DEFAULT 'P'
 );
 --
 -- department transaction table
@@ -415,7 +448,7 @@ CREATE TABLE dpt_trans (
 --
 -- business table
 CREATE TABLE business (
-  id int default nextval('id'),
+  id int DEFAULT nextval('id'),
   description text,
   discount float4
 );
@@ -428,19 +461,20 @@ CREATE TABLE sic (
 );
 --
 CREATE TABLE warehouse (
-  id int default nextval('id'),
+  id int DEFAULT nextval('id'),
   description text
 );
 --
 CREATE TABLE inventory (
+  id int DEFAULT nextval('inventoryid'),
   warehouse_id int,
   parts_id int,
   trans_id int,
   orderitems_id int,
-  qty float4,
+  qty float,
   shippingdate date,
   employee_id int
-) WITH OIDS;
+);
 --
 CREATE TABLE yearend (
   trans_id int,
@@ -457,7 +491,7 @@ CREATE TABLE partsvendor (
 );
 --
 CREATE TABLE pricegroup (
-  id int default nextval('id'),
+  id int DEFAULT nextval('id'),
   pricegroup text
 );
 --
@@ -465,7 +499,7 @@ CREATE TABLE partscustomer (
   parts_id int,
   customer_id int,
   pricegroup_id int,
-  pricebreak float4,
+  pricebreak float,
   sellprice float,
   validfrom date,
   validto date,
@@ -483,7 +517,7 @@ CREATE TABLE audittrail (
   reference text,
   formname text,
   action text,
-  transdate timestamp default current_timestamp,
+  transdate timestamp DEFAULT current_timestamp,
   employee_id int
 );
 --
@@ -502,7 +536,8 @@ CREATE TABLE recurring (
   repeat int2,
   unit varchar(6),
   howmany int,
-  payment bool default 'f'
+  payment bool DEFAULT 'f',
+  description text
 );
 --
 CREATE TABLE recurringemail (
@@ -520,18 +555,208 @@ CREATE TABLE recurringprint (
 );
 --
 CREATE TABLE jcitems (
-  id int default nextval('jcitemsid'),
+  id int DEFAULT nextval('jcitemsid'),
   project_id int,
   parts_id int,
   description text,
-  qty float4,
-  allocated float4,
-  sellprice float8,
-  fxsellprice float8,
+  qty float,
+  allocated float,
+  sellprice float,
+  fxsellprice float,
   serialnumber text,
   checkedin timestamp with time zone,
   checkedout timestamp with time zone,
   employee_id int,
   notes text
 );
+--
+CREATE TABLE cargo (
+  id int not null,
+  trans_id int not null,
+  package text,
+  netweight float,
+  grossweight float,
+  volume float
+);
+--
+CREATE TABLE br (
+  id int DEFAULT nextval('id') primary key,
+  batchnumber text,
+  description text,
+  batch text,
+  transdate date DEFAULT current_date,
+  apprdate date,
+  amount float,
+  managerid int,
+  employee_id int
+);
+--
+CREATE TABLE vr (
+  br_id int references br (id) on delete cascade,
+  trans_id int not null,
+  id int not null DEFAULT nextval('id'),
+  vouchernumber text
+);
+--
+CREATE TABLE semaphore (
+  id int,
+  login text,
+  module text,
+  expires varchar(10)
+);
+--
+CREATE TABLE address (
+  id int DEFAULT nextval('addressid') primary key,
+  trans_id int,
+  address1 varchar(32),
+  address2 varchar(32),
+  city varchar(32),
+  state varchar(32),
+  zipcode varchar(10),
+  country varchar(32)
+);
+--
+CREATE TABLE contact (
+  id int default nextval('contactid') primary key,
+  trans_id int not null,
+  salutation varchar(32),
+  firstname varchar(32),
+  lastname varchar(32),
+  contacttitle varchar(32),
+  occupation varchar(32),
+  phone varchar(20),
+  fax varchar(20),
+  mobile varchar(20),
+  email text,
+  gender char(1) default 'M',
+  parent_id int,
+  typeofcontact varchar(20)
+);
+--
+CREATE TABLE paymentmethod (
+  id int primary key default nextval('id'),
+  description text,
+  fee float,
+  rn int,
+  roundchange float4
+);
+--
+CREATE TABLE bank (
+  id int,
+  name varchar(64),
+  iban varchar(34),
+  bic varchar(11),
+  address_id int default nextval('addressid'),
+  dcn text,
+  rvc text,
+  membernumber text,
+  clearingnumber text
+);
+--
+CREATE TABLE payment (
+  id int not null,
+  trans_id int not null,
+  exchangerate float default 1,
+  paymentmethod_id int
+);
+--
+CREATE TABLE curr (
+  rn int2,
+  curr char(3) primary key,
+  prec int2
+);
+--
+CREATE TABLE report (
+  reportid int primary key default nextval('id'),
+  reportcode text,
+  reportdescription text,
+  login text
+);
+--
+CREATE TABLE reportvars (
+  reportid int not null,
+  reportvariable text,
+  reportvalue text
+);
+--
+CREATE TABLE employeededuction (
+  id int,
+  employee_id int,
+  deduction_id int,
+  exempt float,
+  maximum float
+);
+--
+CREATE TABLE pay_trans (
+  trans_id int,
+  id int,
+  glid int,
+  qty float,
+  amount float
+);
+--
+CREATE TABLE deduction (
+  id int default nextval('id') primary key,
+  description text,
+  employee_accno_id int,
+  employeepays float4,
+  employer_accno_id int,
+  employerpays float4,
+  fromage int2,
+  toage int2,
+  agedob bool,
+  basedon int
+);
+--
+CREATE TABLE deduct (
+  trans_id int,
+  deduction_id int,
+  withholding bool,
+  percent float4
+);
+--
+CREATE TABLE deductionrate (
+  rn int2,
+  trans_id int,
+  rate float,
+  amount float,
+  above float,
+  below float
+);
+--
+CREATE TABLE wage (
+  id int default nextval('id') primary key,
+  description text,
+  amount float,
+  defer int,
+  exempt bool default 'f',
+  chart_id int
+);
+--
+CREATE TABLE payrate (
+  trans_id int,
+  id int,
+  rate float,
+  above float
+);
+--
+CREATE TABLE employeewage (
+  id int,
+  employee_id int,
+  wage_id int
+);
+--
+CREATE TABLE reference (
+  id int,
+  trans_id int,
+  description text
+);
+--
+CREATE TABLE acsrole (
+  id int default nextval('id') primary key,
+  description text,
+  acs text,
+  rn int2
+);
+--
 

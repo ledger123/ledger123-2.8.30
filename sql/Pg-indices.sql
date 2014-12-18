@@ -27,13 +27,11 @@ create index chart_category_key on chart (category);
 create index chart_link_key on chart (link);
 create index chart_gifi_accno_key on chart (gifi_accno);
 --
-create index customer_id_key on customer (id);
-create index customer_customernumber_key on customer (customernumber);
 create index customer_name_key on customer (lower(name));
+create index customer_customernumber_key on customer (customernumber);
 create index customer_contact_key on customer (lower(contact));
 create index customer_customer_id_key on customertax (customer_id);
 --
-create index employee_id_key on employee (id);
 create unique index employee_login_key on employee (login);
 create index employee_name_key on employee (lower(name));
 --
@@ -47,7 +45,6 @@ create index gl_reference_key on gl (reference);
 create index gl_description_key on gl (lower(description));
 create index gl_employee_id_key on gl (employee_id);
 --
-create index invoice_id_key on invoice (id);
 create index invoice_trans_id_key on invoice (trans_id);
 --
 create index makemodel_parts_id_key on makemodel (parts_id);
@@ -59,14 +56,12 @@ create index oe_transdate_key on oe (transdate);
 create index oe_ordnumber_key on oe (ordnumber);
 create index oe_employee_id_key on oe (employee_id);
 create index orderitems_trans_id_key on orderitems (trans_id);
-create index orderitems_id_key on orderitems (id);
 --
 create index parts_id_key on parts (id);
 create index parts_partnumber_key on parts (lower(partnumber));
 create index parts_description_key on parts (lower(description));
 create index partstax_parts_id_key on partstax (parts_id);
 --
-create index vendor_id_key on vendor (id);
 create index vendor_name_key on vendor (lower(name));
 create index vendor_vendornumber_key on vendor (vendornumber);
 create index vendor_contact_key on vendor (lower(contact));
@@ -84,6 +79,9 @@ create index status_trans_id_key on status (trans_id);
 --
 create index department_id_key on department (id);
 --
+create index partscustomer_customer_id_key on partscustomer (customer_id);
+create index partscustomer_parts_id_key on partscustomer (parts_id);
+--
 create index partsvendor_vendor_id_key on partsvendor (vendor_id);
 create index partsvendor_parts_id_key on partsvendor (parts_id);
 --
@@ -97,4 +95,8 @@ create index translation_trans_id_key on translation (trans_id);
 create unique index language_code_key on language (code);
 --
 create index jcitems_id_key on jcitems (id);
+--
+create index cargo_id_key on cargo (id, trans_id);
+--
+create index inventory_parts_id_key on inventory (parts_id);
 

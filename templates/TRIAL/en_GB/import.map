@@ -1,0 +1,27 @@
+3.03
+Sample import.map
+The location of a mapfile is in the templates/dbname/language directory.
+left: CSV file headers, right: Ledger field names
+
+[sales_invoice]
+custid=customernumber
+invtext=description
+account=AR
+currency=curr
+drop=shippingpoint
+distcenter=shipvia
+salesrep=employee
+invoiceno=invnumber
+orderno=ordnumber
+invdate=transdate
+shipduedate=duedate
+matnumber=partnumber
+quantity=qty
+salesprice=sellprice
+disc=discount
+
+[payment]
+paymentdate=transdate
+paydoc=dcn
+doc=source
+payamount=amount

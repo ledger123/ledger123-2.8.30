@@ -1,0 +1,93 @@
+%% First Choice Internet
+%% Sales Quotation, English
+%% B.Plagge 2005-07-02, 2006-03-19
+%% B.Plagge 2009-08-30 - modified letterhead
+%% B.Plagge 2014-07-01 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_cust_en.tex%>
+\vspace*{0.5cm}
+
+\parbox[t]{.80\textwidth}{
+\textbf{SHIP TO} \\
+<%include shipto_en.tex%>
+}
+
+\vspace{1.2cm}
+
+\centerline{\large\bf{Q U O T A T I O N}}
+\normalsize
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
+  \textbf{Quotation No} & \textbf{Date} & \textbf{Valid until} & \textbf{Salesperson}
+  & \textbf{Shipping Point} & \textbf{Ship via} \\ [0.5em]
+  \hline
+  <%quonumber%> & <%quodate%> & <%reqdate%> & <%employee%>
+  & <%shippingpoint%> & <%shipvia%> \\
+  \hline
+\end{tabularx}
+
+\vspace{0.5cm}
+	Prices in: \textbf{<%currency%>}.
+<%if terms%> - Terms:<%terms%> days<%end terms%>
+<%if orddescription%> - <%orddescription%><%end orddescription%>
+}
+\vspace{0.5cm}
+
+\begin{longtable}{|lp{5.5cm} @{\extracolsep\fill} rrrcl|} \hline
+  \textbf{Number} & \textbf{Description} & \textbf{Qty} & 
+  \textbf{Unit} & \textbf{Price} & \textbf{Disc \%} & \textbf{Amount}\\ [0.5em]     
+  \hline
+\endfirsthead
+  \multicolumn{6}{l}{\emph{Continued from previous page ...}} \\
+  \hline
+  \textbf{Number} & \textbf{Description} & \textbf{Qty} & 
+  \textbf{Unit} & \textbf{Price} & \textbf{Disc \%} & \textbf{Amount}\\ [0.5em]     
+  \hline
+\endhead
+   \hline \multicolumn{6}{r}{\emph{Continued on next page ...}}
+\endfoot
+   \hline
+   \multicolumn{6}{|r} \textbf{Total} & <%quototal%> \\
+
+<%foreach tax%>
+  \multicolumn{6}{|r} \textbf{VAT (Base: <%taxbase%>)} & <%tax%>\\
+<%end tax%>
+  
+<%if quototal%>
+		\hline
+	  \multicolumn{6}{|r} \textbf{Total} & <%quototal%> \\
+<%end quototal%>
+  \hline
+\endlastfoot
+<%foreach number%>
+  <%number%> & <%description%> & <%qty%> &
+    <%unit%> & <%sellprice%> & <%discountrate%> & <%linetotal%> \\
+  <%if itemnotes%>
+		& <%itemnotes%> & & & & &\\
+	<%end itemnotes%>
+<%end number%>
+\end{longtable}
+
+\parbox{\textwidth}{
+\vspace{0.5cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+}
+
+\vfill
+
+<%include orderslip_en.tex%>
+\vspace{0.5cm}
+
+<%include footer_en.tex%>
+\end{CJK}
+\end{document}

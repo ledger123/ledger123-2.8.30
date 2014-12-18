@@ -1,0 +1,61 @@
+%% First Choice Internet
+%% Receipt, Japanese
+%% B.Plagge 2008-01-06
+%% B.Plagge 2014-07-01 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_cust_ja.tex%>
+\vspace*{0.5cm}
+
+\centerline{\large\bf{領 収 書}}
+\normalsize
+
+\vspace{2.5cm}
+-
+\vspace{0.5cm}
+
+\begin{tabularx}{\textwidth}{*{3}{|X}|} \hline
+  \textbf{名前} & \textbf{支払日付} & \textbf{ソース} \\ 
+  \hline
+	<%name%> & <%datepaid%> & <%source%> \\
+  \hline
+\end{tabularx}
+
+\vspace{0.5cm}
+Currency: \textbf{<%currency%>}.
+}
+\vspace{0.5cm}  
+
+\begin{longtable}{|l p{5.5cm} @{\extracolsep\fill} rr|} \hline
+  \textbf{請求番号} & \textbf{請求日付} & \textbf{支払予定日} & \textbf{割当} \\     
+  \hline
+\endfirsthead
+  \multicolumn{3}{l}{\emph{前のページから続ける ...}} \\
+  \hline
+  \textbf{請求番号} & \textbf{請求日付} & \textbf{支払予定日} & \textbf{割当} \\     
+  \hline
+\endhead
+   \hline \multicolumn{4}{r}{\emph{次おページ御覧下さい ...}}
+\endfoot
+   \hline
+   \multicolumn{3}{|r} \textbf{合計} & <%amount%> \\ 
+	\hline
+\endlastfoot
+<%foreach invnumber%>
+  <%invnumber%> & <%invdate%> \dotfill & <%due%> & <%paid%> \\
+<%end invnumber%>
+\end{longtable}
+
+\vspace{1cm}
+
+<%if memo%>
+  <%memo%>
+<%end memo%>
+
+\vfill
+<%include footer_ja.tex%>
+\end{CJK}
+\end{document}

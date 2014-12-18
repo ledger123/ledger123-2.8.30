@@ -1,10 +1,4 @@
-$self{texts} = {
-  'Customer'                    => 'Debtor',
-  'Customer missing!'           => 'Debtor missing!',
-  'Customer not on file!'       => 'Debtor not on file!',
-  'Vendor'                      => 'Creditor',
-  'Vendor not on file!'         => 'Creditor not on file!',
-};
+$self{charset} = 'UTF-8';
 
 $self{subs} = {
   'acc_menu'                    => 'acc_menu',

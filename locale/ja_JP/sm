@@ -1,0 +1,25 @@
+$self{charset} = 'UTF-8';
+
+$self{texts} = {
+  'Beginning date'              => '開始日付',
+  'Continue'                    => '続ける',
+  'Date missing'                => '日付を入力して下さい',
+  'Delete Open Invoices'        => '未入金請求の削除',
+  'Deleting Invoices ... '      => '請求を削除中',
+  'From'                        => 'から',
+  'Repost Invoices'             => '請求の再登録',
+  'To'                          => 'まで',
+  'done'                        => '済',
+  'please wait'                 => '少々お待ち',
+};
+
+$self{subs} = {
+  'continue'                    => 'continue',
+  'delete_invoices'             => 'delete_invoices',
+  'do_delete_invoices'          => 'do_delete_invoices',
+  'do_repost_invoices'          => 'do_repost_invoices',
+  'repost_invoices'             => 'repost_invoices',
+};
+
+1;
+

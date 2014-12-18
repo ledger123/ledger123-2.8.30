@@ -1,0 +1,134 @@
+%% First Choice Internet
+%% Vendor Invoice, English
+%% B.Plagge 2007-09-16
+%% B.Plagge 2009-08-30 - modified letterhead
+%% B.Plagge 2014-06-30 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include internal_doc_header_en.tex%>
+
+\rule{\textwidth}{0.5pt}
+
+\vspace*{0.5cm}
+
+\centerline{\textbf{V E N D O R \hspace{0.2cm} I N V O I C E}}
+\normalsize
+\vspace{1.2cm}
+
+\parbox[t]{.55\textwidth}{
+\textbf{FROM} \\
+<%include vendor_en.tex%>
+}
+\parbox[t]{.40\textwidth}{
+\textbf{SHIP TO} \\
+<%include po_shipto_en.tex%>
+}
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabularx}{\textwidth}{*{8}{|X}|} \hline
+  \textbf{Invoice No} & \textbf{Date} & \textbf{Due} & \textbf{Order No}
+  & \textbf{Employee}
+  <%if shippingpoint%>
+  & \textbf{Shipping Point}
+  <%end shippingpoint>
+  <%if ponumber%>
+  & \textbf{PO Number}
+  <%end ponumber%>
+  <%if shipvia%>
+  & \textbf{Ship via}
+  <%end shipvia%>
+  \\ [0.5em]
+  \hline
+  <%invnumber%> & <%invdate%> & <%duedate%> & <%ordnumber%> & <%employee%>
+  <%if shippingpoint%>
+  & <%shippingpoint%>
+  <%end shippingpoint>
+  <%if ponumber%>
+  & <%ponumber%>
+  <%end ponumber%>
+  <%if shipvia%>
+  & <%shipvia%>
+  <%end shipvia%>
+  \\
+  \hline
+\end{tabularx}
+
+\vspace{0.5cm}
+	Prices in: \textbf{<%currency%>}.
+<%if terms%> - Terms:<%terms%> days<%end terms%>
+<%if orddescription%> - <%orddescription%><%end orddescription%>
+}
+\vspace{0.5cm} 
+
+\begin{longtable}{|ll p{5.5cm} @{\extracolsep\fill} lrlrrr|} \hline
+  \textbf{Item} & \textbf{Number} & \textbf{Description} & \textbf{Delivery} &
+        \textbf{Qty} &
+  \textbf{Unit}  & \textbf{Price} & \textbf{Disc} & \textbf{Amount} \\
+  \hline
+\endfirsthead
+  \multicolumn{8}{l}{\emph{Continued from previous page ...}} \\
+  \hline
+  \textbf{Item} & \textbf{Number} & \textbf{Description} & \textbf{Qty} & \textbf{Qty} &
+  \textbf{Unit} & \textbf{Price} & \textbf{Disc} & \textbf{Amount} \\
+  \hline
+\endhead
+   \hline \multicolumn{8}{r}{\emph{Continued on next page ...}}
+\endfoot
+   \hline
+   \multicolumn{8}{|lr} \textbf{Total} & <%invtotal%> \\
+
+   <%foreach tax%>
+     \multicolumn{8}{|lr} \textbf{VAT (Base: <%taxbase%>)} & <%tax%>\\
+   <%end tax%>
+
+   <%if paid%>
+     \multicolumn{8}{|lr} \textbf{Paid}  & - <%paid%> \\
+   <%end paid%>
+   <%if total%>
+     \hline
+     \multicolumn{8}{|rr} \textbf{Balance} & <%total%> \\
+   <%end total%>
+  \hline
+\endlastfoot
+<%foreach number%>
+  <%runningnumber%> & <%number%> & <%description%> & <%deliverydate%> & 
+  <%qty%> & <%unit%> & <%sellprice%> & <%discountrate%> & <%linetotal%> \\
+  <%if itemnotes%>& & <%itemnotes%> & & & & & &\\<%end itemnotes%>
+<%end number%>
+\end{longtable}
+
+\parbox{\textwidth}{
+\vspace{0.2cm}
+<%if taxincluded%>
+Taxes included in price.
+<%end tax included%>
+\vspace{0.5cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+}
+
+\vfill
+<%if paid_1%>
+\begin{tabularx}{10cm}{@{}lXlr@{}}
+  \multicolumn{4}{c}{\textbf{Payments}} \\
+  \hline
+  \textbf{Date} & & \textbf{Source} & \textbf{Amount} \\
+<%end paid_1%>
+<%foreach payment%>
+  <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\
+<%end payment%>
+<%if paid_1%>
+\end{tabularx}
+<%end paid_1%>
+
+\vspace{1em}
+<%include footer_en.tex%>
+\end{CJK}
+\end{document}

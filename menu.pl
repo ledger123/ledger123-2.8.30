@@ -1,27 +1,12 @@
-#!/usr/bin/perl -X
+#!/usr/bin/perl
 #
 ######################################################################
-# SQL-Ledger Accounting
-# Copyright (C) 2001
+# SQL-Ledger ERP
+# Copyright (C) 2006
 #
-#  Author: Dieter Simader
-#   Email: dsimader@sql-ledger.org
-#     Web: http://www.sql-ledger.org
+#  Author: DWS Systems Inc.
+#     Web: http://www.sql-ledger.com
 #
-#  Contributors:	Tony Fraser <tony@sybaspace.com>
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #######################################################################
 #
 # this script is the frontend called from bin/$terminal/$script
@@ -34,12 +19,22 @@
 $userspath = "users";
 $spool = "spool";
 $templates = "templates";
+$images = "images";
 $memberfile = "users/members";
 $sendmail = "| /usr/sbin/sendmail -t";
 $latex = 0;
 %printer = ();
-########## end ###########################################
 
+#bp 2014/11 we need latex and environment variables - used to be in sql-ledger.conf
+if (-f "./sql-ledger-sys.conf") {
+  eval { require "./sql-ledger-sys.conf"; };
+}
+#
+# to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
+if (-f "$userspath/carp_debug.inc") {
+#  eval { require "$userspath/carp_debug.inc"; };
+}
+########## end ###########################################
 
 $| = 1;
 
@@ -47,9 +42,8 @@ use SL::Form;
 
 eval { require "sql-ledger.conf"; };
 
-$form = new Form;
+$form = new Form $userspath;
 
-  
 # name of this script
 $0 =~ tr/\\/\//;
 $pos = rindex $0, '/';
@@ -67,6 +61,11 @@ $form->{login} =~ s/(\.\.|\/|\\|\x00)//g;
 
 # check for user config file, could be missing or ???
 eval { require("$userspath/$form->{login}.conf"); };
+# bp 2014/10
+$myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
+$form->{dateformat} = $myconfig{dateformat};
+$form->db_init(\%myconfig);
+
 if ($@) {
   $locale = new Locale "$language", "$script";
   
@@ -82,23 +81,40 @@ $locale = new Locale "$myconfig{countrycode}", "$script";
 $form->{charset} = $locale->{charset};
 
 # send warnings to browser
-$SIG{__WARN__} = sub { $form->info($_[0]) };
+$SIG{__WARN__} = sub { eval { $form->info($_[0]); } };
 
 # send errors to browser
-$SIG{__DIE__} = sub { $form->error($_[0]) };
+$SIG{__DIE__} = sub { eval { $form->error($_[0]); exit; } };
 
-$myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
+#$myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
 map { $form->{$_} = $myconfig{$_} } qw(stylesheet timeout) unless ($form->{type} eq 'preferences');
 
-$form->{path} =~ s/\.\.\///g;
+$form->{path} =~ s/\.\.//g;
 if ($form->{path} !~ /^bin\//) {
   $form->error($locale->text('Invalid path!')."\n");
 }
 
-# did sysadmin lock us out
-if (-f "$userspath/nologin") {
+# global lock out
+if (-f "$userspath/nologin.LCK") {
+  if (-s "$userspath/nologin.LCK") {
+    open(FH, "$userspath/nologin.LCK");
+    $message = <FH>;
+    close(FH);
+    $form->error($message);
+  }
   $form->error($locale->text('System currently down for maintenance!'));
 }
+
+# dataset lock out
+if (-f "$userspath/$myconfig{dbname}.LCK" && $form->{login} ne "admin\@$myconfig{dbname}") {
+  if (-s "$userspath/$myconfig{dbname}.LCK") {
+    open(FH, "$userspath/$myconfig{dbname}.LCK");
+    $message = <FH>;
+    close(FH);
+    $form->error($message);
+  }
+  $form->error($locale->text('Dataset currently down for maintenance!'));
+} 
 
 # pull in the main code
 require "$form->{path}/$form->{script}";
@@ -113,7 +129,7 @@ if (-f "$form->{path}/$form->{login}_$form->{script}") {
   eval { require "$form->{path}/$form->{login}_$form->{script}"; };
 }
 
-  
+
 if ($form->{action}) {
   # window title bar, user info
   $form->{titlebar} = "SQL-Ledger ".$locale->text('Version'). " $form->{version} - $myconfig{name} - $myconfig{dbname}";
@@ -134,7 +150,7 @@ if ($form->{action}) {
 
 
 sub check_password {
-  
+
   if ($myconfig{password}) {
 
     require "$form->{path}/pw.pl";
@@ -159,24 +175,24 @@ sub check_password {
 	}
       }
     } else {
-      
+
       if ($ENV{HTTP_USER_AGENT}) {
 	$ENV{HTTP_COOKIE} =~ s/;\s*/;/g;
 	@cookies = split /;/, $ENV{HTTP_COOKIE};
+	%cookie = ();
 	foreach (@cookies) {
 	  ($name,$value) = split /=/, $_, 2;
 	  $cookie{$name} = $value;
 	}
-	
+
 	if ($cookie{"SL-$form->{login}"}) {
-	  
+
 	  $form->{sessioncookie} = $cookie{"SL-$form->{login}"};
-	  
+
 	  $s = "";
 	  %ndx = ();
-	  # take cookie apart
 	  $l = length $form->{sessioncookie};
-	  
+
 	  for $i (0 .. $l - 1) {
 	    $j = substr($myconfig{sessionkey}, $i * 2, 2);
 	    $ndx{$j} = substr($cookie{"SL-$form->{login}"}, $i, 1);
@@ -190,7 +206,7 @@ sub check_password {
 	  $login = substr($s, 0, $l);
 	  $password = substr($s, $l, (length $s) - ($l + 10));
 
-	  # validate cookie
+          # validate cookie
 	  if (($login ne $form->{login}) || ($myconfig{password} ne crypt $password, substr($form->{login}, 0, 2))) {
 	    &getpassword(1);
 	    exit;
@@ -199,7 +215,7 @@ sub check_password {
 	} else {
 
 	  if ($form->{action} ne 'display') {
-	    &getpassword(1); 
+	    &getpassword(1);
 	    exit;
 	  }
 

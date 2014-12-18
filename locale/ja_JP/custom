@@ -1,0 +1,25 @@
+$self{charset} = 'UTF-8';
+
+$self{texts} = {
+  'Add missing account?'        => '未登録勘定を追加しますか？',
+  'Department'                  => '部門',
+  'Import preview ...'          => 'インポートプレビュー',
+  'Missing accounts ...\n'      => '未登録勘定...\n',
+  'Missing accounts found. Data not imported...' => '未登録勘定を見つけた。データがインポートされなかった...',
+  'Posting failed!'             => '登記の失敗',
+  'Processed!'                  => '処理済み',
+  'Project'                     => 'プロジェクト',
+  'Year'                        => '年',
+  'ok'                          => 'ok',
+};
+
+$self{subs} = {
+  'continue'                    => 'continue',
+  'process_datev'               => 'process_datev',
+  'process_domus'               => 'process_domus',
+  'search_datev'                => 'search_datev',
+  'search_domus'                => 'search_domus',
+};
+
+1;
+

@@ -1,0 +1,41 @@
+%% First Choice Internet
+%% Ship-To Address Japanese
+%% B.Plagge 2007-09-16, shipto_ja.tex 
+〒 <%shiptozipcode%> \\
+<%shiptostate%><%shiptocity%><%shiptoaddress1%> \\
+<%shiptoaddress2%> \\
+<%shiptoname%> 御中 \\
+<%shiptocountry%> \\
+
+\vspace{.5cm}
+<%if shiptocontact%>
+<%shiptocontact%>
+<%end shiptocontact%>
+
+<%if not shiptocontact%>
+\hspace{0.1cm} 
+<%end shiptocontact%>
+
+<%if shiptophone%>
+Tel: <%shiptophone%>
+<%end shiptophone%>
+
+<%if not shiptophone%>
+\hspace{0.1cm}
+<%end shiptophone%>
+
+<%if shiptofax%>
+Fax: <%shiptofax%>
+<%end shiptofax%>
+
+<%if not shiptofax%>
+\hspace{0.1cm}
+<%end shiptofax%>
+
+<%if shiptoemail%>
+メール: <%shiptoemail%>
+<%end shiptoemail%>
+
+<%if not shiptoemail%>
+\hspace{0.1}
+<%end shiptoemail%>

@@ -1,6 +1,7 @@
 $self{charset} = 'ISO-8859-13';
 
 $self{texts} = {
+  'Account'                     => 'Konts',
   'Accounting Menu'             => 'Kontçğanas izvçlne',
   'Active'                      => 'Aktîvs',
   'Add'                         => 'Pievienot',
@@ -15,6 +16,7 @@ $self{texts} = {
   'Continue'                    => 'Turpinât',
   'Current'                     => 'Pağreizçjs',
   'Customer'                    => 'Klients',
+  'Customer Number'             => 'Klienta numurs',
   'Customer missing!'           => 'Nav norâdîts klients!',
   'Customer not on file!'       => 'Nav tâda klienta!',
   'Date'                        => 'Datums',
@@ -44,6 +46,7 @@ $self{texts} = {
   'Nothing selected!'           => 'Nekas nav iezîmçts!',
   'Number'                      => 'Numurs',
   'Orphaned'                    => 'Bez atbilstoğâ pâra',
+  'POS'                         => 'POS',
   'Pricegroup'                  => 'Cenu grupa',
   'Pricegroup deleted!'         => 'Cenu grupa izdzçsta',
   'Pricegroup missing!'         => 'Cenu grupa nav norâdîta',
@@ -70,6 +73,7 @@ $self{texts} = {
   'Update'                      => 'Atjauninât',
   'Updated'                     => 'Atjauninâts',
   'Vendor'                      => 'Pârdevçjs',
+  'Vendor Number'               => 'Pârdevçja numurs',
   'Vendor not on file!'         => 'Nav tâda pârdevçja!',
   'Weight'                      => 'Svars',
 };

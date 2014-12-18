@@ -1,0 +1,91 @@
+%% First Choice Internet
+%% Order Confirmation, Japanese
+%% B.Plagge 2005-07-02, 2006-03-19
+%% B.Plagge 2008-01-06
+%% B.Plagge 2014-07-08 TRIAL templates
+<%include settings.tex%> 
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_cust_ja.tex%>
+\vspace*{0.5cm}
+
+\parbox[t]{.80\textwidth}{
+\textbf{出荷先} \\
+<%include shipto_ja.tex%>
+}
+
+\vspace{1.2cm}
+
+\centerline{\large\bf{受 注}\hspace{5mm}確 認 書}
+\normalsize
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
+  \textbf{受注番号} & \textbf{受注日} & \textbf{納品日} & \textbf{営業担当者}
+  & \textbf{出荷ポイント} & \textbf{出荷場所} \\ [0.5em]
+  \hline
+  <%ordnumber%> & <%orddate%> & <%reqdate%> & <%employee%> & 
+  <%shippingpoint%> & <%shipvia%> \\
+  \hline
+\end{tabularx}
+
+\parbox{\textwidth}{
+\vspace{0.5cm}
+<%if terms%>
+	受注の通貨: \textbf{<%currency%>}
+   支払い条件: <%orddescription%>
+<%end terms%>
+}
+
+\vspace{0.5cm}
+
+\begin{longtable}{|ll p{4.5cm} @{\extracolsep\fill} lrlrr|} \hline
+  \textbf{明細} & \textbf{品番} & \textbf{品名・テキスト} & \textbf{顧客購入番号} & 
+	\textbf{数量} & \textbf{単位}  & \textbf{価格} & \textbf{金額} \\     
+  \hline
+\endfirsthead
+  \multicolumn{7}{l}{\emph{前のページから続ける ...}} \\
+  \hline
+  \textbf{明細} & \textbf{品番} & \textbf{品名・テキスト} & \textbf{顧客購入番号} & 
+	\textbf{数量} & \textbf{単位}  & \textbf{価格} & \textbf{金額} \\     
+  \hline
+\endhead
+   \hline \multicolumn{7}{r}{\emph{次おページ御覧下さい ...}}
+\endfoot
+   \hline
+   \multicolumn{7}{|r} \textbf{合計} & <%ordtotal%> \\
+
+<%foreach tax%>
+  \multicolumn{7}{|r} \textbf{消費税 (ベース: <%taxbase%>)} & <%tax%>\\
+<%end tax%>
+  
+<%if ordtotal%>
+		\hline
+	  \multicolumn{7}{|r} \textbf{未決済額} & <%ordtotal%> \\
+<%end ordtotal%>
+  \hline
+\endlastfoot
+<%foreach number%>
+  <%runningnumber1%> & <%number%> & <%description%> & <%customerponumber%> & 
+  <%qty%> & <%unit%> & <%sellprice%> & <%linetotal%> \\
+  バッチ: & <%serialnumber%> & <%itemnotes%> & & & & & \\
+<%end number%>
+\end{longtable}
+
+\parbox{\textwidth}{
+\vspace{0.5cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+}
+\vfill
+\centerline{\jszmi{ご利用して頂きましてありがとうございます}}
+\vspace{1cm}
+<%include footer_ja.tex%>
+\end{CJK}
+\end{document}

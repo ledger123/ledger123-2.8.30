@@ -1,6 +1,7 @@
 $self{charset} = 'UTF-8';
 
 $self{texts} = {
+  'Account'                     => 'Рахунок',
   'Accounting Menu'             => 'Меню обліку',
   'Active'                      => 'Активний',
   'Add'                         => 'Додати',
@@ -15,6 +16,7 @@ $self{texts} = {
   'Continue'                    => 'Продовжити',
   'Current'                     => 'Поточний',
   'Customer'                    => 'Клієнт',
+  'Customer Number'             => 'Номер клієнта',
   'Customer missing!'           => 'Не вказаний клієнт!',
   'Customer not on file!'       => 'Клієнта нема в списку!',
   'Date'                        => 'Дата',
@@ -71,6 +73,7 @@ $self{texts} = {
   'Update'                      => 'Оновити',
   'Updated'                     => 'Оновлено',
   'Vendor'                      => 'Постачальник',
+  'Vendor Number'               => 'Номер постачальника',
   'Vendor not on file!'         => 'Потачальника нема у списку ',
   'Weight'                      => 'Вага',
   'Year'                        => 'Рік',

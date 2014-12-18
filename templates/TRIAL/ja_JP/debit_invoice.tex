@@ -1,0 +1,120 @@
+%% First Choice Internet
+%% Debit Invoice, Japanese
+%% B.Plagge 2007-09-16
+%% B.Plagge 2008-01-03
+%% B.Plagge 2009-08-29 - modified letterhead
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_vend_ja.tex%>
+
+\vspace{2.5cm}
+
+\centerline{\textbf{デ ビ ッ ト   請 求 書}}
+\normalsize
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabularx}{\textwidth}{*{8}{|X}|} \hline
+  \textbf{請求番号} & \textbf{日付} & \textbf{支払予定日} & \textbf{発注番号}
+  & \textbf{担当者}
+  <%if shippingpoint%>
+  & \textbf{出荷ポイント}
+  <%end shippingpoint>
+  <%if ponumber%>
+  & \textbf{発注番号}
+  <%end ponumber%>
+  <%if shipvia%>
+  & \textbf{出荷経由地}
+  <%end shipvia%>
+  \\ [0.5em]
+  \hline
+  <%invnumber%> & <%invdate%> & <%duedate%> & <%ordnumber%> & <%employee%>
+  <%if shippingpoint%>
+  & <%shippingpoint%>
+  <%end shippingpoint>
+  <%if ponumber%>
+  & <%ponumber%>
+  <%end ponumber%>
+  <%if shipvia%>
+  & <%shipvia%>
+  <%end shipvia%>
+  \\
+  \hline
+\end{tabularx}
+
+\vspace{1cm}
+請求書の通貨: \textbf{<%currency%>}.
+\vspace{0.5cm}
+
+\begin{longtable}{|ll p{6cm} @{\extracolsep\fill} lrlrrr|} \hline
+\xstrut
+  \textbf{明細} & \textbf{商番} & \textbf{品名・テキスト} & \textbf{出荷予定日} &
+	\textbf{数量} & 
+  \textbf{単位}  & \textbf{価格} & \textbf{値引} & \textbf{金額} \\     
+  \hline
+\endfirsthead
+  \multicolumn{8}{l}{\emph{前のページから続ける ...}} \\
+  \hline
+  \textbf{明細} & \textbf{商番} & \textbf{品名・テキスト} & \textbf{出荷予定日} &
+	\textbf{数量} & 
+  \textbf{単位}  & \textbf{価格} & \textbf{値引} & \textbf{金額} \\     
+  \hline
+\endhead
+   \hline \multicolumn{8}{r}{\emph{次おページ御覧下さい ...}}
+\endfoot
+   \hline
+   \multicolumn{8}{|r} \textbf{合計} & <%invtotal%> \\
+
+   <%foreach tax%>
+     \multicolumn{8}{|r} \textbf{VAT (消費税 (ベース: <%taxbase%>)} & <%tax%>\\
+   <%end tax%>
+  
+   <%if paid%>
+     \multicolumn{8}{|r} \textbf{{支払金額}  & - <%paid%> \\
+   <%end paid%>
+   <%if total%>
+     \hline
+     \multicolumn{8}{|r} \textbf{残高額} & <%total%> \\
+   <%end total%>
+  \hline
+\endlastfoot
+<%foreach number%>
+  <%runningnumber1%> & <%number%> & <%description%> & <%deliverydate%> & 
+  <%qty%> & <%unit%> & <%sellprice%> & <%discountrate%> & <%linetotal%> \\
+  <%if itemnotes%>& & <%itemnotes%> & & & & & &\\<%end itemnotes%>
+<%end number%>
+\end{longtable}
+
+\vspace{1.5cm}
+
+\parbox[t]{.80\textwidth}{
+<%if notes%>
+<%notes%>
+<%end notes%>
+}
+
+\vfill
+
+<%if paid_1%>
+\begin{tabularx}{10cm}{@{}lXlr@{}}
+  \multicolumn{4}{c}{\textbf{還付金}} \\
+  \hline
+  \textbf{日付} & & \textbf{ソース} & \textbf{金額} \\
+<%end paid_1%>
+<%foreach payment%>
+  <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\
+<%end payment%>
+<%if paid_1%>
+\end{tabularx}
+<%end paid_1%>
+
+\vfill
+<%include footer_ja.tex%>
+\end{CJK}  
+\end{document}
+

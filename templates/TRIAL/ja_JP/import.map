@@ -1,0 +1,28 @@
+3.03
+Sample import.map
+The location of a mapfile is in the templates/dbname/language directory.
+left: CSV file headers, right: Ledger field names
+
+[sales_invoice]
+顧客番号=customernumber
+テキスト=description
+勘定=AR
+通貨=curr
+シュッカポイント=shippingpoint
+流通センター=shipvia
+担当者=employee
+請求番号=invnumber
+受注番号=ordnumber
+請求日付=transdate
+期日=duedate
+品番=partnumber
+数量=qty
+価格=sellprice
+値引=discount
+現金値引=cashdiscount
+
+[payment]
+伝票日=transdate
+支払伝票=dcn
+支払い方法=source
+金額=amount

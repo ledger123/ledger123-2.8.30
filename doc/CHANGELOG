@@ -1,0 +1,192 @@
+# bp 2014.12.11
+bugfix
+bug: bep_201412-06 - fixed 2014/12/11
+* When changing the customer/vendor selection fields in the receipt/payment transaction the precision is reset back
+* to the system default. Incorrect because "Currency" is one of the selection fields.
+  We set the precision according to the currency selelcted.
+
+# bp 2014.12.11
+bugfix
+bug: bep_201412-04
+* Receipt transaction: sql error in CP->get_openinvoices if the customer id is not available
+  make the call to CP->get_openinvoices only if we have a customer id
+
+# bp 2014.12.11
+bugfix bug: bep_201412-02
+* Receipt screen, manually entered exchange rate is dleted when pressing update, need to enter the exchange rate beforehand
+  Code change. exchange rate will only be checked if currency or datepaid change or if we have a fx receipt and
+  no exchangerate has been entered by the user
+
+# bp 2014.12.10
+  bug: bep_201412-04
+* Receipt screen, manually entered exchange rate is deleted when pressing update, need to enter the exchange rate beforehand
+* call to $form->{check_exchangerate} in cp.pl
+
+# bp 2014.12.06
+bugfix bug: bep_201412-03
+* order numbers with 4-digit year will only be created when $self->transdate is available for the 'update_defaults'
+* function in Form.pm
+  set the datepaid when calling the function
+
+# bp 2014.12.06
+bugfix bep_201412-02
+* AP-Transaction: calculation of cash discount incorrect if tax is not included
+  incorrect calculation (in aa.pl) corrected
+
+# bp 2014.12.03
+bugfix bep_201412-01
+* When creating a vendor invoice for a purchase order the payment method is copied from the vendor master record.
+* However, when saving the invoice the payment method is not stored in the AP record. When editing the invoice
+* the corrected payment method and account (e.g. bank transfer) are not copied to the AP record.
+  This happens because the "amount" field below the date/currency filed is empty. When pressing "update" the
+  line item amounts are added and entered into the "amount" field.
+  Problem solved by checking the "amount" field and displaying a message if the field is empty.
+
+# bp 2014.12.02
+bugfix bep 201412-01
+* Calculation of Outstanding Payment in AP Transactions
+  Cash discount was not taken into account and the amount was incorrect formatted (precision)
+
+new feature/bugfix bep_201411-06
+* Purchase transaction list shows transaction in foreign currency without decimals
+  Amounts in foreign currency are showing if the currency field has been selected. Values are now showing with the
+  precision for their currency. Subtotal calculation has also been corrected. All foreign currency subtotals are
+  showing if the list is sorted by currency.
+  Amountsin home currency are NOT shown in the foreign currency columns anymore.
+  Added missing subtotals (netamount and tax).
+  Totals for foreign currency are NOT shown anymore - if we have two or more currencies it doesn't make sense calculate
+  a total of different currencies.
+
+# bp 2014.11.25
+new feature
+* calculate and store high precision exchange rate to avoid differences between invoice and payment amounts
+   Converting between currencies is getting difficult if (a) one currency doesn't have decimals (Japanese Yen)
+   and (b) the conversion rates are high. Exchange rates with 1 or 2 decimals are not sufficient to correctly
+   convert back from Jpy to Euro or Dollar.
+   To solve this problem we calculate the exchange rate by dividing the amount in local currency by the amount
+   in document currency. Instead of the exchange rate entered we store the calculated exchange rate with
+   5 decimals in the ap table
+
+# bp 2014.11.24
+new feature/bugfix bug bep_201411-05
+   receipt/payment screen: when one customer/vendor has been selected update the screens business type
+   and payment method to the customer/vendors business type and payment method
+   Reason: vendor has payment method 'bank transfer'. If we post a payment this payment type should be selected
+   by default. Currently no payment method is selected and - unless the user selects it manually - the payment
+   is recorded with an empty payment method (in the payment table)
+   Added business type data retrieval to AA.pm get_name function, set vendor/customer fields in cp.pl
+
+# bp 2014.11.22
+bugfix/new feature bug bep_201411-04
+* Additional payment record if payment is entered with new payment method
+    For details check the BUGLIST.
+    Added new column 'fxamount' (double precision) to table 'payment'.
+
+# bp 2014.11.17
+new feature
+* format_amount dash option
+    Added a new dash option 'SZ' to suppress trailing zeroes when formatting amounts. Thisi s used to show
+    lastcost, sellprice and vendor/customer maxtrix prices only up to the detail entered - i.e. not always
+    up to the Max Price Decimals precision.
+
+new feature
+*  solved price matrix bug:
+    The precision of prices entered into the vendor price matrix is limited to the number of decimals found
+    in the last cost field of the part.
+    The precision of customer prices entered into the customer price matrix is limited to the number of decimals
+    found in the sell price field of the part.
+    Japanese Yen don't have decimals and therefore sellprice, lastcost are with 0 decimals. If you want to enter
+    a Euro, Pound, Dollar price with cents/pennies in the price matrix you have to add decimals to the lastcost
+    before you can enter a customer/vendor price with cents/pennies.
+    This is a kludge and users won't understand it without additional explanation.
+  new feature
+    New default variable: Max Price Decimals
+    This variable determines the max number of decimals a last cost/selling price may have. If not specified the value
+    is automatically set to '2' - which is the precision of (almost) all currencies. The value cannot be smaller than
+    the precision of the home currency.
+
+# bp 2014.11.14
+bugfix
+* parts cannot be saved and updated, partsgroup_id not set in query
+  partsgroup_id incorrectly assigned when query is built in IC.pm
+
+* parts reports; when the Group Code field is checked the column is not displayed on the list screen
+  partsgroupcode field was missing in display column definition
+
+# bp 2014.11.13 bplagge@choicenet.ne.jp
+bugfix
+* current date format
+   when adding new orders the requirement date was set to the current date. However, the format of the
+  current date did not comply with the date format settings in the user's preferences.
+  Corrected function current_date in Form.pm
+
+* incorrect error message
+  when entering a purchase order without pickup requirement the message "order date missing" was displayed.
+  Corrected to show correct message "Pickup date missing" when transport data has been entered
+
+# bp 2014.11.12 bplagge@choicenet.ne.jp
+new feature
+* added function to lookup the exchange rate for foreign currency sales and purchase orders.
+  an additional button is placed next to the exchange rate field. If pressed the current exchange rate is
+  entered into the exchange rate field.
+  Lookup program and the exchange rate precision are defined in the sql-ledger-sys.conf file.
+  Variables: $get_exrate_prog, $exrate_rounding
+  The lookup program requires the perl Finance::Quote module
+  This function is available for:
+  Sales: Add Transaction, Sales Invoice, Credit Note, Credit Invoice,
+  Purchases: Add Transaction, Vendor Invoice, Debit Note, Debit Invoice,
+  Order Entry: Sales Order, Puchase Order
+  Quotations: Quotation, RFQ
+  General Ledger: Add Transaction
+
+# bp 2014.11.11 bplagge@choicenet.ne.jp
+bugfix
+* date picker
+  datepicker uses 'y' for the 2-digit year and 'yy' for the 4-digit year. Had to change the
+  'yyyy-mm-dd' date format to 'yy-mm-dd' for datepicker (1 occurence in Form.pm)
+
+# bp 2014.11.07 bplagge@choicenet.ne.jp
+* Update to version 3.03, branch rel3
+* includes all my changes including the transport functions
+
+bugfixes
+* login didn't work
+  moved password unpack line before the db_init statement
+
+* include of tex templates didn't work
+  corrected template directory path to include the dbname and minor code fix
+
+* display and edit of template files not working
+  corrected template directory path to include the dbname
+
+* printing of ps/pdf files from queue not working, html template was printed (looks like bug in SQL-Ledger)
+  retrieve spool files, don't run parse_template, send files to printer, remove spool files, update status
+  (pdf files are converted to ps using pdftops)
+
+* could not print orders, invoices from the 'add order', 'change order' screens
+  - $latex = 0 was set
+  - the "selectprinter" routine was disabled in the program code
+  * added enable_selectprinter variable via include file sql-ledger-sys.conf
+
+* couldn't create ps files from tex templates
+  - $latex = 0 was set in all main .pl program
+  - the lighttpd web server (I'm using) does not preserve environment variables
+  * added the $ENV['PATH'] via include file sql-ledger-sys.conf
+
+new feature
+* sql-ledger-sys.conf
+  - the main configuration file sql-ledger.conf is created by SQL-Ledger. Some of the system related variables
+    have been moved to the main *.pl files like $sendmail, $latex, $printer, $ENV
+    However, some variables are system dependent ($sendmail, $gzip, $latex, $ENV). Printing from a hosting/cloud
+    environment to a (remote) customer printer is possible but not easy to set up. It is easier to use pdf files,
+    call a pdf reader and print/save the data.
+    But if we are in a networking environment direct printing is the easiest solution.
+
+  - For these reasons I defined and included a new system configuration file where the system administrator can
+    define the required variables for the system environment. This is easy and requires only few code changes.
+
+* carp debugging
+  added an inactive carp debugging include file. If enabled carp debugging lines can be added to the code which
+  is a great help when debugging the code.
+
+

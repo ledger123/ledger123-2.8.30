@@ -1,16 +1,14 @@
+$self{charset} = 'UTF-8';
+
 $self{texts} = {
   'AP'                          => 'Purchases',
-  'AP Aging'                    => 'Creditor Aging',
+  'AP Aging'                    => 'Vendor Aging',
   'AP Transaction'              => 'Purchase Transaction',
   'AR'                          => 'Sales',
-  'AR Aging'                    => 'Debtor Aging',
+  'AR Aging'                    => 'Customer Aging',
   'AR Transaction'              => 'Sales Transaction',
-  'Add Customer'                => 'Add Debtor',
-  'Add Vendor'                  => 'Add Creditor',
   'Check'                       => 'Cheque',
-  'Customers'                   => 'Debtors',
-  'Vendor Invoice'              => 'Creditor Invoice',
-  'Vendors'                     => 'Creditors',
+  'SIC'                         => 'SIC Codes'
 };
 
 $self{subs} = {

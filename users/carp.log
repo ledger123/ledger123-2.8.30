@@ -1,0 +1,178 @@
+[Thu Dec 11 17:08:46 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:08:46 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:09:04 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:09:04 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:09:37 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:09:37 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:09:39 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:09:39 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:09:40 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:09:40 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:09:42 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:09:42 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:09:47 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:09:47 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:10:08 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:10:08 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:10:35 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:10:35 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:10:42 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:10:42 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:10:43 2014] gl.pl: d-curr: JPY - curr:  - precision: 0 
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 244
+[Thu Dec 11 17:10:43 2014] gl.pl: amount:  - fxamount:  
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 250
+[Thu Dec 11 17:10:43 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 253
+[Thu Dec 11 17:10:43 2014] gl.pl: d-curr: JPY - curr:  - precision: 0 
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 244
+[Thu Dec 11 17:10:43 2014] gl.pl: amount:  - fxamount:  
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 250
+[Thu Dec 11 17:10:43 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 253
+[Thu Dec 11 17:10:43 2014] gl.pl: d-curr: JPY - curr:  - precision: 0 
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 244
+[Thu Dec 11 17:10:43 2014] gl.pl: amount:  - fxamount:  
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 250
+[Thu Dec 11 17:10:43 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 253
+[Thu Dec 11 17:10:43 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:10:43 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:12:16 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:12:16 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:12:25 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:12:25 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:12:42 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:12:42 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:13:03 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:13:03 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:15:22 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:15:22 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:15:25 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:15:25 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:15:40 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:15:40 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:16:09 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:16:09 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:16:12 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:16:12 2014] gl.pl: currency: EUR 
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 115
+[Thu Dec 11 17:16:12 2014] gl.pl: d-curr: JPY - curr: EUR - precision: 0 
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 245
+[Thu Dec 11 17:16:12 2014] gl.pl: amount:  - fxamount:  
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 251
+[Thu Dec 11 17:16:12 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 254
+[Thu Dec 11 17:16:12 2014] gl.pl: d-curr: JPY - curr: EUR - precision: 0 
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 245
+[Thu Dec 11 17:16:12 2014] gl.pl: amount:  - fxamount:  
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 251
+[Thu Dec 11 17:16:12 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 254
+[Thu Dec 11 17:16:12 2014] gl.pl: d-curr: JPY - curr: EUR - precision: 0 
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 245
+[Thu Dec 11 17:16:12 2014] gl.pl: amount:  - fxamount:  
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 251
+[Thu Dec 11 17:16:12 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 254
+[Thu Dec 11 17:16:12 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:16:12 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:18:39 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:18:39 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:18:45 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:18:45 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:18:49 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:18:49 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:18:53 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:18:53 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:18:55 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:18:55 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:18:55 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:18:55 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:18:58 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:18:58 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:19:12 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:19:12 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:19:14 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:19:14 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:19:15 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:19:15 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:19:21 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:19:21 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:19:39 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:19:39 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:19:57 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:19:57 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:20:01 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:20:01 2014] gl.pl: currency: EUR 
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 115
+[Thu Dec 11 17:20:01 2014] gl.pl: d-curr: JPY - curr: EUR - precision: 0 
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 245
+[Thu Dec 11 17:20:01 2014] gl.pl: amount: -13454.78 - fxamount:  
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 251
+[Thu Dec 11 17:20:01 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 254
+[Thu Dec 11 17:20:01 2014] gl.pl: d-curr: JPY - curr: EUR - precision: 0 
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 245
+[Thu Dec 11 17:20:01 2014] gl.pl: amount: 13454.78 - fxamount:  
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 251
+[Thu Dec 11 17:20:01 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 254
+[Thu Dec 11 17:20:01 2014] gl.pl: d-curr: JPY - curr: EUR - precision: 0 
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 245
+[Thu Dec 11 17:20:01 2014] gl.pl: amount: 0 - fxamount:  
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 251
+[Thu Dec 11 17:20:01 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:20:01 2014] gl.pl:  at SL/GL.pm line 254
+[Thu Dec 11 17:20:02 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:20:02 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:22:59 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:22:59 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:23:13 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:23:13 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:23:29 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:23:29 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:23:44 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:23:44 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:23:45 2014] gl.pl: currency: EUR 
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 115
+[Thu Dec 11 17:23:45 2014] gl.pl: d-curr: JPY - curr: EUR - precision: 0 
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 245
+[Thu Dec 11 17:23:45 2014] gl.pl: amount: -13470 - fxamount: -100.22 
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 251
+[Thu Dec 11 17:23:45 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 254
+[Thu Dec 11 17:23:45 2014] gl.pl: d-curr: JPY - curr: EUR - precision: 0 
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 245
+[Thu Dec 11 17:23:45 2014] gl.pl: amount: 13470 - fxamount: 100.22 
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 251
+[Thu Dec 11 17:23:45 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 254
+[Thu Dec 11 17:23:45 2014] gl.pl: d-curr: JPY - curr: EUR - precision: 0 
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 245
+[Thu Dec 11 17:23:45 2014] gl.pl: amount: 0 - fxamount: 0 
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 251
+[Thu Dec 11 17:23:45 2014] gl.pl: amount 2:  - fxamount:  
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 254
+[Thu Dec 11 17:23:45 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:23:45 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:25:00 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:25:00 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:25:07 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:25:07 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:25:11 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:25:11 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:25:15 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:25:15 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:25:18 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:25:18 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:25:18 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:25:18 2014] gl.pl:  at SL/GL.pm line 22
+[Thu Dec 11 17:25:30 2014] gl.pl: Carp is alive 
+[Thu Dec 11 17:25:30 2014] gl.pl:  at SL/GL.pm line 22
+[Tue Dec 16 00:20:37 2014] oe.pl: weightunit: kg - precision: 0 - maxprdec: 3  
+[Tue Dec 16 00:20:37 2014] oe.pl:  at SL/OE.pm line 744
+[Tue Dec 16 00:21:41 2014] oe.pl: weightunit: kg - precision: 0 - maxprdec: 3  
+[Tue Dec 16 00:21:41 2014] oe.pl:  at SL/OE.pm line 744

@@ -1,0 +1,12 @@
+$self{charset} = 'UTF-8';
+
+$self{texts} = {
+  'Reference Documents'         => '参照文書',
+};
+
+$self{subs} = {
+  'reference_documents'         => 'reference_documents',
+};
+
+1;
+

@@ -1,0 +1,23 @@
+%% First Choice Internet
+%% Vendor Address English
+%% B.Plagge 2014-07-01, vendor_en.tex
+<%name%> \\
+<%if address2%><%address2%> \\ <%end address2%>
+<%address1%> \\
+<%city%> <%state%> \\
+<%if country%><%country%> <%end country%><%zipcode%> \\
+\vspace{0.1cm}
+
+<%if contact%>
+<%contact%>
+<%end contact%>
+<%if vendorphone%>Tel: <%vendorphone%><%end vendorphone%>
+<%if not vendorfax%> \\<%end vendorfax%>
+<%if vendorfax%>, Fax: <%vendorfax%> \\<%end vendorfax%>
+<%if email%>Email: <%email%> \\<%end email%>
+
+<%if not contact%>\vspace*{0.3cm} <%end contact%>
+<%if not vendorphone%>\vspace*{0.3cm}<%end vendorphone%>
+<%if not vendorfax%>\vspace*{0.3cm}<%end vendorfax%>
+<%if not email%>\vspace*{0.3}<%end email%>
+

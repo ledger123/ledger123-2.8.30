@@ -1,9 +1,9 @@
-$self{texts} = {
-};
+$self{charset} = 'UTF-8';
 
 $self{subs} = {
   'acc_menu'                    => 'acc_menu',
   'continue'                    => 'continue',
+  'deselect_all'                => 'deselect_all',
   'display'                     => 'display',
   'display_form'                => 'display_form',
   'done'                        => 'done',

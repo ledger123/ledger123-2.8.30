@@ -1,23 +1,10 @@
 #=====================================================================
-# SQL-Ledger Accounting
-# Copyright (c) 2004
+# SQL-Ledger ERP
+# Copyright (c) 2006
 #
 #  Author: DWS Systems Inc.
-#     Web: http://www.sql-ledger.org
+#     Web: http://www.sql-ledger.com
 #
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #======================================================================
 
 
@@ -28,6 +15,10 @@
 sub getpassword {
   my ($s) = @_;
 
+  if (-f "$form->{path}/custom_pw.pl") {
+    require "$form->{path}/custom_pw.pl";
+  }
+
   my $login = ($form->{"root login"}) ? "root login" : $form->{login};
   
   my @d = split / +/, scalar gmtime(time);
@@ -37,7 +28,7 @@ sub getpassword {
     $stylesheet = qq|<LINK REL="stylesheet" HREF="css/$form->{stylesheet}" TYPE="text/css" TITLE="SQL-Ledger stylesheet">
 |;
   }
-  
+
   if ($form->{charset}) {
     $charset = qq|<META HTTP-EQUIV="Content-Type" CONTENT="text/plain; charset=$form->{charset}">
 |;
@@ -52,14 +43,14 @@ Content-Type: text/html
   $charset
 </head>
 |;
-
+  
   $sessionexpired = qq|<b><font color=red><blink>|.$locale->text('Session expired!').qq|</blink></font></b><p>| if $s;
   
   print qq|
-<script language="JavaScript" type="text/javascript">
+<script language="javascript" type="text/javascript">
 <!--
 function sf(){
-    document.pw.password.focus();
+    document.forms[0].password.focus();
 }
 // End -->
 </script>
@@ -68,19 +59,29 @@ function sf(){
 
   $sessionexpired
 
-<form method=post action=$form->{script} name=pw>
+<form method=post action=$form->{script}>
 
 <table>
   <tr>
     <th align=right>|.$locale->text('Password').qq|</th>
-    <td><input type=password name=password size=30></td>
-    <td><input type=submit value="|.$locale->text('Continue').qq|"></td>
+    <td><input type=password name=password value="$form->{password}" size=30></td>
+    <td><input type=submit class=submit value="|.$locale->text('Continue').qq|"></td>
   </tr>
 </table>
 
 |;
 
   for (qw(script password header sessioncookie)) { delete $form->{$_} }
+
+  foreach $item (split /;/, $form->{acs}) {
+    $item = $form->escape($item,1);
+    if ($form->{$item}) {
+      delete $form->{$item};
+      $item = $form->unescape($item);
+      $form->{$item} = 1;
+    }
+  }
+
   $form->hide_form;
   
   print qq|

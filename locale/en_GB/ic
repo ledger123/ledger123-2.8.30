@@ -1,12 +1,4 @@
-$self{texts} = {
-  'Customer'                    => 'Debtor',
-  'Customer Number'             => 'Debtor Number',
-  'Customer not on file!'       => 'Debtor not on file!',
-  'Vendor'                      => 'Creditor',
-  'Vendor Invoice'              => 'Creditor Invoice',
-  'Vendor Number'               => 'Creditor Number',
-  'Vendor not on file!'         => 'Creditor not on file!',
-};
+$self{charset} = 'UTF-8';
 
 $self{subs} = {
   'acc_menu'                    => 'acc_menu',
@@ -22,7 +14,6 @@ $self{subs} = {
   'check_vendor'                => 'check_vendor',
   'continue'                    => 'continue',
   'create_form'                 => 'create_form',
-  'customer_details'            => 'customer_details',
   'customer_row'                => 'customer_row',
   'delete'                      => 'delete',
   'display'                     => 'display',
@@ -44,6 +35,7 @@ $self{subs} = {
   'name_selected'               => 'name_selected',
   'new_item'                    => 'new_item',
   'parts_subtotal'              => 'parts_subtotal',
+  'preview'                     => 'preview',
   'print'                       => 'print',
   'print_form'                  => 'print_form',
   'print_options'               => 'print_options',
@@ -62,10 +54,11 @@ $self{subs} = {
   'select_name'                 => 'select_name',
   'send_email'                  => 'send_email',
   'ship_to'                     => 'ship_to',
+  'so_requirements'             => 'so_requirements',
+  'so_requirements_report'      => 'so_requirements_report',
   'stock_assembly'              => 'stock_assembly',
   'update'                      => 'update',
   'validate_items'              => 'validate_items',
-  'vendor_details'              => 'vendor_details',
   'vendor_row'                  => 'vendor_row',
 };
 

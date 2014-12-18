@@ -1,0 +1,81 @@
+%% First Choice Internet
+%% Request for Quotation, English
+%% B.Plagge 2008-01-06
+%% B.Plagge 2014-06-30 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_vend_en.tex%>
+\vspace{0.5cm}
+
+\parbox[t]{.80\textwidth}{
+\textbf{SHIP TO} \\
+<%include shipto_en.tex%>
+}
+
+\hfill \\
+
+\vspace{0.5cm}
+
+\centerline{\textbf{R E Q U E S T  for  Q U O T A T I O N}}
+\normalsize
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
+  \textbf{RFQ No} & \textbf{Date} & \textbf{Required by} & \textbf{Contact}
+  & \textbf{Shipping Point} & \textbf{Ship via} \\ [0.5em]
+  \hline
+  <%quonumber%> & <%quodate%> & <%reqdate%> & <%employee%> & 
+  <%shippingpoint%> & <%shipvia%> \\
+  \hline
+\end{tabularx}
+
+\parbox{\textwidth}{
+\vspace{1.0cm}
+Please provide price and delivery time for the following items:
+}
+
+\vspace{0.5cm}
+	Prices in: \textbf{<%currency%>}.
+<%if terms%> - Terms:<%terms%> days<%end terms%>
+<%if orddescription%> - <%orddescription%><%end orddescription%>
+}
+\vspace{0.5cm} 
+
+\begin{longtable}{|l p{5.5cm} @{\extracolsep\fill} rclrr|} \hline
+  \textbf{Number} & \textbf{Description} & \textbf{Qty} & \textbf{Unit}  & \textbf{Delivery} & \textbf{Price} & \textbf{Amount} \\     
+  \hline
+\endfirsthead
+  \multicolumn{6}{l}{\emph{Continued from previous page ...}} \\
+  \hline
+  \textbf{Number} & \textbf{Description} & \textbf{Qty} & \textbf{Unit}  & \textbf{Delivery} & \textbf{Price} & \textbf{Amount} \\     
+  \hline
+\endhead
+   \hline \multicolumn{6}{r}{\emph{Continued on next page ...}}
+\endfoot
+   \hline
+\endlastfoot
+<%foreach number%>
+  <%number%> & <%description%> & <%qty%> & <%unit%> & & &\\
+  <%if itemnotes%>
+		& <%itemnotes%> & & & & &\\
+	<%end itemnotes%>
+<%end number%>
+\end{longtable}
+
+\parbox{\textwidth}{
+\vspace{0.5cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+}
+
+\vfill
+<%include footer_en.tex%>
+\end{CJK}
+\end{document}

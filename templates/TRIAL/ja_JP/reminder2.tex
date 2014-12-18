@@ -1,0 +1,40 @@
+%% First Choice Internet
+%% Reminder1, English
+%% B.Plagge 2014-07-09 TRIAL templates
+<%include settings.tex%> 
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_cust_ja.tex%>
+\vspace*{2.5cm}
+
+\textbf{第二 リマインダー} \hfill \textbf{<%statementdate%>}
+\normalsize
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabular}{|llccr|}
+  \hline
+  \textbf{請求番号} & \textbf{受注番号} & \textbf{請求日} & \textbf{支払予約日} & \textbf{金額}\\
+  \hline
+  <%invnumber%> & <%ordnumber%> & <%invdate%> & <%duedate%> & <%due%> \\
+  \hline
+\end{tabular}
+
+\vspace{0.5cm}
+
+請求 <%invnumber%> に対するお支払いを入金出来ませんでした。お支払いもされましたらこの通知を度外視して下さい。
+
+\vspace{0.5cm}
+ご理解とご協力お願い申し上げます。
+
+\vfill
+
+<%include account_info_ja.tex%>
+\vspace{0.5cm}
+<%include footer_ja.tex%>
+\end{CJK}
+\end{document}

@@ -1,0 +1,134 @@
+%% First Choice Internet
+%% Vendor Invoice, Japanese
+%% B.Plagge 2007-09-16
+%% B.Plagge 2008-01-03
+%% B.Plagge 2014-06-30 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include internal_doc_header_ja.tex%>
+
+\rule{\textwidth}{0.5pt}
+
+\vspace*{0.5cm}
+
+\centerline{\textbf{仕 入 先  請 求 書}}
+\normalsize
+\vspace{1.2cm}
+
+\parbox[t]{.55\textwidth}{
+\textbf{出荷元} \\
+<%include vendor_ja.tex%>
+}
+\parbox[t]{.40\textwidth}{
+\textbf{出荷先} \\
+<%include po_shipto_ja.tex%>
+}
+
+\vspace{0.5cm}
+-
+\vspace{0.2cm}
+
+\begin{tabularx}{\textwidth}{*{8}{|X}|} \hline
+  \textbf{請求番号} & \textbf{日付} & \textbf{支払予定日} & \textbf{発注番号}
+  & \textbf{担当者}
+  <%if shippingpoint%>
+  & \textbf{出荷ポイント}
+  <%end shippingpoint>
+  <%if ponumber%>
+  & \textbf{発注番号}
+  <%end ponumber%>
+  <%if shipvia%>
+  & \textbf{出荷経由地}
+  <%end shipvia%>
+  \\ [0.5em]
+  \hline
+  <%invnumber%> & <%invdate%> & <%duedate%> & <%ordnumber%> & <%employee%>
+  <%if shippingpoint%>
+  & <%shippingpoint%>
+  <%end shippingpoint>
+  <%if ponumber%>
+  & <%ponumber%>
+  <%end ponumber%>
+  <%if shipvia%>
+  & <%shipvia%>
+  <%end shipvia%>
+  \\
+  \hline
+\end{tabularx}
+
+\vspace{1cm}
+請求書の通貨: \textbf{<%currency%>}.
+<%if terms%> - 支払条件:<%terms%> 日<%end terms%>
+<%if orddescription%> - <%orddescription%><%end orddescription%>
+\vspace{0.5cm}
+
+\begin{longtable}{|ll p{6cm} @{\extracolsep\fill} lrlrrr|} \hline
+  \textbf{明細} & \textbf{商番} & \textbf{品名・テキスト} & \textbf{出荷予定日} &
+	\textbf{数量} & 
+  \textbf{単位}  & \textbf{価格} & \textbf{値引} & \textbf{金額} \\     
+  \hline
+\endfirsthead
+  \multicolumn{8}{l}{\emph{前のページから続ける ...}} \\
+  \hline
+  \textbf{明細} & \textbf{商番} & \textbf{品名・テキスト} & \textbf{出荷予定日} &
+	\textbf{数量} & 
+  \textbf{単位}  & \textbf{価格} & \textbf{値引} & \textbf{金額} \\     
+  \hline
+\endhead
+   \hline \multicolumn{8}{r}{\emph{次おページ御覧下さい ...}}
+\endfoot
+   \hline
+   \multicolumn{8}{|r} \textbf{合計} & <%invtotal%> \\
+
+   <%foreach tax%>
+     \multicolumn{8}{|r} \textbf{VAT (消費税 (ベース: <%taxbase%>)} & <%tax%>\\
+   <%end tax%>
+  
+   <%if paid%>
+     \multicolumn{8}{|r} \textbf{{支払金額}  & - <%paid%> \\
+   <%end paid%>
+   <%if total%>
+     \hline
+     \multicolumn{8}{|r} \textbf{残高額} & <%total%> \\
+   <%end total%>
+  \hline
+\endlastfoot
+<%foreach number%>
+  <%runningnumber1%> & <%number%> & <%description%> & <%deliverydate%> & 
+  <%qty%> & <%unit%> & <%sellprice%> & <%discountrate%> & <%linetotal%> \\
+  <%if itemnotes%>& & <%itemnotes%> & & & & & &\\<%end itemnotes%>
+<%end number%>
+\end{longtable}
+
+\parbox{\textwidth}{
+\vspace{0.2cm}
+<%if taxincluded%>
+価格は税込です。
+<%end tax included%>
+\vspace{0.5cm}
+<%if notes%>
+  <%notes%>
+<%end notes%>
+}
+
+\vfill
+<%if paid_1%>
+\begin{tabularx}{10cm}{@{}lXlr@{}}
+  \multicolumn{4}{c}{\textbf{還付金}} \\
+  \hline
+  \textbf{日付} & & \textbf{ソース} & \textbf{金額} \\
+<%end paid_1%>
+<%foreach payment%>
+  <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\
+<%end payment%>
+<%if paid_1%>
+\end{tabularx}
+<%end paid_1%>
+
+\vspace{1em}
+<%include footer_ja.tex%>
+\end{CJK}  
+\end{document}

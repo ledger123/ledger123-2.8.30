@@ -1,0 +1,39 @@
+%% First Choice Internet
+%% Remittance Voucher, English
+%% B.Plagge 2007-09-16
+%% B.Plagge 2014-06-30 TRIAL templates
+<%include settings.tex%>
+\begin{document}
+\begin{CJK}{UTF8}{arialuni}
+
+\vspace*{-3.3cm}
+<%include letterhead_en.tex%>
+\vspace*{1.5cm}
+
+\centerline{\textbf{Remittance Voucher}}
+
+\hfill <%currency%> <%total%>
+
+IBAN: <%bankiban%> BIC: <%bankbic%> Bank: <%bankname%>
+
+<%company%> <%address%>}
+
+\vspace{0.3cm}
+
+<%name%>
+
+<%address1%>
+
+<%address2%>
+
+<%city%>
+<%if state%>
+\hspace{-1mm}, <%state%>
+<%end state%>
+<%zipcode%>
+
+<%country%>
+\vfill
+<%include footer_en.tex%>
+\end{CJK}
+\end{document}

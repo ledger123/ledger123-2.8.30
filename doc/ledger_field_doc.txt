@@ -1,0 +1,54 @@
+Ledger - Field Definitions
+
+The purpose of this document is to define content, format and usage of key data fields.
+
+Currency
+Identified by the ISO currency code (3-digits). Most currencies have 'cents' like Dollar and Euro. In this case the
+currency has a precision of 2 (= 2 decimals) like USD 5.12. Japanese Yen are an exception; they have a precision of 0!
+The precision is entered with the currency. The first currency entered is the 'home currency' . The precision of the
+home currency is also entered into the Defaults screen.
+
+Precision
+The precision for all currencies to be used and the default precision need to be entered into the system.
+The precision determines how currencies are rounded and formatted and thus affect directly the data being entered into
+the accounting part of the system.
+All data entered into accounting tables is rounded with the default precision!
+
+Part Selling Price and Last Cost
+The selling price and last cost of a part may have a higher precision than the currency e.g. currency = EUR,
+last cost = 1.2245 Euro, selling price = 3.2654 Euro. This makes it possible to record costs correctly for low cost/price
+parts.
+The maximum number of decimals is control by the 'Max Price Decimals' field on the System Defaults screen. This value is
+set automatically to 2 - as (almost) all currencies have a precision of 2. Set it to higher values to allow a higher
+precision.
+This value does NOT affect the values posted to the accounting tables.
+Example: PO Order for 7 pc @ 1.4412 Euros = 10.0884 Euros -> but this gets rounded to 10.09 Euros (and posted to Accounts Payable).
+         If Max Price Decimals is 4 then last costs are: 1.4414 (exact value would be: 1.4414285).
+
+Credit limit
+Credit limit and remaining credit limit is always calculated in the home currency. Amounts are rounded with the
+Default precision.
+Calculation: ( sum(invoices) - sum(payments) ) - current_order_value
+
+sellprice
+price the item was sold t a customer. The sellprice is in home currency.
+Calculation: unitprice * (1 - discount), rounded to maxpricedecimals
+
+itemtotal
+the total price for a line item. Itemtotal is in document currency i.e. home currency or foreign currency
+Calculation: sellprice * qty, rounded to the currency precision
+
+Invoices
+amount: invoiced amount (in table ap)
+netamount = amount - tax
+tax (in table invoicetax)
+
+paid: amount paid (in table ap)
+
+disount per item: reduces the itemtotal
+
+overall cash discount (for quick payment): reduces AP but not the tax!
+
+line item discount: changes the lineitem total and the total amount of tax for the item
+
+FXgain/FXloss: arise if exchangerates in invoice and in payment are different

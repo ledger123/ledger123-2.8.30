@@ -1,0 +1,29 @@
+$self{charset} = 'UTF-8';
+
+$self{texts} = {
+  'Company'                     => '会社',
+  'Continue'                    => '続ける',
+  'Dataset is newer than version!' => 'デタセットはバージョンより新しい',
+  'Dataset locked!'             => 'データセットロック中',
+  'Incorrect Dataset version!'  => '間違えたデタセットバージョン',
+  'Incorrect Password!'         => '間違えたパスワード',
+  'Incorrect Username!'         => '間違えたユーザ名',
+  'Login'                       => 'ログイン',
+  'Name'                        => '名字',
+  'Password'                    => 'パスワード',
+  'Upgrading to Version'        => '更新的のバージョン',
+  'Version'                     => 'バージョン',
+  'You did not enter a name!'   => '名前を入力して下さい',
+  'admin does not exist!'       => 'adminユーザが存在しません',
+};
+
+$self{subs} = {
+  'login'                       => 'login',
+  'login_screen'                => 'login_screen',
+  'logout'                      => 'logout',
+  'selectdataset'               => 'selectdataset',
+  'ログイン'                => 'login',
+};
+
+1;
+

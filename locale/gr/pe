@@ -1,6 +1,7 @@
 $self{charset} = 'ISO-8859-7';
 
 $self{texts} = {
+  'Account'                     => 'Λογαριασμός',
   'Accounting Menu'             => 'Μενπύ Λογιστικής',
   'Active'                      => 'Ενεργός',
   'Add'                         => 'Προσθήκη',
@@ -13,6 +14,7 @@ $self{texts} = {
   'Continue'                    => 'Συνέχεια',
   'Current'                     => 'Τρέχων',
   'Customer'                    => 'Πελάτης',
+  'Customer Number'             => 'Κωδικός Πελάτη',
   'Customer missing!'           => 'Ο Πελάτης λείπει!',
   'Customer not on file!'       => 'Debtor not on file!',
   'Date'                        => 'Ημερομηνία',
@@ -38,6 +40,7 @@ $self{texts} = {
   'Save'                        => 'Αποθήκευση',
   'Tax'                         => 'Φόρος',
   'Vendor'                      => 'Creditor',
+  'Vendor Number'               => 'Creditor Number',
   'Vendor not on file!'         => 'Creditor not on file!',
 };
 
