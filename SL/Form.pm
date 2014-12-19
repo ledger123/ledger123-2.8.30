@@ -463,11 +463,14 @@ sub header {
 <script src="js/rma.js" type="text/javascript"></script>
 | if 1;
 
+    my $dateformat = $self->{dateformat};
+    $dateformat = 'yy-mm-dd' if $dateformat eq 'yyyy-mm-dd';
+
     $jquery_dateformat = q|
 <script>
 $(function() {
    $(".date").datepicker({ 
-	dateFormat: '|.$self->{dateformat}.q|',
+	dateFormat: '|.$dateformat.q|',
 	showOn: "button",
 	buttonImage: "images/calendar.gif",
 	buttonImageOnly: true,
