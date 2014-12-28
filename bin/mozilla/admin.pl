@@ -83,7 +83,7 @@ function sf(){
 
 <div align=center>
 
-<a href="http://www.sql-ledger.com"><img src=$images/sql-ledger.gif border=0 target=_blank></a>
+<a href="http://www.sql-ledger-network.com"><img src=$images/sql-ledger.gif border=0 target=_blank></a>
 <h1 class=login>|.$locale->text('Version').qq| $form->{version}<p>|.$locale->text('Administration').qq|</h1>
 
 <form method=post action="$form->{script}">
@@ -100,7 +100,7 @@ function sf(){
 
 </form>
 
-<a href=http://www.sql-ledger.com target=_blank>SQL-Ledger |.$locale->text('website').qq|</a>
+<a href=http://www.sql-ledger-network.com target=_blank>SQL-Ledger Network |.$locale->text('website').qq|</a>
 
 </div>
 
