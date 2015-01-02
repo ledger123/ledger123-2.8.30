@@ -1,27 +1,35 @@
 # bp 2014/11/12
+# bp 2015/01/02 correction
+
 The Finance::Quote module is used for currency conversion.
 However, it can also be used to retrieve share prices.
 
-Debian/Ubuntu Installation
---------------------------
+Debian/Ubuntu Installation (Wheezy)
+-----------------------------------------
 The Debian version of the program is from 2003 ie. outdated. Please use the version 1.35 (here) or a newer version.
 
 The program requires:
   - HTML::Tableextract -> current Debian program (version 2.11-1) is ok
-  - Mozilla::CA
-  - Date::Calc::XS
+  - Mozilla::CA        -> Mozilla certificates, should have been installed automatically
+  - Date::Calc::XS     -> current Debian package is ok
 
 Installation
 ------------
-1) use apt-get to install "libhtml-tableextract-perl"
-2) install the other modules with cpan:
-    cpan Mozilla::CA
-    cpan Date::Calc::XS
+1) use apt-get to install
+     libhtml-tableextract-perl
+     libdate-calc-xs-perl
+     libjson-perl
+     libjson-xs-perl
 
-Then run:
-1)  perl Makefile.PL
-2)  make test
-3)  make install
+2) download the Debian package
+     libfinance-quote-perl_1.35-1_all.deb
+    and install it with apt-get install
+
+
+Other Linux
+-------------
+Use the tarball provided in the contrib directory if your Linux version shouldn't have special packages.
+
 
 Documention
 -----------
