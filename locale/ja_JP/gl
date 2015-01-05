@@ -75,6 +75,7 @@ $self{texts} = {
   'GIFI'                        => 'GIFI',
   'GL Transaction'              => '仕訳トランザクション',
   'General Ledger'              => '仕訳',
+  'GetExRate'                   => '現為替レート',
   'Heading'                     => '見出し',
   'ID'                          => 'ID',
   'Include Payment'             => '支払い込み',

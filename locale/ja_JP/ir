@@ -95,6 +95,7 @@ $self{texts} = {
   'Fixed value'                 => '固定値',
   'For'                         => '&nbsp',
   'G.W.'                        => '総重量',
+  'GetExRate'                   => '現為替レート',
   'Group'                       => 'グループ',
   'Group by'                    => 'グループ化',
   'Heading'                     => '見出し',

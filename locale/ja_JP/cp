@@ -65,6 +65,7 @@ $self{texts} = {
   'Payment'                     => '単位支払い',
   'Payment Method'              => '支払いメソッド',
   'Payment account missing!'    => '支払勘定は未入力',
+  'Payment amount missing! Press Update before Post!' => '支払額は未入力! 実行の前に更新をして下さい',
   'Payment posted!'             => '支払金を登録された',
   'Payments'                    => '複数支払い',
   'Post'                        => '登録',
