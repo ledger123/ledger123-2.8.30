@@ -1,6 +1,8 @@
 # These are all the texts to build the translations files.
 # to build unique strings edit the module files instead
 # this file is just a shortcut to build strings which are the same
+$self{charset} = 'UTF-8';
+
 
 $self{texts} = {
   'A'                           => '',
@@ -55,7 +57,7 @@ $self{texts} = {
   'Add Purchase Order'          => '',
   'Add Quotation'               => '',
   'Add Request for Quotation'   => '',
-  'Add SIC'                     => '',
+  'Add SIC'                     => 'Add Standard Industrial Code',
   'Add Sales Invoice'           => '',
   'Add Sales Order'             => '',
   'Add Service'                 => '',
@@ -191,7 +193,9 @@ $self{texts} = {
   'Currency'                    => '',
   'Current'                     => '',
   'Current Earnings'            => '',
+  'Customer'                    => 'Debtor',
   'Customer History'            => '',
+  'Customer Number'             => 'Debtor Number',
   'DOB'                         => '',
   'Database Host'               => '',
   'Dataset'                     => '',
@@ -605,7 +609,7 @@ $self{texts} = {
   'Retained Earnings'           => '',
   'Role'                        => '',
   'S'                           => '',
-  'SIC'                         => '',
+  'SIC'                         => 'SIC Codes',
   'SIC deleted!'                => '',
   'SIC saved!'                  => '',
   'SKU'                         => '',
@@ -751,11 +755,13 @@ $self{texts} = {
   'Upgrading to Version'        => '',
   'User'                        => '',
   'Valid until'                 => '',
+  'Vendor'                      => 'Creditor',
   'Vendor History'              => '',
   'Vendor Invoice '             => '',
   'Vendor Invoice.'             => '',
   'Vendor Invoice/AP Transaction Number' => '',
   'Vendor Invoices'             => '',
+  'Vendor Number'               => 'Creditor Number',
   'Version'                     => '',
   'Warehouse'                   => '',
   'Warehouse deleted!'          => '',

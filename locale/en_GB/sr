@@ -5,21 +5,21 @@ $self{texts} = {
 
 $self{subs} = {
   'acc_menu'                    => 'acc_menu',
-  'continue'                    => 'continue',
-  'deselect_all'                => 'deselect_all',
+  'add_column'                  => 'add_column',
+  'delete_column'               => 'delete_column',
+  'delete_report'               => 'delete_report',
   'display'                     => 'display',
-  'display_form'                => 'display_form',
   'display_frame'               => 'display_frame',
-  'done'                        => 'done',
-  'get_payments'                => 'get_payments',
+  'do_save_report'              => 'do_save_report',
+  'edit_column'                 => 'edit_column',
   'jsmenu'                      => 'jsmenu',
   'jsmenu_frame'                => 'jsmenu_frame',
   'menubar'                     => 'menubar',
   'mlmenu'                      => 'mlmenu',
-  'reconciliation'              => 'reconciliation',
+  'save_column'                 => 'save_column',
+  'save_report'                 => 'save_report',
+  'save_report_as_new'          => 'save_report_as_new',
   'section_menu'                => 'section_menu',
-  'select_all'                  => 'select_all',
-  'update'                      => 'update',
 };
 
 1;

@@ -1,10 +1,6 @@
 $self{charset} = 'UTF-8';
 
 $self{texts} = {
-  'Customer'                    => 'Debtor',
-  'Customer Number'             => 'Debtor Number',
-  'Vendor'                      => 'Creditor',
-  'Vendor Number'               => 'Creditor Number',
 };
 
 $self{subs} = {
@@ -14,9 +10,16 @@ $self{subs} = {
   'display_form'                => 'display_form',
   'display_row'                 => 'display_row',
   'e_mail'                      => 'e_mail',
+  'gl_autocomplete'             => 'gl_autocomplete',
+  'gl_data'                     => 'gl_data',
   'invoicetotal'                => 'invoicetotal',
   'item_selected'               => 'item_selected',
   'new_item'                    => 'new_item',
+  'partdescription_data'        => 'partdescription_data',
+  'partnumber_data'             => 'partnumber_data',
+  'partnumber_partdescription_autocomplete' => 'partnumber_partdescription_autocomplete',
+  'pg_autocomplete'             => 'pg_autocomplete',
+  'pg_data'                     => 'pg_data',
   'print'                       => 'print',
   'print_form'                  => 'print_form',
   'print_options'               => 'print_options',
@@ -27,7 +30,12 @@ $self{subs} = {
   'select_item'                 => 'select_item',
   'send_email'                  => 'send_email',
   'ship_to'                     => 'ship_to',
+  'shipto_selected'             => 'shipto_selected',
+  'transport'                   => 'transport',
+  'transport_selected'          => 'transport_selected',
   'validate_items'              => 'validate_items',
+  'vc_autocomplete'             => 'vc_autocomplete',
+  'vc_data'                     => 'vc_data',
 };
 
 1;

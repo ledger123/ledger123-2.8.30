@@ -4,18 +4,23 @@ $self{texts} = {
   'AP'                          => 'Purchases',
   'AP Aging'                    => 'Vendor Aging',
   'AP Transaction'              => 'Purchase Transaction',
+  'AP Transactions'             => 'Purchase Transactions',
   'AR'                          => 'Sales',
   'AR Aging'                    => 'Customer Aging',
   'AR Transaction'              => 'Sales Transaction',
+  'AR Transactions'             => 'Sales Transactions',
   'Check'                       => 'Cheque',
-  'SIC'                         => 'SIC Codes'
+  'SIC'                         => 'SIC Codes',
 };
 
 $self{subs} = {
   'acc_menu'                    => 'acc_menu',
   'display'                     => 'display',
-  'js_menu'                     => 'js_menu',
+  'display_frame'               => 'display_frame',
+  'jsmenu'                      => 'jsmenu',
+  'jsmenu_frame'                => 'jsmenu_frame',
   'menubar'                     => 'menubar',
+  'mlmenu'                      => 'mlmenu',
   'section_menu'                => 'section_menu',
 };
 
