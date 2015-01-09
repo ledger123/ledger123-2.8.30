@@ -109,7 +109,7 @@ sub edit {
 
   &create_links;
 
-  #say Dumper ( $form );
+#say Dumper ( $form );
 
   %title = ( transaction => "$form->{ARAP} Transaction",
              credit_note => 'Credit Note',
@@ -392,6 +392,8 @@ sub create_links {
            } else {
             $form->{"${akey}_$i"} = $form->{acc_trans}{$key}->[$i - 1 ]->{amount} * $ml;
            }
+        } else {
+            $form->{"${akey}_$i"} = $form->{acc_trans}{$key}->[$i - 1 ]->{amount} * $ml;
         }
 
           if ( $akey eq 'amount' ) {

@@ -30,6 +30,19 @@ Other Linux
 -------------
 Use the tarball provided in the contrib directory if your Linux version shouldn't have special packages.
 
+Perl CPAN
+-----------
+The Perl cpan can be used to download and install Perl modules from the Perl cpan repository. This is useful
+if you don't have a package manager like Debian or Centos systems.
+
+cpan Date::Calc::XS
+this will download the module data, install and test the module.
+
+perldoc perllocal
+this command will show you the modules locally installed
+
+cpanp uninstall <module>
+this command will uninstalle modules previously installed
 
 Documention
 -----------

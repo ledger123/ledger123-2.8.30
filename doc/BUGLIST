@@ -4,8 +4,56 @@ BUGLIST
   fields have been added to many screens. Upload of reference docs is listed as planned function for
   SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
 
+bp 2015/1/6
+  bug: bep_201501-10 - fixed 2015/1/9
+  If a rate is entered in a deduction record the deduction amount is calculated by applying the rate to the wage.
+  Using the “Based On” field we can calculate the amount with respect to another deduction. In this case
+  only a rate can be entered. Additional error message specified
+
+bp 2015/1/6
+  bug: bep_201501-09 - fixed 2015/1/9
+  Employee pays, employer pays. The percentage values must add up to 100%. This is not checked.
+
+bp 2015/1/6
+  bug: bep_201501-08 - fixed 2015/1/9
+  Employee pays, employer pays.
+  Percentage values like 0.4 are required. This is confusing because in the rate column percent are
+  entered like 30%
+
+bp 2015/1/6
+  bug: bep_201501-07 - fixed 2015/1/9
+  Deduction screen: must enter rate or amount. Error message reads: Enter rate.
+  change error message to read: enter rate or amount
+
+bp 2015/1/8
+  bug: bep_201501-06 - fixed 2015/1/8
+  Payroll: if a "defer payment" account is specified the wage payment is paid to the specified deferremnt account.
+            program rounds an already formatted amount resulting is a smaller amount. Added call to parse_amount.
+
+bp 2015/1/6
+  bug: bep_201501-05 - fixed 2015/1/8
+  Payroll: employee master: overtime rate can not be entered into the employee master
+
+bp 2015/1/6 - fixed 2015/1/8
+  bug: bep_201501-04 - enhancemant 2015/1/8
+  Payroll: entries in the amount column are ignored. If a deduction can only be defined in percentage terms
+           this is a serious restriction because not all deductions are defined this way
+
+bp 2015/1/6
+  bug: bep_201501-03 - fixed 2015/1/7
+  Payroll: if employer share=employee share=0.5 only 0.25 are posted for the employer
+  system calculates employee share in Jpy first, then applies the employer rate to this amount
+
+bp 2015/1/6
+  bug: bep_201501-02 - fixed 2015/1/7
+  Payroll: deductions only payable by the employer are ignored.
+
+bp 2015/1/6
+  bug: bep_201501-01 - fixed 2015/1/7
+  AP transaction values for domestic transactions not showing
+
 bp 2014/12/18
-  but: bep_2014-07
+  bug: bep_2014-07
 * Purchase order generation function creates Purchase Order numbers with 2-digit year (see bug: bep_201412-03)
   -> function update_defaults() must be called with a date.
 

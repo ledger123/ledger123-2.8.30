@@ -1,0 +1,58 @@
+1) AP
+
+employee: 10527
+department: 10535
+bank: 10371
+paymentmethod: 10546
+
+
+INSERT INTO ar ( invnumber, transdate, customer_id, taxincluded, amount, netamount, paid, datepaid, duedate, invoice, curr, employee_id, department_id, terms, approved, cashdiscount, discountterms, onhold, exchangerate, bank_id, paymentmethod_id ) 
+VALUES ( 'SI-20141215-000900', '20141215', 10841, '0', 46628.80, 46628.80, 46628.80, '20141215', '2015.01.10', '0', 'USD', 10527, 10535, 30, '1', 5, 14, '0', 120.23, 10371, 10546 );
+
+get the id number as trans_id for the following records;
+payment record
+
+INSERT INTO payment ( id, trans_id, exchangerate, paymentmethod_id )
+VALUES ( 1, trans_id, 120.23, 10546 );
+
+acc_trans lines
+
+# sales posting
+INSERT INTO acc_trans ( trans_id, chart_id , amount, transdate, approved, fx_transaction )
+VALUES (trans_id, (select id from chart where accno = '6010'), 175.15, '2014.12.15', '1', '0');
+
+INSERT INTO acc_trans ( trans_id, chart_id, amount, transdate, approved, fx_transaction )
+VALUES (trans_id, (select id from chart where accno = '6010'), 20883.13, '2014.12.15', '1', '1' );
+
+INSERT INTO acc_trans ( trans_id, chart_id , amount, transdate, approved, fx_transaction )
+VALUES (trans_id, (select id from chart where accno = '6010'), 212.68, '2014.12.15', '1', '0' );
+
+INSERT INTO acc_trans ( trans_id, chart_id, amount, transdate, approved, fx_transaction )
+VALUES (trans_id, (select id from chart where accno = '6010'), 25357.84, '2014.12.15', '1', '1' );
+
+# AR Posting
+INSERT INTO acc_trans ( trans_id, chart_id, amount, transdate, approved, fx_transaction )
+VALUES (trans_id, (select id from chart where accno = '2110'), -46628.80, '2014.12.15', '1', '0' );
+
+# Receipt 1
+INSERT INTO acc_trans ( trans_id, chart_id , amount, transdate, approved, fx_transaction, id )
+VALUES (trans_id, (select id from chart where accno = '2010'), -368.44, '2014.12.15', '1', '0', '1' );
+
+INSERT INTO acc_trans ( trans_id, chart_id, amount, transdate, approved, fx_transaction )
+VALUES (trans_id, (select id from chart where accno = '2010'), -43928.92, '2014.12.15', '1', '1' );
+
+# AR Posting
+INSERT INTO acc_trans ( trans_id, chart_id, amount, transdate, approved, fx_transaction )
+VALUES (trans_id, (select id from chart where accno = '2110'), 44297.36, '2014.12.15', '1', '0' );
+
+# Discount
+INSERT INTO acc_trans ( trans_id, chart_id, amount, transdate, approved, fx_transaction, id )
+VALUES (trans_id, (select id from chart where accno = '8410'), -19.39, '2014.12.15', '1', '0', '10616' );
+
+INSERT INTO acc_trans ( trans_id, chart_id, amount, transdate, approved, fx_transaction, id )
+VALUES (trans_id, (select id from chart where accno = '8410'), -2307.10, '2014.12.15', '1', '0', '10616' );
+
+# AR Posting
+INSERT INTO acc_trans ( trans_id, chart_id, amount, transdate, approved, fx_transaction, 'id )
+VALUES (trans_id, (select id from chart where accno = '2110'), 2331.44, '2014.12.15', '1', '0', '10616' );
+

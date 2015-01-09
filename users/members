@@ -121,7 +121,6 @@ menuwidth=155
 name=O.Kahn
 numberformat=1,000.00
 outputformat=
-password=
 printer=
 role=admin
 sid=
@@ -133,6 +132,7 @@ timeout=10800
 vclimit=1000
 warehouse=
 warehouse_id=
+password=kaa8BH2D3Ic2.
 
 [miller@fctest@fctest]
 dateformat=yyyy-mm-dd

@@ -6,6 +6,10 @@ $self{texts} = {
   'AR Transaction'              => 'Sales Transaction',
   'AR Transactions'             => 'Sales Transactions',
   'Check'                       => 'Cheque',
+  'Customer'                    => 'Debtor',
+  'Customer Number'             => 'Debtor Number',
+  'Vendor'                      => 'Creditor',
+  'Vendor Number'               => 'Creditor Number',
 };
 
 $self{subs} = {

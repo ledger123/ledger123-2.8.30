@@ -32,7 +32,7 @@ if (-f "./sql-ledger-sys.conf") {
 #
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "$userspath/carp_debug.inc") {
-#  eval { require "$userspath/carp_debug.inc"; };
+  eval { require "$userspath/carp_debug.inc"; };
 }
 ########## end ###########################################
 
@@ -68,7 +68,7 @@ $form->db_init(\%myconfig);
 
 if ($@) {
   $locale = new Locale "$language", "$script";
-  
+
   $form->{callback} = "";
   $msg1 = $locale->text('You are logged out!');
   $msg2 = $locale->text('Login');
@@ -114,7 +114,7 @@ if (-f "$userspath/$myconfig{dbname}.LCK" && $form->{login} ne "admin\@$myconfig
     $form->error($message);
   }
   $form->error($locale->text('Dataset currently down for maintenance!'));
-} 
+}
 
 # pull in the main code
 require "$form->{path}/$form->{script}";

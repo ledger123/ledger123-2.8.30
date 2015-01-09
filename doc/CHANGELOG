@@ -1,6 +1,56 @@
+bp 2015/1/9
+bugfix
+  bug: bep_201501-10
+  If a rate is entered in a deduction record the deduction amount is calculated by applying the rate to the wage.
+  Using the “Based On” field we can calculate the amount with respect to another deduction. In this case
+  only a rate can be entered. Additional error message specified
+
+bp 2015/1/9
+bugfix: bep_201501-09
+  Employee pays, employer pays. The percentage values must add up to 100%. This is not checked.
+
+bp 2015/1/9
+bugfix bep_201501-08
+  Employee pays, employer pays.
+  Percentage values like 0.4 are required. This is confusing because in the rate column percent are
+  entered like 30%. Change to percent input
+
+bp 2015/1/9
+bugfix: bep_201501-07
+  Deduction screen: must enter rate or amount. Error message reads: Enter rate.
+  change error message to read: enter rate or amount
+
+# bp 2015.01.08
+bugfix
+bug: bep_201501-05
+* bug caused by different screen field and database field names
+
+# bp 2015.01.08
+new feature/bugfix bep_201501-04
+* entries in the "amount" column of the deduction record are no honored. It is now possible to calculate deductions
+  not only in percentage terms but also as fixed amounts.
+
+# bp 2015.01.08
+bugfix
+bug: bep_201501-06
+* added call to parse_amount before rounding the amount
+
+# bp 2015.01.07
+  bug: bep_201501-03
+  Payroll: if employer share=employee share=0.5 only 0.25 are posted for the employer
+  system calculates employee share in Jpy first, then applies the employer rate to this amount
+
+# bp 2015.01.07
+  bug: bep_201501-02 - fixed 2015/1/7
+  Payroll: deductions only payable by the employer are ignored.
+
+# bp 2015.01.07
+bugfix
+bug: bep_201501-01 bp programming error, fixed
+
 # bp 2014.12.11
 bugfix
-bug: bep_201412-06 - fixed 2014/12/11
+bug: bep_201412-06
 * When changing the customer/vendor selection fields in the receipt/payment transaction the precision is reset back
 * to the system default. Incorrect because "Currency" is one of the selection fields.
   We set the precision according to the currency selelcted.
