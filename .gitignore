@@ -1,7 +1,10 @@
+fc
+isna
 users
 sql-ledger.conf
 sql-ledger-sys.conf
 templates/*/
+!templates/Default
 locale/*.zip
 locales*.pl
 spool/*
