@@ -118,6 +118,10 @@ body.menu {
   background: white;
 }
 
+.menuLogo {
+/* applies only the menu logo */
+}
+
 .menuOpen {
 
   background-image: url("menu_open.png");

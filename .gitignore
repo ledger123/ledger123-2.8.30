@@ -1,8 +1,10 @@
 users
 sql-ledger.conf
+sql-ledger-sys.conf
 templates/*/
 locale/*.zip
 locales*.pl
+spool/*
 *.missing
 *~
 

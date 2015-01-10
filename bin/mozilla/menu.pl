@@ -20,12 +20,12 @@ use SL::Menu;
 
 
 sub display {
-  
+
 #$form->{callback} = "am.pl?login=$form->{login}&action=$form->{main}&path=$form->{path}&password=$form->{password}&jsmenu=1";
 #$form->redirect;
 #exit;
 
- 
+
 $form->{frames} = 1;
 #warn $userspath;
 #exit;
@@ -34,7 +34,7 @@ $form->{frames} = 1;
     if ($form->{frames}) {
       &display_frame;
     } else {
-      
+
       my $menu = new Menu "$menufile";
       $menu->add_file("custom_$menufile") if -f "custom_$menufile";
       $menu->add_file("$form->{login}_$menufile") if -f "$form->{login}_$menufile";
@@ -53,21 +53,21 @@ $form->{frames} = 1;
 #      if (! open(FH, ">$userspath/$form->{login}_menu_items.js")) {
 #	&display_frame;
 #      }
-      
+
 #$form->debug;
 $form->debug("$userspath/mlmenu.html");
 #exit;
       # display entry screen
       $form->{callback} = "am.pl?login=$form->{login}&action=$form->{main}&path=$form->{path}&password=$form->{password}&jsmenu=1&mlmenu=";
       $form->{callback} .= $form->escape($form->{mlmenu},1);
-      
+
       $form->redirect;
 
     }
   } else {
     &display_frame;
   }
-  
+
 }
 
 
@@ -100,7 +100,7 @@ sub acc_menu {
   my $menu = new Menu "$menufile";
   $menu->add_file("custom_$menufile") if -f "custom_$menufile";
   $menu->add_file("$form->{login}_$menufile") if -f "$form->{login}_$menufile";
-  
+
   $form->{title} = $locale->text('Accounting Menu');
 
   $form->header;
@@ -135,7 +135,7 @@ function SwitchMenuAndSub(menu, submenu) {
     } else {
       el.style.display = "none";
     }
-    
+
     if ( document.getElementById(menu).className == 'menuClose' ) {
       document.getElementById(menu).className = 'menuOpen';
     } else if ( document.getElementById(menu).className == 'menuOpen' ) {
@@ -148,7 +148,9 @@ function SwitchMenuAndSub(menu, submenu) {
 
 <body class=menu>
 
+<div class=menuLogo>
 <img src=$images/sql-ledger.gif width=80 border=0>
+</div>
 |;
 
   if ($form->{js}) {
@@ -183,7 +185,7 @@ sub section_menu {
     $label =~ s/ /&nbsp;/g if $label !~ /<img /i;
 
     $menu->{$item}{target} = "main_window" unless $menu->{$item}{target};
-    
+
     if ($menu->{$item}{submenu}) {
 
       $menu->{$item}{$item} = !$form->{$item};
@@ -195,7 +197,7 @@ sub section_menu {
 
 	# remove same level items
 	map { shift @menuorder } grep /^$item/, @menuorder;
-	
+
 	&section_menu($menu, $item);
 
 	print qq|<br>\n|;
@@ -208,19 +210,19 @@ sub section_menu {
 	map { shift @menuorder } grep /^$item/, @menuorder;
 
       }
-      
+
     } else {
-    
+
       if ($menu->{$item}{module}) {
 
 	print qq|<br>\n$spacer|.$menu->menuitem(\%myconfig, \%$form, $item, $level).qq|$label</a>|;
-	
+
       } else {
 
         $form->{tag}++;
 	print qq|<a name="id$form->{tag}"></a>
 	<p><b>$label</b>|;
-	
+
 	&section_menu($menu, $item);
 
 	print qq|<br>\n|;
@@ -248,18 +250,18 @@ sub jsmenu_frame {
     $menu->{$item}{target} = "main_window" unless $menu->{$item}{target};
 
     if ($menu->{$item}{submenu}) {
-      
+
 	$display = "display: none;" unless $level eq ' ';
 
 	print qq|
 	<div id="menu$i" class="menuClose" onclick="SwitchMenuAndSub('menu$i','sub$i')">$label</div>
 	<div class="submenu" id="sub$i" style="$display">|;
-	
+
 	# remove same level items
 	map { shift @menuorder } grep /^$item/, @menuorder;
 
 	&jsmenu_frame($menu, $item);
-	
+
 	print qq|
 	</div>
 |;
@@ -277,7 +279,7 @@ sub jsmenu_frame {
           &jsmenu_frame($menu, $item);
 
 	} else {
-	
+
 	  print qq|<div class="submenu"> |.
           $menu->menuitem(\%myconfig, \%$form, $item, $level).qq|$label</a></div>|;
 	}
@@ -289,9 +291,9 @@ sub jsmenu_frame {
 	print qq|
 <div id="menu$i" class="menuClose" onclick="SwitchMenuAndSub('menu$i','sub$i')">$label</div>
 	<div class="submenu" id="sub$i" style="$display">|;
-	
+
 	&jsmenu_frame($menu, $item);
-	
+
 	print qq|
 	</div>
 |;
@@ -307,7 +309,7 @@ sub jsmenu_frame {
 
 sub jsmenu {
   my ($menu, $level) = @_;
-  
+
   # build menu_{login}.js for user
   my @menuorder = $menu->access_control(\%myconfig, $level);
 
@@ -320,17 +322,17 @@ sub jsmenu {
     if ($menu->{$item}{submenu}) {
 
       $form->{items} = 1;
-      
+
       $form->{jsmenu} .= $form->{stagger};
       $form->{jsmenu} .= qq|['$label', null, null,\n|;
-      
+
       # remove same level items
       map { shift @menuorder } grep /^$item/, @menuorder;
 
       $form->{stagger} .= "\t";
 
       &jsmenu($menu, $item);
-      
+
       chop $form->{stagger};
       $form->{jsmenu} .= qq|$form->{stagger}],\n|;
 
@@ -338,7 +340,7 @@ sub jsmenu {
 
       if ($menu->{$item}{module}) {
 	$form->{items} = 1;
-	
+
 	if ($level eq "") {
 
 	  $menu->{$item}{jsmenu} = 1;
@@ -348,16 +350,16 @@ sub jsmenu {
 
           $form->{jsmenu} .= $form->{stagger};
 	  $form->{jsmenu} .= qq|['$label', '$str'],\n|;
-	  
+
 	  # remove same level items
 	  map { shift @menuorder } grep /^$item/, @menuorder;
 
           &jsmenu($menu, $item);
 
 	  $form->{jsmenu} .= qq|$form->{stagger}],\n|;
-	  
+
 	} else {
-	
+
 	  $menu->{$item}{jsmenu} = 1;
 	  $str = $menu->menuitem(\%myconfig, \%$form, $item, $level);
 	  $str =~ s/^<a href=//;
@@ -372,7 +374,7 @@ sub jsmenu {
         $form->{jsmenu} .= $form->{stagger};
 	$form->{jsmenu} .= qq|['$label', null, null,\n|;
 	$form->{stagger} .= "\t";
-        
+
 	&jsmenu($menu, $item);
 
 	chop $form->{stagger};
@@ -393,7 +395,7 @@ sub jsmenu {
 
 sub mlmenu {
   my ($menu, $level) = @_;
-  
+
   # build menu_{login}.html for user
   my @menuorder = $menu->access_control(\%myconfig, $level);
 
@@ -406,14 +408,14 @@ sub mlmenu {
     if ($menu->{$item}{submenu}) {
 
       $form->{items} = 1;
-      
+
       $form->{stagger} .= "\t";
 
       # remove same level items
       map { shift @menuorder } grep /^$item/, @menuorder;
 
       &mlmenu($menu, $item);
-      
+
       $form->{mlmenu} =~ s/<\/li>$/\n$form->{stagger}<ul>/;
       chop $form->{stagger};
       $form->{mlmenu} .= qq|$form->{stagger}</ul>\n|;
@@ -422,7 +424,7 @@ sub mlmenu {
 
       if ($menu->{$item}{module}) {
 	$form->{items} = 1;
-	
+
 	if ($level eq "") {
 
 	  $menu->{$item}{jsmenu} = 1;
@@ -430,16 +432,16 @@ sub mlmenu {
 
           $form->{mlmenu} .= $form->{stagger};
 	  $form->{mlmenu} .= qq|<li>$str$label</a>\n$form->{stagger}<ul>\n|;
-	  
+
 	  # remove same level items
 	  map { shift @menuorder } grep /^$item/, @menuorder;
 
           &mlmenu($menu, $item);
 
 	  $form->{mlmenu} .= qq|$form->{stagger}</ul>\n|;
-	  
+
 	} else {
-	
+
 	  $menu->{$item}{jsmenu} = 1;
 	  $str = $menu->menuitem(\%myconfig, \%$form, $item, $level);
           $form->{mlmenu} .= $form->{stagger};
@@ -452,7 +454,7 @@ sub mlmenu {
         $form->{mlmenu} .= $form->{stagger};
 	$form->{mlmenu} .= qq|<ul><li>$label</li>\n|;
 	$form->{stagger} .= "\t";
-        
+
 	&mlmenu($menu, $item);
 
 	chop $form->{stagger};

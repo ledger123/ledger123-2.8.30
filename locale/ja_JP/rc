@@ -9,7 +9,6 @@ $self{texts} = {
   'August'                      => '8月',
   'Balance'                     => '差額',
   'Beginning Balance'           => '開始貸借対照表',
-  'Check \'Ignore Difference\' box to ignore statement balance difference and save reconciled transactions' => '申告釣合差異を無視すると和解されているトランザクションを保存するように\\'異を無視する\\'をチェックして',
   'Continue'                    => '続ける',
   'Credit'                      => '貸方',
   'Current'                     => '現在',

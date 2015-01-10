@@ -1,105 +1,5 @@
 # SQL-Ledger Accounting members
 
-[admin@fctest]
-countrycode=en_GB
-dateformat=yyyy-mm-dd
-dbconnect=dbi:Pg:dbname=fctest;host=localhost;port=5432
-dbdriver=Pg
-dbhost=localhost
-dbname=fctest
-dbpasswd=*=&QM-3!9,THS=P``
-dbport=5432
-dbuser=ledger123
-menuwidth=155
-numberformat=1,000.00
-outputformat=ps
-password=adpexzg3FUZAk
-printer=BRN2270
-role=admin
-stylesheet=sql-ledger.css
-timeout=10800
-vclimit=1000
-
-[admin@fctest@fctest]
-dateformat=yyyy-mm-dd
-dbconnect=dbi:Pg:dbname=fctest;host=localhost;port=5432
-dbdriver=Pg
-dbhost=localhost
-dbname=fctest
-dbpasswd=*=&QM-3!9,THS=P``
-dbuser=ledger123
-numberformat=1,000.00
-stylesheet=sql-ledger.css
-timeout=86400
-
-[fctest]
-acs=
-company=Tokyo Music Instruments
-countrycode=
-dateformat=yyyy-mm-dd
-dbconnect=dbi:Pg:dbname=fctest;host=localhost;port=5432
-dbdriver=Pg
-dbhost=localhost
-dbname=fctest
-dboptions=
-dbpasswd=*=&QM-3!9,THS=P``
-dbport=5432
-dbuser=ledger123
-department=
-department_id=
-email=
-fax=03-6379-2686
-menuwidth=155
-name=FC Test User
-numberformat=1,000.00
-outputformat=postscript
-password=fcONE.CMq7Zxc
-printer=Brother_BRN2270
-role=admin
-sid=
-signature=FC Tester
-stylesheet=fcstd.css
-tel=03-6369-2516
-templates=templates/TRIAL
-timeout=10800
-vclimit=1000
-warehouse=
-warehouse_id=
-
-[kahn]
-acs=
-company=Tokyo Music Instruments
-countrycode=en_GB
-dateformat=yyyy-mm-dd
-dbconnect=dbi:Pg:dbname=fctest;host=localhost;port=5432
-dbdriver=Pg
-dbhost=localhost
-dbname=fctest
-dboptions=
-dbpasswd=*=&QM-3!9,THS=P``
-dbport=5432
-dbuser=ledger123
-department=
-department_id=
-email=kahn@mit.de
-fax=03-3333-4444
-menuwidth=155
-name=O. Kahn
-numberformat=1,000.00
-outputformat=postscript
-password=kaa8BH2D3Ic2.
-printer=Virtual Printer
-role=admin
-sid=
-signature=Olli
-stylesheet=fctest.css
-tel=03-1111-2222
-templates=templates/TRIAL
-timeout=10800
-vclimit=1000
-warehouse=
-warehouse_id=
-
 [kahn@fctest]
 acs=
 company=
@@ -134,18 +34,6 @@ warehouse=
 warehouse_id=
 password=kaa8BH2D3Ic2.
 
-[miller@fctest@fctest]
-dateformat=yyyy-mm-dd
-dbconnect=dbi:Pg:dbname=fctest;host=localhost;port=5432
-dbdriver=Pg
-dbhost=localhost
-dbname=fctest
-dbpasswd=*=&QM-3!9,THS=P``
-dbuser=ledger123
-numberformat=1,000.00
-password=mi2.NMm2zcdOc
-stylesheet=sql-ledger.css
-timeout=86400
 
 [root login]
 password=roHFIIjdG91ZQ
@@ -183,4 +71,24 @@ timeout=10800
 vclimit=1000
 warehouse=
 warehouse_id=
+
+[admin@fctest]
+countrycode=en_GB
+dateformat=yyyy-mm-dd
+dbconnect=dbi:Pg:dbname=fctest;host=localhost;port=5432
+dbdriver=Pg
+dbhost=localhost
+dbname=fctest
+dbpasswd=*=&QM-3!9,THS=P``
+dbport=5432
+dbuser=ledger123
+menuwidth=155
+numberformat=1,000.00
+outputformat=ps
+password=adpexzg3FUZAk
+printer=BRN2270
+role=admin
+stylesheet=sql-ledger-jp.css
+timeout=10800
+vclimit=1000
 
