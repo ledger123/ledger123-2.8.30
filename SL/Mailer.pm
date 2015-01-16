@@ -35,8 +35,9 @@ sub send {
   my $domain = $self->{from};
   $domain =~ s/(.*?\@|>)//g;
   my $msgid = "$boundary\@$domain";
-  
-  $self->{charset} ||= "ISO-8859-1";
+
+  # bp 2015/01 changed charset from ISO-8859-1 to UTF-8 and added reply-to $h{from}  (below)
+  $self->{charset} ||= "UTF-8";
 
   if ($out) {
     open(OUT, $out) or return "$out : $!";
@@ -71,6 +72,7 @@ To: $h{to}
 $h{cc}$h{bcc}$h{subject}
 Message-ID: <$msgid>
 $h{notify}X-Mailer: SQL-Ledger $self->{version}
+Reply-To: $h{from}
 MIME-Version: 1.0
 |;
 
