@@ -78,13 +78,22 @@ sub list {
         th => { class => ['listheading'] },
       );
 
+
     $table->map_cell(
         sub {
             my $datum = shift;
             my $row   = $table->get_current_row();
             my $col   = $table->get_current_col();
+
+            my $varslink;
+            if ($datum =~ /^(acc_trans|ar|ap|invoice|inventory|transdate|gl|fifo|)$/){
+                $varslink="&fromdate=$form->{fromdate}&todate=$form->{todate}";
+            } else {
+                $varlink='';
+            }
+
             return
-qq|<a href="$form->{script}?action=list&table_name=$datum&old_table_name=$form->{table_name}&path=$form->{path}&login=$form->{login}&all_columns=$form->{all_columns}&l_subtotal=$form->{l_subtotal}">$datum</a>|;
+qq|<a href="$form->{script}?action=list&table_name=$datum&old_table_name=$form->{table_name}$varslink&path=$form->{path}&login=$form->{login}&all_columns=$form->{all_columns}&l_subtotal=$form->{l_subtotal}">$datum</a>|;
         },
         'table_name'
     );
@@ -295,7 +304,7 @@ sub print_table {
     $query = qq|SELECT * FROM $form->{table_name} WHERE $where ORDER BY 1 LIMIT $limit|;
 
     my @report_columns = @columns;
-    my @allrows = $form->{dbs}->query( $query, @bind )->hashes or die( $form->{dbs}->error );
+    my @allrows = $form->{dbs}->query( $query, @bind )->hashes; # or die( $form->{dbs}->error );
     my ( %tabledata, %totals, %subtotals );
 
     my $url = "$form->{script}?oldsort=$sort&sortorder=$sortorder";
