@@ -45,6 +45,8 @@ sub alltaxes {
 
     #$form->{todate} = $form->current_date( \%myconfig ) if !$form->{todate};
 
+    #RP->create_links(\%myconfig, \%$form, $report{$form->{reportcode}}->{vc});
+
     my $cashchecked;
     my $accrualchecked;
     if ( $form->{method} eq 'cash' ) {
@@ -173,6 +175,20 @@ sub alltaxes {
 
         UNION ALL
 
+        SELECT DISTINCT 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE aa.netamount = aa.amount
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9
+
+        UNION ALL
+
         SELECT 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
@@ -182,6 +198,20 @@ sub alltaxes {
         JOIN ap aa ON (aa.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE c.link LIKE '%tax%'
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9
+
+        UNION ALL
+
+        SELECT DISTINCT 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE aa.netamount = aa.amount
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9
 
