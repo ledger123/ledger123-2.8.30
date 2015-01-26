@@ -22,6 +22,33 @@ sub alltaxes {
     ( $null, $department_id ) = split( /--/, $form->{department} );
     &bld_department( 'selectdepartment', 1, $department_id );
 
+    $form->all_departments(\%myconfig);
+
+
+  if (@{ $form->{all_years} }) {
+    # accounting years
+    $selectaccountingyear = "\n";
+    for (@{ $form->{all_years} }) { $selectaccountingyear .= qq|$_\n| }
+    $selectaccountingmonth = "\n";
+    for (sort keys %{ $form->{all_month} }) { $selectaccountingmonth .= qq|$_--|.$locale->text($form->{all_month}{$_}).qq|\n| }
+
+    $selectfrom = qq|
+        <tr>
+	  <th align=right>|.$locale->text('Period').qq|</th>
+	  <td colspan=3>
+	  <select name=month>|.$form->select_option($selectaccountingmonth, $form->{month}, 1, 1).qq|</select>
+	  <select name=year>|.$form->select_option($selectaccountingyear, $form->{year}, 1).qq|</select>
+	  <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+	  <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+	  <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+	  <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+	  </td>
+	</tr>
+|;
+
+  }
+
+
     my @columns        = qw(module account transdate invnumber description name number amount tax);
     my @total_columns  = qw(amount tax);
     my @search_columns = qw(fromdate todate);
@@ -55,11 +82,12 @@ sub alltaxes {
     else {
         $accrualchecked = 'checked';
     }
+    #($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
 
     if ( !$form->{runit} ) {
 
         # Defaults
-        $form->{l_subtotal} = 1;
+        $form->{l_subtotal} = 'checked';
         $accrualchecked = 'checked';
     }
 
@@ -78,6 +106,7 @@ sub alltaxes {
     <th align="right">| . $locale->text('To date') . qq|</th>
     <td><input name=todate type=text size=12 class="date" value="$form->{todate}"></td>
 </tr>
+$selectfrom_disabled
 <tr>
     <th align="right" class="norpint">| . $locale->text('Include') . qq|</th>
     <td class="noprint">|;
@@ -112,26 +141,20 @@ sub alltaxes {
     my @report_columns;
     for (@columns) { push @report_columns, $_ if $form->{"l_$_"} }
 
-    my $where = ' 1 = 1 ';
+    my $where;
     if ( !$form->{runit} ) {
         $where = ' 1 = 2 ';          # Display data only when Update button is pressed.
-        $form->{l_subtotal} = '1';
+        $form->{l_subtotal} = 'checked';
     }
-    my @bind = ();
 
     my $transdate = "aa.transdate";
 
     if ( $form->{fromdate} ) {
-        $where .= qq| AND $transdate <= ?|;
-        push @bind, $form->{fromdate};
+        $where .= qq| AND $transdate >= '$form->{fromdate}'|;
     }
-
     if ( $form->{todate} ) {
-        $where .= qq| AND $transdate <= ?|;
-        push @bind, $form->{todate};
+        $where .= qq| AND $transdate <= '$form->{todate}'|;
     }
-
-    #($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
 
     if ( $form->{method} eq 'cash' ) {
         $transdate = "aa.datepaid";
@@ -170,6 +193,7 @@ sub alltaxes {
         JOIN ar aa ON (aa.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE c.link LIKE '%tax%'
+        $where
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9
 
@@ -184,6 +208,7 @@ sub alltaxes {
         JOIN ar aa ON (aa.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE aa.netamount = aa.amount
+        $where
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9
 
@@ -198,6 +223,7 @@ sub alltaxes {
         JOIN ap aa ON (aa.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE c.link LIKE '%tax%'
+        $where
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9
 
@@ -212,6 +238,7 @@ sub alltaxes {
         JOIN ap aa ON (aa.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE aa.netamount = aa.amount
+        $where
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9
 
