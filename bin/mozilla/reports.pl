@@ -45,24 +45,65 @@ sub alltaxes {
 
     #$form->{todate} = $form->current_date( \%myconfig ) if !$form->{todate};
 
+    my $cashchecked;
+    my $accrualchecked;
+    if ( $form->{method} eq 'cash' ) {
+        $cashchecked = 'checked';
+    }
+    else {
+        $accrualchecked = 'checked';
+    }
+
+    if ( !$form->{runit} ) {
+
+        # Defaults
+        $form->{l_subtotal} = 1;
+        $accrualchecked = 'checked';
+    }
+
     print qq|
 <form action="$form->{script}" method="post">
 <table>
-<tr><th align=right>Department</th><td><select name=department>$form->{selectdepartment}</select></td></tr>
-<tr><th align="right">Business</th><td><select name="business_id">$form->{selectbusiness}</select></td></tr>
-<tr><th align="right">To date</th><td><input name=todate type=text size=12 class="date" value="$form->{todate}"></td></tr>
-<tr><th align="right" class="norpint">Include</th><td class="noprint">|;
+<tr>
+    <th align=right>| . $locale->text('Department') . qq|</th>
+    <td><select name=department>$form->{selectdepartment}</select></td>
+</tr>
+<tr>
+    <th align="right">| . $locale->text('From date') . qq|</th>
+    <td><input name=fromdate type=text size=12 class="date" value="$form->{fromdate}"></td>
+</tr>
+<tr>
+    <th align="right">| . $locale->text('To date') . qq|</th>
+    <td><input name=todate type=text size=12 class="date" value="$form->{todate}"></td>
+</tr>
+<tr>
+    <th align="right" class="norpint">| . $locale->text('Include') . qq|</th>
+    <td class="noprint">|;
     for (@columns) {
         $checked = $form->{runit} ? ( $form->{"l_$_"} ? 'checked' : '' ) : 'checked';
         print qq|<input type=checkbox name=l_$_ value="1" $checked> | . ucfirst($_);
     }
     $form->hide_form(qw(nextsub path login));
-    print qq|</td></tr>
-    <tr><th align="right">Subtotal</th><td><input type=checkbox name=l_subtotal value="checked" $form->{l_subtotal}></td></tr>
+    print qq|
+    </td>
+</tr>
+<tr>
+    <th align="right">| . $locale->text('Method') . qq|</th>
+    <td>
+        <input type=radio name=method value="accrual" $accrualchecked> Accrual
+        <input type=radio name=method value="cash" $cashchecked> Cash
+    </td>
+</tr>
+
+<tr>
+    <th align="right">| . $locale->text('Subtotal') . qq|</th>
+    <td><input type=checkbox name=l_subtotal value="checked" $form->{l_subtotal}></td>
+</tr>
 </table>
-    <hr/>
-    <input type=hidden name=runit value=1>
-    <input type=submit name=action class="submit noprint" value="Continue">
+
+<hr/>
+<input type=hidden name=runit value=1>
+<input type=submit name=action class="submit noprint" value="Continue">
 </form>
 |;
 
@@ -70,17 +111,50 @@ sub alltaxes {
     for (@columns) { push @report_columns, $_ if $form->{"l_$_"} }
 
     my $where = ' 1 = 1 ';
-    $where = ' 1 = 2 ' if !$form->{runit};    # Display data only when Update button is pressed.
+    if ( !$form->{runit} ) {
+        $where = ' 1 = 2 ';          # Display data only when Update button is pressed.
+        $form->{l_subtotal} = '1';
+    }
     my @bind = ();
+
+    my $transdate = "aa.transdate";
+
+    if ( $form->{fromdate} ) {
+        $where .= qq| AND $transdate <= ?|;
+        push @bind, $form->{fromdate};
+    }
+
+    if ( $form->{todate} ) {
+        $where .= qq| AND $transdate <= ?|;
+        push @bind, $form->{todate};
+    }
+
+    #($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
+
+    if ( $form->{method} eq 'cash' ) {
+        $transdate = "aa.datepaid";
+
+        my $todate = $form->{todate};
+        if ( !$todate ) {
+            $todate = $form->current_date($myconfig);
+        }
+
+        $cashwhere = qq|
+             AND ac.trans_id IN (
+                 SELECT trans_id
+                 FROM acc_trans
+                 JOIN chart ON (chart_id = chart.id)
+                 WHERE link LIKE '%_paid%'
+                 AND aa.approved = '1'
+                 AND $transdate <= '$todate'
+                 AND aa.paid = aa.amount
+               )
+              |;
+    }
 
     &split_combos('department');
     $form->{department_id} *= 1;
     $where .= qq| AND aa.department_id = $form->{department_id}| if $form->{department};
-
-    if ( $form->{todate} ) {
-        $where .= qq| AND aa.transdate <= ?|;
-        push @bind, $form->{todate};
-    }
 
     my $query;
 
@@ -94,6 +168,7 @@ sub alltaxes {
         JOIN ar aa ON (aa.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE c.link LIKE '%tax%'
+        $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9
 
         UNION ALL
@@ -107,7 +182,7 @@ sub alltaxes {
         JOIN ap aa ON (aa.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE c.link LIKE '%tax%'
-
+        $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9
 
         ORDER BY 1, 2, 6
