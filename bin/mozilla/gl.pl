@@ -175,6 +175,14 @@ sub create_links {
         for ( @{ $form->{all_project} } ) { $form->{selectprojectnumber} .= qq|$_->{projectnumber}--$_->{id}\n| }
     }
 
+    # tax accounts
+    my @taxaccounts = $form->{dbs}->query(qq|
+          SELECT accno, description FROM chart WHERE id IN 
+            (SELECT chart_id FROM tax WHERE validto >= ? OR validto IS NULL)
+          |, $form->{transdate}
+    )->hashes;
+    for (@taxaccounts) { $form->{selecttax} .= qq|$_->{accno}--$_->{description}\n| }
+
     # departments
     # armaghan 12-apr-2012 restrict user to his department
     if ( @{ $form->{all_department} } ) {
@@ -198,7 +206,7 @@ sub create_links {
     }
     $form->{reference_rows} = $i;
 
-    for (qw(department projectnumber accno currency)) { $form->{"select$_"} = $form->escape( $form->{"select$_"}, 1 ) }
+    for (qw(department projectnumber accno currency tax)) { $form->{"select$_"} = $form->escape( $form->{"select$_"}, 1 ) }
 
 }
 
@@ -1106,7 +1114,7 @@ sub update {
 
     @f     = ();
     $count = 0;
-    @flds  = qw(accno debit credit projectnumber source memo cleared fx_transaction);
+    @flds  = qw(accno debit credit projectnumber tax source memo cleared fx_transaction);
 
     for $i ( 1 .. $form->{rowcount} ) {
         unless ( ( $form->{"debit_$i"} eq "" ) && ( $form->{"credit_$i"} eq "" ) ) {
@@ -1151,30 +1159,26 @@ sub display_rows {
     $form->{totalcredit} = 0;
 
     for $i ( 1 .. $form->{rowcount} ) {
-
-        $source = qq|
-    <td><input name="source_$i" size=10 value="| . $form->quote( $form->{"source_$i"} ) . qq|"></td>|;
-        $memo = qq|
-    <td><input name="memo_$i" value="| . $form->quote( $form->{"memo_$i"} ) . qq|"></td>|;
+        $source = qq|<td><input name="source_$i" size=10 value="| . $form->quote( $form->{"source_$i"} ) . qq|"></td>|;
+        $memo = qq|<td><input name="memo_$i" value="| . $form->quote( $form->{"memo_$i"} ) . qq|"></td>|;
 
         if ($init) {
-            $accno = qq|
-      <td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
+            $accno = qq|<td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
 
             if ( $form->{selectprojectnumber} ) {
-                $project = qq|
-    <td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
+                $project = qq|<td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
+            }
+
+            if ( $form->{selecttax} ) {
+                $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, undef, 0 ) . qq|</select></td>|;
             }
 
             if ( $form->{fxadj} ) {
-                $fx_transaction = qq|
-	<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>
+                $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>
 |;
             }
-
         }
         else {
-
             $form->{totaldebit}  += $form->{"debit_$i"};
             $form->{totalcredit} += $form->{"credit_$i"};
 
@@ -1190,30 +1194,34 @@ sub display_rows {
                     $project = qq|<td>$project</td>|;
                 }
 
+                if ( $form->{selecttax} ) {
+                    $tax = $form->{"tax_$i"};
+                    $tax = qq|<td>$tax</td>|;
+                }
+
                 if ( $form->{fxadj} ) {
                     $checked = ( $form->{"fx_transaction_$i"} ) ? "1" : "";
                     $x = ($checked) ? "x" : "";
-                    $fx_transaction = qq|
-      <td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>
+                    $fx_transaction = qq|<td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>
 |;
                 }
 
-                $form->hide_form( map { "${_}_$i" } qw(accno projectnumber) );
+                $form->hide_form( map { "${_}_$i" } qw(accno projectnumber tax) );
 
             }
             else {
-
-                $accno = qq|
-      <td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
+                $accno = qq|<td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
 
                 if ( $form->{selectprojectnumber} ) {
-                    $project = qq|
-      <td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
+                    $project = qq|<td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
+                }
+
+                if ( $form->{selecttax} ) {
+                    $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, undef, 0 ) . qq|</select></td>|;
                 }
 
                 if ( $form->{fxadj} ) {
-                    $fx_transaction = qq|
-      <td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>
+                    $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>
 |;
                 }
             }
@@ -1226,6 +1234,7 @@ sub display_rows {
     <td><input name="credit_$i" class="inputright" size=12 value=$form->{"credit_$i"}></td>
     $source
     $memo
+    $tax
     $project
   </tr>
 |;
@@ -1286,6 +1295,12 @@ sub form_header {
 	  <th class=listheading>| . $locale->text('Project') . qq|</th>
 | if $form->{selectprojectnumber};
 
+    $tax = qq| 
+	  <th class=listheading>| . $locale->text('Tax') . qq|</th>
+| if $form->{selecttax};
+
+
+
     if ( $form->{fxadj} ) {
         $fx_transaction = qq|
           <th class=listheading>| . $locale->text('FX') . qq|</th>
@@ -1319,7 +1334,7 @@ sub form_header {
 |;
 
     $form->hide_form(qw(id fxadj closedto locked oldtransdate oldcurrency recurring batch batchid batchnumber batchdescription defaultcurrency precision helpref reference_rows referenceurl));
-    $form->hide_form( map { "select$_" } qw(accno department currency) );
+    $form->hide_form( map { "select$_" } qw(accno department currency tax) );
 
     print qq|
 <input type=hidden name=title value="| . $form->quote( $form->{title} ) . qq|">
@@ -1364,6 +1379,7 @@ sub form_header {
 	  <th class=listheading>| . $locale->text('Credit') . qq|</th>
 	  <th class=listheading>| . $locale->text('Source') . qq|</th>
 	  <th class=listheading>| . $locale->text('Memo') . qq|</th>
+      $tax
 	  $project
 	</tr>
 |;
@@ -1377,6 +1393,10 @@ sub form_footer {
     $project = qq|
 	  <th>&nbsp;</th>
 | if $form->{selectprojectnumber};
+
+    $tax = qq|
+	  <th>&nbsp;</th>
+| if $form->{selecttax};
 
     if ( $form->{fxadj} ) {
         $fx_transaction = qq|
@@ -1392,6 +1412,7 @@ sub form_footer {
 	  <th class=listtotal align=right>$form->{totalcredit}</th>
 	  <th>&nbsp;</th>
 	  <th>&nbsp;</th>
+      $tax
 	  $project
         </tr>
       </table>
