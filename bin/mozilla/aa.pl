@@ -89,7 +89,7 @@ sub add {
     $form->{title} = $locale->text($title);
     $form->helpref("${arap}_$form->{type}", $myconfig{countrycode});
   }
-  
+
   $form->{callback} = "$form->{script}?action=add&type=$form->{type}&path=$form->{path}&login=$form->{login}" unless $form->{callback};
 
   $form->{focus} = "amount_1";
@@ -292,12 +292,14 @@ sub create_links {
   $ml = ($form->{ARAP} eq 'AR') ? 1 : -1;
   $ml *= -1 if $form->{type} =~ /_note/;
 
+  $form->{selecttax} = "\n";
   foreach $key (keys %{ $form->{"$form->{ARAP}_links"} }) {
     
     $form->{"select$key"} = "";
     foreach $ref (@{ $form->{"$form->{ARAP}_links"}{$key} }) {
       if ($key eq "$form->{ARAP}_tax") {
 	$form->{"select$form->{ARAP}_tax_$ref->{accno}"} = $form->escape("$ref->{accno}--$ref->{description}",1);
+	$form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n";
 	next;
       }
       $form->{"select$key"} .= "$ref->{accno}--$ref->{description}\n";
@@ -365,6 +367,7 @@ sub create_links {
     }
   }
   
+  $form->{"selecttax"} = $form->escape($form->{selecttax},1);
   if ($form->{paidaccounts}) {
     $i = $form->{paidaccounts} + 1;
   } else {
@@ -665,7 +668,7 @@ sub form_header {
 
   $form->hide_form(qw(id type printed emailed sort closedto locked oldtransdate oldduedate oldcurrency audittrail recurring checktax creditlimit creditremaining defaultcurrency rowcount oldterms batch batchid batchnumber batchdescription cdt precision remittancevoucher reference_rows referenceurl));
   $form->hide_form("select$form->{vc}");
-  $form->hide_form(map { "select$_" } qw(formname currency department employee projectnumber language paymentmethod printer));
+  $form->hide_form(map { "select$_" } qw(formname currency department employee projectnumber language paymentmethod printer tax));
   $form->hide_form("old$form->{vc}", "$form->{vc}_id", "old$form->{vc}number");
   $form->hide_form(map { "select$_" } ("$form->{ARAP}_amount", "$form->{ARAP}", "$form->{ARAP}_paid", "$form->{ARAP}_discount"));
 
@@ -772,6 +775,7 @@ sub form_header {
 	  <th></th>
 	  <th>|.$locale->text('Account').qq|</th>
 	  <th>|.$locale->text('Description').qq|</th>
+	  <th>|.$locale->text('Tax').qq|</th>
 	  $project
 	</tr>
 |;
@@ -793,6 +797,8 @@ sub form_header {
     } else {
       $description = qq|<td><input name="description_$i" size=40 value="|.$form->quote($form->{"description_$i"}).qq|"></td>|;
     }
+
+    $linetax = qq|<td><select name="tax_$i">|.$form->select_option($form->{selecttax}, $form->{"tax_$i"}).qq|</select></td>|;
     
     $form->{subtotal} += $form->{"amount_$i"};
     
@@ -806,6 +812,7 @@ sub form_header {
 	  .$form->select_option($form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"})
 	  .qq|</select></td>
 	  $description
+      $linetax
 	  $project
 	</tr>
 |;
