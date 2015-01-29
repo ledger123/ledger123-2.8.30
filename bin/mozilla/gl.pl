@@ -176,6 +176,7 @@ sub create_links {
     }
 
     # tax accounts
+    $form->{selecttax} = "\n";
     my @taxaccounts = $form->{dbs}->query(qq|
           SELECT accno, description FROM chart WHERE id IN 
             (SELECT chart_id FROM tax WHERE validto >= ? OR validto IS NULL)
@@ -1117,7 +1118,7 @@ sub update {
     @flds  = qw(accno debit credit projectnumber tax source memo cleared fx_transaction);
 
     for $i ( 1 .. $form->{rowcount} ) {
-        unless ( ( $form->{"debit_$i"} eq "" ) && ( $form->{"credit_$i"} eq "" ) ) {
+        unless ( ( $form->{"debit_$i"} eq "" ) && ( $form->{"credit_$i"} eq "" ) || ( $form->{"tax_$i"} eq 'auto' )) {
             for (qw(debit credit)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
             push @f, {};
@@ -1137,7 +1138,25 @@ sub update {
         for (@flds) { delete $form->{"${_}_$i"} }
     }
 
-    $form->{rowcount} = $count + 1;
+    for $i ( 1 .. $count ) {
+        if ($form->{"tax_$i"} and $form->{"tax_$i"} ne 'auto'){
+            my ($tax_accno, $null) = split(/--/, $form->{"tax_$i"});
+            $tax_rate = $form->{dbs}->query(qq|
+                SELECT rate 
+                FROM tax 
+                WHERE chart_id = (SELECT id FROM chart WHERE accno = ?)
+                AND (validto IS NULL OR validto <= ?)|, $tax_accno, $form->{transdate}
+            )->list;
+            $j = ++$count;
+            for (@flds) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
+            $form->{"accno_$j"} = $form->{"tax_$i"};
+            $form->{"debit_$j"} *= $tax_rate;
+            $form->{"credit_$j"} *= $tax_rate;
+            $form->{"tax_$j"} = 'auto';
+        }
+    }
+
+    $form->{rowcount} = $j + 1;
 
     &display_form;
 
