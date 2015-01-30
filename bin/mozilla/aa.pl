@@ -795,6 +795,7 @@ sub form_header {
 	  <th>| . $locale->text('Account') . qq|</th>
 	  <th>| . $locale->text('Description') . qq|</th>
 	  <th>| . $locale->text('Tax') . qq|</th>
+	  <th>| . $locale->text('Amount') . qq|</th>
 	  $project
 	</tr>
 |;
@@ -818,6 +819,7 @@ sub form_header {
         }
 
         $linetax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, $form->{"tax_$i"} ) . qq|</select></td>|;
+        $linetaxamount = qq|<td align="right">|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|</td>|;
 
         $form->{subtotal} += $form->{"amount_$i"};
 
@@ -830,6 +832,7 @@ sub form_header {
           . $form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select></td>
 	  $description
       $linetax
+      $linetaxamount
 	  $project
 	</tr>
 |;
@@ -1211,7 +1214,7 @@ sub update {
         $form->redo_rows( \@flds, \@f, $count, $form->{reference_rows} );
         $form->{reference_rows} = $count + 1;
 
-        @flds  = ( "amount", "$form->{ARAP}_amount", "projectnumber", "description" );
+        @flds  = ( "amount", "$form->{ARAP}_amount", "projectnumber", "description", "tax" );
         $count = 0;
         @f     = ();
         for $i ( 1 .. $form->{rowcount} ) {
@@ -1230,7 +1233,19 @@ sub update {
 
         $form->{"$form->{ARAP}_amount_$form->{rowcount}"} = $form->{"$form->{ARAP}_amount_$count"};
 
-        for ( 1 .. $form->{rowcount} ) { $form->{invtotal} += $form->{"amount_$_"} }
+        for $i (1 .. $form->{rowcount} ){
+            for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = 0 }
+        }
+        for ( 1 .. $form->{rowcount} ) { 
+            if ($form->{"tax_$_"}){
+                ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
+                $form->{"linetaxamount_$_"} = $form->{"amount_$_"} * $form->{"${taxaccno}_rate"};
+                $form->{"tax_$taxaccno"} += $form->{"linetaxamount_$_"};
+            } else {
+                $form->{"linetaxamount_$_"} = 0;
+            }
+            $form->{invtotal} += $form->{"amount_$_"} 
+        }
 
         if ( $form->{transdate} ne $form->{oldtransdate} || $form->{currency} ne $form->{oldcurrency} ) {
             $form->{exchangerate} = $form->check_exchangerate( \%myconfig, $form->{currency}, $form->{transdate} );
