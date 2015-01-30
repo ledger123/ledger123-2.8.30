@@ -173,4 +173,6 @@ CREATE TABLE generic_import (
 );
 
 
+ALTER TABLE acc_trans ADD tax TEXT;
+
 -- EOF

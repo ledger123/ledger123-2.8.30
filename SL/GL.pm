@@ -232,7 +232,7 @@ sub post_transaction {
     
     if ($amount || $form->{"source_$i"} || $form->{"memo_$i"} || ($project_id ne 'NULL')) {
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
-		  source, fx_transaction, project_id, memo, cleared, approved)
+		  source, fx_transaction, project_id, memo, cleared, approved, tax)
 		  VALUES
 		  ($form->{id}, (SELECT id
 				 FROM chart
@@ -241,7 +241,7 @@ sub post_transaction {
 		   $dbh->quote($form->{"source_$i"}) .qq|,
 		  '$form->{"fx_transaction_$i"}',
 		  $project_id, |.$dbh->quote($form->{"memo_$i"}).qq|,
-		  $cleared, '$approved')|;
+		  $cleared, '$approved', '$form->{"tax_$i"}')|;
       $dbh->do($query) || $form->dberror($query);
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
@@ -250,7 +250,7 @@ sub post_transaction {
 	
 	if ($amount) {
 	  $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
-		      source, project_id, fx_transaction, memo, cleared, approved)
+		      source, project_id, fx_transaction, memo, cleared, approved, tax)
 		      VALUES
 		      ($form->{id}, (SELECT id
 				     FROM chart
@@ -258,7 +258,7 @@ sub post_transaction {
 		       $amount, '$form->{transdate}', |.
 		       $dbh->quote($form->{"source_$i"}) .qq|,
 		      $project_id, '1', |.$dbh->quote($form->{"memo_$i"}).qq|,
-		      $cleared, '$approved')|;
+		      $cleared, '$approved', '$form->{"tax_$i"}')|;
 	  $dbh->do($query) || $form->dberror($query);
 	}
       }

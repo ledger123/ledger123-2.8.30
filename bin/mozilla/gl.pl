@@ -120,7 +120,7 @@ sub edit {
         $form->{"accno_$i"} = "$ref->{accno}--$ref->{description}";
 
         $form->{"projectnumber_$i"} = "$ref->{projectnumber}--$ref->{project_id}" if $ref->{project_id};
-        for (qw(fx_transaction source memo cleared)) { $form->{"${_}_$i"} = $ref->{$_} }
+        for (qw(fx_transaction source memo cleared tax)) { $form->{"${_}_$i"} = $ref->{$_} }
 
         if ( $ref->{amount} < 0 ) {
             $form->{totaldebit} -= $ref->{amount};
