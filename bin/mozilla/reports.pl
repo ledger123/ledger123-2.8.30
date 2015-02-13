@@ -186,6 +186,82 @@ $selectfrom
 
     $query = qq~
         SELECT 'AR' module, c.accno || '--' || c.description account,
+        SUM(aa.netamount) amount, SUM(ac.amount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE c.link LIKE '%tax%'
+        $where
+        $cashwhere
+        GROUP BY 1,2
+
+        UNION ALL
+
+        SELECT DISTINCT 'AR' module, 'Non-taxable' account,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE aa.netamount = aa.amount
+        $where
+        $cashwhere
+
+        UNION ALL
+
+        SELECT 'AP' module, c.accno || '--' || c.description account,
+        SUM(aa.netamount) amount, SUM(ac.amount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE c.link LIKE '%tax%'
+        $where
+        $cashwhere
+        GROUP BY 1,2
+
+        UNION ALL
+
+        SELECT DISTINCT 'AP' module, 'Non-taxable' account,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE aa.netamount = aa.amount
+        $where
+        $cashwhere
+
+        ORDER BY 1 DESC, 2, 3
+    ~;
+
+    my @allrows = $form->{dbs}->query($query)->hashes; # or die( $form->{dbs}->error );
+
+   print qq|
+        <table cellpadding="3" cellspacing="2" width="100%">
+        <tr class="listheading">
+|;
+    print qq|<th>|.$locale->text('Module').qq|</td>|;
+    print qq|<th>|.$locale->text('Account').qq|</td>|;
+    print qq|<th>|.$locale->text('Amount').qq|</td>|;
+    print qq|<th>|.$locale->text('Tax').qq|</td>|;
+
+    print qq|
+        </tr>
+|;
+    for $row (@allrows){
+        print qq|<tr class="listrow0">|;
+        print qq|<td>$row->{module}</td>|;
+        print qq|<td>$row->{account}</td>|;
+        print qq|<td align="right">|.$form->format_amount(\%myconfig, $row->{amount}, 2).qq|</td>|;
+        print qq|<td align="right">|.$form->format_amount(\%myconfig, $row->{tax}, 2).qq|</td>|;
+        print qq|</tr>|;
+    }
+    print qq|</table><br/><br/><br/>|;
+
+    $query = qq~
+        SELECT 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
         aa.netamount amount, SUM(ac.amount) AS tax
@@ -243,7 +319,7 @@ $selectfrom
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9
 
-        ORDER BY 1, 2, 6
+        ORDER BY 1 DESC, 2, 6
     ~;
 
     my @allrows = $form->{dbs}->query($query)->hashes; # or die( $form->{dbs}->error );
@@ -257,7 +333,7 @@ $selectfrom
     for (@report_columns) { $tabledata{$_} = qq|<th><a class="listheading" href="$url&sort=$_">| . ucfirst $_ . qq|</a></th>\n| }
 
     print qq|
-        <table cellpadding="3" cellspacing="2">
+        <table cellpadding="3" cellspacing="2" width="100%">
         <tr class="listheading">
 |;
     for (@report_columns) { print $tabledata{$_} }
