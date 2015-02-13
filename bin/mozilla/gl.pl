@@ -1147,16 +1147,12 @@ sub update {
                 WHERE chart_id = (SELECT id FROM chart WHERE accno = ?)
                 AND (validto IS NULL OR validto <= ?)|, $tax_accno, $form->{transdate}
             )->list;
-            $j = ++$count;
-            for (@flds) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
-            $form->{"accno_$j"} = $form->{"tax_$i"};
-            $form->{"debit_$j"} *= $tax_rate;
-            $form->{"credit_$j"} *= $tax_rate;
-            $form->{"tax_$j"} = 'auto';
+            $tax_amount = ($form->{"debit_$i"} + $form->{"credit_$i"}) - ($form->{"debit_$i"} + $form->{"credit_$i"}) / (1 + $tax_rate);
+            $form->{"tax_amount_$i"} = $tax_amount;
         }
     }
 
-    $form->{rowcount} = $j + 1;
+    $form->{rowcount} = $count + 1;
 
     &display_form;
 
@@ -1254,6 +1250,8 @@ sub display_rows {
     $source
     $memo
     $tax
+    <td align="right">|.$form->format_amount(\%myconfig, $form->{"tax_amount_$i"}, $form->{precision}).qq|</td>
+    <input type=hidden name="tax_amount_$i" value='$form->{"tax_amount_$i"}'>
     $project
   </tr>
 |;
@@ -1316,6 +1314,7 @@ sub form_header {
 
     $tax = qq| 
 	  <th class=listheading>| . $locale->text('Tax') . qq|</th>
+	  <th class=listheading>| . $locale->text('Amount') . qq|</th>
 | if $form->{selecttax};
 
 
@@ -1576,6 +1575,31 @@ sub post {
             exit;
         }
     }
+
+    # Process per line tax information
+    $count = $form->{rowcount};
+    for my $i (1 .. $form->{rowcount}){
+        if ($form->{"tax_amount_$i"}){
+           $j = $count++;
+           $form->{"accno_$j"} = $form->{"tax_$i"};
+           $form->{"tax_$j"} = 'auto';
+
+           $form->{"source_$j"} = $form->{"source_$i"};
+           $form->{"memo_$j"} = $form->{"memo_$i"};
+           $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
+
+           for (qw(debit credit tax_amount)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
+
+           if ($form->{"debit_$i"}){
+               $form->{"debit_$i"} -= $form->{"tax_amount_$i"};
+               $form->{"debit_$j"} = $form->{"tax_amount_$i"};
+           } else {
+               $form->{"credit_$i"} -= $form->{"tax_amount_$i"};
+               $form->{"credit_$j"} = $form->{"tax_amount_$i"};
+           }
+        }
+    }
+    $form->{rowcount} = $count;
 
     if ( $form->{batch} ) {
         $rc = VR->post_transaction( \%myconfig, \%$form );
