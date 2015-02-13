@@ -48,7 +48,6 @@ sub alltaxes {
 
   }
 
-
     my @columns        = qw(module account transdate invnumber description name number amount tax);
     my @total_columns  = qw(amount tax);
     my @search_columns = qw(fromdate todate);
@@ -82,8 +81,10 @@ sub alltaxes {
     else {
         $accrualchecked = 'checked';
     }
-    #($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
-
+    if ($form->{year} && $form->{month}){
+        ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval});
+        for (qw(fromdate todate)) { $form->{$_} = $form->format_date($myconfig{dateformat}, $form->{$_}) }
+    }
     if ( !$form->{runit} ) {
 
         # Defaults
@@ -106,7 +107,7 @@ sub alltaxes {
     <th align="right">| . $locale->text('To date') . qq|</th>
     <td><input name=todate type=text size=12 class="date" value="$form->{todate}"></td>
 </tr>
-$selectfrom_disabled
+$selectfrom
 <tr>
     <th align="right" class="norpint">| . $locale->text('Include') . qq|</th>
     <td class="noprint">|;
@@ -143,7 +144,7 @@ $selectfrom_disabled
 
     my $where;
     if ( !$form->{runit} ) {
-        $where = ' 1 = 2 ';          # Display data only when Update button is pressed.
+        $where = ' AND 1 = 2 ';          # Display data only when Update button is pressed.
         $form->{l_subtotal} = 'checked';
     }
 
@@ -245,7 +246,7 @@ $selectfrom_disabled
         ORDER BY 1, 2, 6
     ~;
 
-    my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error );
+    my @allrows = $form->{dbs}->query($query)->hashes; # or die( $form->{dbs}->error );
 
     my ( %tabledata, %grandtotals, %totals, %subtotals );
 
