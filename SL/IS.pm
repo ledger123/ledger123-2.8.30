@@ -229,7 +229,7 @@ sub invoice_details {
     }
 
     # bp 2014/11 get maxpricedecimals
-    my $dbh = $form->dbconnect( \%myconfig );
+    my $dbh = $form->dbconnect( $myconfig );
     %res = $form->get_defaults( $dbh, \@{ ['maxpricedecimals'] } );
     my $maxpricedecimals = $res{maxpricedecimals};
 
