@@ -1,3 +1,18 @@
+bp 2015/2/15
+bugfix
+bp 2015/2/14
+  bug: bep_201502-02 - fixed 2015/2/15
+  payslip incorrect, multiple issues:
+  cannot print several wage types, cannot print several rates, deductions not correctly printed, currency and
+  bank data not printed, no distinction between already paid and not yet paid.
+  Retrieved missing data and amended the latex form.
+
+bp 2015/2/14
+bugfix
+  bug: bep_201502-01 - fixed 2015/2/14
+  cannot print invoices. Error message: Can't connect to data source '' because I can't work out what driver to use
+  Programming error in IS.pm (line 238)- database connection failed
+
 bp 2015/1/9
 bugfix
   bug: bep_201501-10
@@ -6,37 +21,37 @@ bugfix
   only a rate can be entered. Additional error message specified
 
 bp 2015/1/9
-bugfix: bep_201501-09
+bugfix: bep_201501-09 git
   Employee pays, employer pays. The percentage values must add up to 100%. This is not checked.
 
 bp 2015/1/9
-bugfix bep_201501-08
+bugfix bep_201501-08 git
   Employee pays, employer pays.
   Percentage values like 0.4 are required. This is confusing because in the rate column percent are
   entered like 30%. Change to percent input
 
 bp 2015/1/9
-bugfix: bep_201501-07
+bugfix: bep_201501-07 git
   Deduction screen: must enter rate or amount. Error message reads: Enter rate.
   change error message to read: enter rate or amount
 
 # bp 2015.01.08
 bugfix
-bug: bep_201501-05
+bug: bep_201501-05 git
 * bug caused by different screen field and database field names
 
-# bp 2015.01.08
-new feature/bugfix bep_201501-04
+# bp 2015.01.08 git
+new feature/bugfix bep_201501-04 git
 * entries in the "amount" column of the deduction record are no honored. It is now possible to calculate deductions
   not only in percentage terms but also as fixed amounts.
 
 # bp 2015.01.08
 bugfix
-bug: bep_201501-06
+bug: bep_201501-06 git
 * added call to parse_amount before rounding the amount
 
 # bp 2015.01.07
-  bug: bep_201501-03
+  bug: bep_201501-03 fixed
   Payroll: if employer share=employee share=0.5 only 0.25 are posted for the employer
   system calculates employee share in Jpy first, then applies the employer rate to this amount
 
@@ -50,7 +65,7 @@ bug: bep_201501-01 bp programming error, fixed
 
 # bp 2014.12.11
 bugfix
-bug: bep_201412-06
+bug: bep_201412-06 git
 * When changing the customer/vendor selection fields in the receipt/payment transaction the precision is reset back
 * to the system default. Incorrect because "Currency" is one of the selection fields.
   We set the precision according to the currency selelcted.
@@ -62,7 +77,7 @@ bug: bep_201412-04
   make the call to CP->get_openinvoices only if we have a customer id
 
 # bp 2014.12.11
-bugfix bug: bep_201412-02
+bugfix bug: bep_201412-02 git
 * Receipt screen, manually entered exchange rate is dleted when pressing update, need to enter the exchange rate beforehand
   Code change. exchange rate will only be checked if currency or datepaid change or if we have a fx receipt and
   no exchangerate has been entered by the user
@@ -79,12 +94,12 @@ bugfix bug: bep_201412-03
   set the datepaid when calling the function
 
 # bp 2014.12.06
-bugfix bep_201412-02
+bugfix bep_201412-02 git
 * AP-Transaction: calculation of cash discount incorrect if tax is not included
   incorrect calculation (in aa.pl) corrected
 
 # bp 2014.12.03
-bugfix bep_201412-01
+bugfix bep_201412-01 git
 * When creating a vendor invoice for a purchase order the payment method is copied from the vendor master record.
 * However, when saving the invoice the payment method is not stored in the AP record. When editing the invoice
 * the corrected payment method and account (e.g. bank transfer) are not copied to the AP record.
@@ -93,11 +108,11 @@ bugfix bep_201412-01
   Problem solved by checking the "amount" field and displaying a message if the field is empty.
 
 # bp 2014.12.02
-bugfix bep 201412-01
+bugfix bep 201412-01 git
 * Calculation of Outstanding Payment in AP Transactions
   Cash discount was not taken into account and the amount was incorrect formatted (precision)
 
-new feature/bugfix bep_201411-06
+new feature/bugfix bep_201411-06 git
 * Purchase transaction list shows transaction in foreign currency without decimals
   Amounts in foreign currency are showing if the currency field has been selected. Values are now showing with the
   precision for their currency. Subtotal calculation has also been corrected. All foreign currency subtotals are
@@ -108,18 +123,18 @@ new feature/bugfix bep_201411-06
   a total of different currencies.
 
 # bp 2014.11.25
-new feature
+new feature git
 * calculate and store high precision exchange rate to avoid differences between invoice and payment amounts
    Converting between currencies is getting difficult if (a) one currency doesn't have decimals (Japanese Yen)
    and (b) the conversion rates are high. Exchange rates with 1 or 2 decimals are not sufficient to correctly
    convert back from Jpy to Euro or Dollar.
    To solve this problem we calculate the exchange rate by dividing the amount in local currency by the amount
    in document currency. Instead of the exchange rate entered we store the calculated exchange rate with
-   5 decimals in the ap table
+   10 decimals in the ap table
 
 # bp 2014.11.24
-new feature/bugfix bug bep_201411-05
-   receipt/payment screen: when one customer/vendor has been selected update the screens business type
+new feature/bugfix bug bep_201411-05 git
+   receipt/payment screen: when one customer/vendor has been selected we now update the screens business type
    and payment method to the customer/vendors business type and payment method
    Reason: vendor has payment method 'bank transfer'. If we post a payment this payment type should be selected
    by default. Currently no payment method is selected and - unless the user selects it manually - the payment
@@ -139,7 +154,7 @@ new feature
     lastcost, sellprice and vendor/customer maxtrix prices only up to the detail entered - i.e. not always
     up to the Max Price Decimals precision.
 
-new feature
+new feature git
 *  solved price matrix bug:
     The precision of prices entered into the vendor price matrix is limited to the number of decimals found
     in the last cost field of the part.
@@ -156,7 +171,7 @@ new feature
     the precision of the home currency.
 
 # bp 2014.11.14
-bugfix
+bugfix git
 * parts cannot be saved and updated, partsgroup_id not set in query
   partsgroup_id incorrectly assigned when query is built in IC.pm
 
@@ -164,7 +179,7 @@ bugfix
   partsgroupcode field was missing in display column definition
 
 # bp 2014.11.13 bplagge@choicenet.ne.jp
-bugfix
+bugfix git
 * current date format
    when adding new orders the requirement date was set to the current date. However, the format of the
   current date did not comply with the date format settings in the user's preferences.
@@ -175,7 +190,7 @@ bugfix
   Corrected to show correct message "Pickup date missing" when transport data has been entered
 
 # bp 2014.11.12 bplagge@choicenet.ne.jp
-new feature
+new feature git
 * added function to lookup the exchange rate for foreign currency sales and purchase orders.
   an additional button is placed next to the exchange rate field. If pressed the current exchange rate is
   entered into the exchange rate field.
@@ -190,8 +205,8 @@ new feature
   General Ledger: Add Transaction
 
 # bp 2014.11.11 bplagge@choicenet.ne.jp
-bugfix
-* date picker
+bugfix git
+* date picker git
   datepicker uses 'y' for the 2-digit year and 'yy' for the 4-digit year. Had to change the
   'yyyy-mm-dd' date format to 'yy-mm-dd' for datepicker (1 occurence in Form.pm)
 

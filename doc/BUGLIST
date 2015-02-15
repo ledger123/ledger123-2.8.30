@@ -4,6 +4,16 @@ BUGLIST
   fields have been added to many screens. Upload of reference docs is listed as planned function for
   SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
 
+bp 2015/2/14
+  bug: bep_201502-02 - fixed 2015/2/15
+  payslip incorrect, multiple issues:
+  cannot print several wage types, cannot print several rates, deductions not correctly printed, currency and
+  bank data not printed, no distinction between already paid and not yet paid.
+
+bp 2015/2/14
+  bug: bep_201502-01 - fixed 2015/2/14
+  cannot print invoices. Error message: Can't connect to data source '' because I can't work out what driver to use
+
 bp 2015/1/6
   bug: bep_201501-10 - fixed 2015/1/9
   If a rate is entered in a deduction record the deduction amount is calculated by applying the rate to the wage.
@@ -34,12 +44,12 @@ bp 2015/1/6
   bug: bep_201501-05 - fixed 2015/1/8
   Payroll: employee master: overtime rate can not be entered into the employee master
 
-bp 2015/1/6 - fixed 2015/1/8
+bp 2015/1/6 - fixed 2015/1/8 git
   bug: bep_201501-04 - enhancemant 2015/1/8
   Payroll: entries in the amount column are ignored. If a deduction can only be defined in percentage terms
            this is a serious restriction because not all deductions are defined this way
 
-bp 2015/1/6
+bp 2015/1/6 git
   bug: bep_201501-03 - fixed 2015/1/7
   Payroll: if employer share=employee share=0.5 only 0.25 are posted for the employer
   system calculates employee share in Jpy first, then applies the employer rate to this amount
@@ -85,18 +95,18 @@ bp 2014/12/06 - fixed 2014/12/06
 * function in Form.pm.
 
 bp 2014/12/05 - fixed 2014/12/06
-  bug: bep_201412-02
+  bug: bep_201412-02 git
 * AP-Transaction: calculation of cash discount incorrect if tax is not included
   Cash discount calculation is incorrect when tax included data is entered.
 
 bp 2014/12/03 - fixed 2014/12/03
-  bug: bep_201412-01
+  bug: bep_201412-01 git
 * Payment screen - post without update
   If you enter a payment, enter the payment amount, chcke the checkbox and print "Post" a "overpayment" document
   (AP transaction) with the negative payment amount will be created.
 
 bp 2014/11/22 - fixed 2014/12/02
-  bug: bep_201411-05
+  bug: bep_201411-05 git
 * When creating a vendor invoice for a purchase order the payment method is copied from the vendor master record.
   However, when saving the invoice the payment method is not stored in the AP record. When editing the invoice
   the corrected payment method and account (e.g. bank transfer) are not copied to the AP record.

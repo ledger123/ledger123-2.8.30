@@ -51,10 +51,11 @@ sub get_employee {
 
   if ($form->{id}) {
     # armaghan 11-apr-2012 added department/warehouse
+    # bp 2015/02 added bank membernumber, clearingnumber
     $query = qq|SELECT e.*,
                 ad.id AS addressid, ad.address1, ad.address2, ad.city,
 		ad.state, ad.zipcode, ad.country,
-		bk.name AS bankname, bk.iban, bk.bic,
+		bk.name AS bankname, bk.iban, bk.bic, bk.membernumber, clearingnumber,
 		ad1.address1 AS bankaddress1,
 		ad1.address2 AS bankaddress2,
 		ad1.city AS bankcity,
@@ -122,6 +123,8 @@ sub get_employee {
 
     while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
       push @{ $form->{all_payrate} }, $ref;
+      # bp 2015/02 for payroll
+      $form->{payrate}{$ref->{id}} = $ref;
     }
     $sth->finish;
 
@@ -261,7 +264,6 @@ sub get_employee {
     push @{ $form->{all_wage} }, $ref;
   }
   $sth->finish;
-
 
   # get deductions
   $query = qq|SELECT *
