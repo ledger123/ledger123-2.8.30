@@ -1138,6 +1138,7 @@ sub update {
         for (@flds) { delete $form->{"${_}_$i"} }
     }
 
+    # per line tax
     for $i ( 1 .. $count ) {
         if ($form->{"tax_$i"} and $form->{"tax_$i"} ne 'auto'){
             my ($tax_accno, $null) = split(/--/, $form->{"tax_$i"});
@@ -1147,8 +1148,8 @@ sub update {
                 WHERE chart_id = (SELECT id FROM chart WHERE accno = ?)
                 AND (validto IS NULL OR validto <= ?)|, $tax_accno, $form->{transdate}
             )->list;
-            $tax_amount = ($form->{"debit_$i"} + $form->{"credit_$i"}) - ($form->{"debit_$i"} + $form->{"credit_$i"}) / (1 + $tax_rate);
-            $form->{"tax_amount_$i"} = $tax_amount;
+            $taxamount = $form->round_amount(($form->{"debit_$i"} + $form->{"credit_$i"}) - ($form->{"debit_$i"} + $form->{"credit_$i"}) / (1 + $tax_rate), $form->{precision});
+            $form->{"taxamount_$i"} = $taxamount;
         }
     }
 
@@ -1250,8 +1251,8 @@ sub display_rows {
     $source
     $memo
     $tax
-    <td align="right">|.$form->format_amount(\%myconfig, $form->{"tax_amount_$i"}, $form->{precision}).qq|</td>
-    <input type=hidden name="tax_amount_$i" value='$form->{"tax_amount_$i"}'>
+    <td align="right">|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|</td>
+    <input type=hidden name="taxamount_$i" value='$form->{"taxamount_$i"}'>
     $project
   </tr>
 |;
@@ -1579,7 +1580,7 @@ sub post {
     # Process per line tax information
     $count = $form->{rowcount};
     for my $i (1 .. $form->{rowcount}){
-        if ($form->{"tax_amount_$i"}){
+        if ($form->{"taxamount_$i"}){
            $j = $count++;
            $form->{"accno_$j"} = $form->{"tax_$i"};
            $form->{"tax_$j"} = 'auto';
@@ -1588,14 +1589,14 @@ sub post {
            $form->{"memo_$j"} = $form->{"memo_$i"};
            $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
 
-           for (qw(debit credit tax_amount)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
+           for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
 
            if ($form->{"debit_$i"}){
-               $form->{"debit_$i"} -= $form->{"tax_amount_$i"};
-               $form->{"debit_$j"} = $form->{"tax_amount_$i"};
+               $form->{"debit_$i"} -= $form->{"taxamount_$i"};
+               $form->{"debit_$j"} = $form->{"taxamount_$i"};
            } else {
-               $form->{"credit_$i"} -= $form->{"tax_amount_$i"};
-               $form->{"credit_$j"} = $form->{"tax_amount_$i"};
+               $form->{"credit_$i"} -= $form->{"taxamount_$i"};
+               $form->{"credit_$j"} = $form->{"taxamount_$i"};
            }
         }
     }

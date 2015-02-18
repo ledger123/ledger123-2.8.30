@@ -172,7 +172,7 @@ CREATE TABLE generic_import (
     c20 text
 );
 
-
 ALTER TABLE acc_trans ADD tax TEXT;
+ALTER TABLE acc_trans ADD taxamount float;
 
 -- EOF
