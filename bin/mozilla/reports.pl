@@ -198,15 +198,14 @@ $selectfrom
 
         UNION ALL
 
-        SELECT DISTINCT 'AR' module, 'Non-taxable' account,
-        aa.netamount amount, 0 as tax
-        FROM acc_trans ac
-        JOIN chart c ON (c.id = ac.chart_id)
-        JOIN ar aa ON (aa.id = ac.trans_id)
+        SELECT 'AR' module, 'Non-taxable' account,
+        SUM(aa.netamount) amount, SUM(0) as tax
+        FROM ar aa
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE aa.netamount = aa.amount
         $where
         $cashwhere
+        GROUP BY 1,2
 
         UNION ALL
 
@@ -223,15 +222,14 @@ $selectfrom
 
         UNION ALL
 
-        SELECT DISTINCT 'AP' module, 'Non-taxable' account,
-        aa.netamount amount, 0 as tax
-        FROM acc_trans ac
-        JOIN chart c ON (c.id = ac.chart_id)
-        JOIN ap aa ON (aa.id = ac.trans_id)
+        SELECT 'AP' module, 'Non-taxable' account,
+        SUM(aa.netamount) amount, SUM(0) as tax
+        FROM ap aa 
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE aa.netamount = aa.amount
         $where
         $cashwhere
+        GROUP BY 1,2
 
         ORDER BY 1 DESC, 2, 3
     ~;
