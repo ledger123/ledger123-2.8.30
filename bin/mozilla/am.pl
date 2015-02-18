@@ -101,6 +101,7 @@ sub account_header {
   my %checked;
   $checked{$form->{charttype}} = "checked";
   $checked{contra} = "checked" if $form->{contra};
+  $checked{allow_gl} = "checked" if $form->{allow_gl};
   $checked{"$form->{category}_"} = "checked";
   
   for (qw(accno description)) { $form->{$_} = $form->quote($form->{$_}) }
@@ -181,6 +182,10 @@ if ($form->{charttype} eq "A") {
 	      </tr>
 	    </table>
 	  </td>
+	</tr>
+	<tr>
+		<th>|.$locale->text('Allow GL Transaction').qq|</th>
+		<td><input name=allow_gl class=checkbox type=checkbox value=1 $checked{allow_gl}></td>
 	</tr>
 	<tr>
 	  <th colspan=2>|.$locale->text('Include in drop-down menus').qq|</th>

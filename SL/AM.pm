@@ -24,7 +24,7 @@ sub get_account {
   my $dbh = $form->dbconnect($myconfig);
 
   my $query = qq|SELECT accno, description, charttype, gifi_accno,
-                 category, link, contra
+                 category, link, contra, allow_gl
                  FROM chart
 	         WHERE id = $form->{id}|;
   my $sth = $dbh->prepare($query);
@@ -97,6 +97,7 @@ sub save_account {
   my $sth;
   
   $form->{contra} *= 1;
+  $form->{allow_gl} *= 1;
   
   # if we have an id then replace the old record
   if ($form->{id}) {
@@ -107,17 +108,18 @@ sub save_account {
 		gifi_accno = '$form->{gifi_accno}',
 		category = '$form->{category}',
 		link = '$form->{link}',
-		contra = '$form->{contra}'
+		contra = '$form->{contra}',
+		allow_gl = '$form->{allow_gl}'
 		WHERE id = $form->{id}|;
   } else {
     $query = qq|INSERT INTO chart 
                 (accno, description, charttype, gifi_accno, category, link,
-		contra)
+		contra, allow_gl)
                 VALUES ('$form->{accno}',|
 		.$dbh->quote($form->{description}).qq|,
 		'$form->{charttype}', |
 		.$dbh->quote($form->{gifi_accno}).qq|,
-		'$form->{category}', '$form->{link}', '$form->{contra}')|;
+		'$form->{category}', '$form->{link}', '$form->{contra}', '$form->{allow_gl}')|;
   }
   $dbh->do($query) || $form->dberror($query);
 

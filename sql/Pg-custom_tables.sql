@@ -85,6 +85,7 @@ CREATE SEQUENCE entry_id;
 SELECT nextval ('entry_id');
 ALTER TABLE acc_trans ADD COLUMN entry_id INTEGER DEFAULT nextval('entry_id');
 
+ALTER TABLE chart ADD allow_gl BOOLEAN DEFAULT true;
 
 -- Update new denormalized columns (moved from cogs reposting)
 UPDATE invoice SET 
