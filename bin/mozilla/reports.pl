@@ -406,7 +406,7 @@ $selectfrom
         }
 
         my $translink = qq|$module.pl?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}|;
-        my $vclink = qq|ct.pl?id=$vc_id}&db=$db&action=edit&path=$form->{path}&login=$form->{login}|;
+        my $vclink = qq|ct.pl?id=$vc_id&db=$db&action=edit&path=$form->{path}&login=$form->{login}|;
 
         for (@report_columns) { $tabledata{$_} = qq|<td>$row->{$_}</td>| }
         for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
