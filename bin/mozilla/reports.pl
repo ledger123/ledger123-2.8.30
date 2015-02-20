@@ -394,8 +394,24 @@ $selectfrom
         }
         $groupvalue2 = $row->{module};
 
+        my $module = lc $row->{module};
+        my $db = $module eq 'ar' ? 'customer' : 'vendor';
+        my ($till, $invoice, $vc_id) = $form->{dbs}->query(qq|select till, invoice, $db{_}id from $module where id = ?|, $row->{id})->list;
+
+        if ($module eq 'ar'){
+            $module = 'is' if $invoice;
+            $module = 'ps' if $till;
+        } else {
+            $module = 'ir' if $invoice;
+        }
+
+        my $translink = qq|$module.pl?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}|;
+        my $vclink = qq|ct.pl?id=$vc_id}&db=$db&action=edit&path=$form->{path}&login=$form->{login}|;
+
         for (@report_columns) { $tabledata{$_} = qq|<td>$row->{$_}</td>| }
         for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
+        $tabledata{invnumber} = qq|<td><a href="$translink">$row->{invnumber}</a></td>|;
+        $tabledata{name} = qq|<td><a href="$vclink">$row->{name}</a></td>|;
         for (@total_columns) { $totals{$_}      += $row->{$_} }
         for (@total_columns) { $subtotals{$_}   += $row->{$_} }
         for (@total_columns) { $grandtotals{$_} += $row->{$_} }
