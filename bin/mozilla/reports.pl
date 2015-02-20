@@ -48,7 +48,7 @@ sub alltaxes {
 
   }
 
-    my @columns        = qw(module account transdate invnumber description name number amount tax);
+    my @columns        = qw(module account transdate invnumber description name number taxnumber amount tax);
     my @total_columns  = qw(amount tax);
     my @search_columns = qw(fromdate todate);
 
@@ -60,8 +60,9 @@ sub alltaxes {
         description    => 5,
         name           => 6,
         number         => 7,
-        amount         => 8,
-        tax            => 9,
+        taxnumber      => 8,
+        amount         => 9,
+        tax            => 10,
     };
     my $sort  = $form->{sort}  ? $form->{sort}  : 'module';
     my $sort2 = $form->{sort2} ? $form->{sort2} : 'account';
@@ -201,8 +202,11 @@ $selectfrom
         SELECT 'AR' module, 'Non-taxable' account,
         SUM(aa.netamount) amount, SUM(0) as tax
         FROM ar aa
+        JOIN acc_trans ac ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE aa.netamount = aa.amount
+        AND c.link = 'AR'
         $where
         $cashwhere
         GROUP BY 1,2
@@ -225,8 +229,11 @@ $selectfrom
         SELECT 'AP' module, 'Non-taxable' account,
         SUM(aa.netamount) amount, SUM(0) as tax
         FROM ap aa 
+        JOIN acc_trans ac ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE aa.netamount = aa.amount
+        AND c.link = 'AP'
         $where
         $cashwhere
         GROUP BY 1,2
@@ -248,6 +255,8 @@ $selectfrom
     print qq|
         </tr>
 |;
+    my $total_amount = 0;
+    my $total_tax = 0;
     for $row (@allrows){
         print qq|<tr class="listrow0">|;
         print qq|<td>$row->{module}</td>|;
@@ -255,13 +264,22 @@ $selectfrom
         print qq|<td align="right">|.$form->format_amount(\%myconfig, $row->{amount}, 2).qq|</td>|;
         print qq|<td align="right">|.$form->format_amount(\%myconfig, $row->{tax}, 2).qq|</td>|;
         print qq|</tr>|;
+        $total_amount += $row->{amount};
+        $total_tax += $row->{tax};
     }
+    print qq|<tr class="listtotal">|;
+    print qq|<td>&nbsp;</td>|;
+    print qq|<td>&nbsp;</td>|;
+    print qq|<td align="right">|.$form->format_amount(\%myconfig, $total_amount, 2).qq|</td>|;
+    print qq|<td align="right">|.$form->format_amount(\%myconfig, $total_tax, 2).qq|</td>|;
+    print qq|</tr>|;
     print qq|</table><br/><br/><br/>|;
 
     $query = qq~
         SELECT 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
+        vc.taxnumber,
         aa.netamount amount, SUM(ac.amount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
@@ -270,13 +288,14 @@ $selectfrom
         WHERE c.link LIKE '%tax%'
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9
+        GROUP BY 1,2,3,4,5,6,7,8,9,10
 
         UNION ALL
 
         SELECT DISTINCT 'AR' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
+        vc.taxnumber,
         aa.netamount amount, 0 as tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
@@ -285,13 +304,14 @@ $selectfrom
         WHERE aa.netamount = aa.amount
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9
+        GROUP BY 1,2,3,4,5,6,7,8,9,10
 
         UNION ALL
 
         SELECT 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
+        vc.taxnumber,
         aa.netamount amount, SUM(ac.amount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
@@ -300,13 +320,14 @@ $selectfrom
         WHERE c.link LIKE '%tax%'
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9
+        GROUP BY 1,2,3,4,5,6,7,8,9,10
 
         UNION ALL
 
         SELECT DISTINCT 'AP' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
+        vc.taxnumber,
         aa.netamount amount, 0 as tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
@@ -315,7 +336,7 @@ $selectfrom
         WHERE aa.netamount = aa.amount
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9
+        GROUP BY 1,2,3,4,5,6,7,8,9,10
 
         ORDER BY 1 DESC, 2, 6
     ~;
@@ -363,6 +384,12 @@ $selectfrom
                 for (@report_columns) { print $tabledata{$_} }
                 print qq|</tr>\n|;
                 for (@total_columns) { $totals{$_} = 0 }
+
+                # Blank line
+                for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $totals{$_}, 2 ) . qq|</th>| }
+                print qq|<tr class="listsubtotal">|;
+                for (@report_columns) { print $tabledata{$_} }
+                print qq|</tr>\n|;
             }
         }
         $groupvalue2 = $row->{module};
