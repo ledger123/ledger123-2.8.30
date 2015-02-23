@@ -862,7 +862,8 @@ sub im_coa {
     $column_data{category}    = $locale->text('Category');
     $column_data{link}        = $locale->text('Link');
     $column_data{gifi_accno}  = $locale->text('GIFI');
-    $column_data{contra}      = $locale->text('C');
+    $column_data{contra}      = $locale->text('Contra');
+    $column_data{allow_gl}      = $locale->text('GL');
 
     IM->prepare_import_data( \%myconfig, \%$form );
 
@@ -904,6 +905,7 @@ sub im_coa {
         for (@column_index) { $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>| }
 
         $column_data{contra} = ( $form->{"contra_$i"} ) ? qq|<td>*</td>| : qq|<td>&nbsp;</td>|;
+        $column_data{allow_gl} = ( $form->{"allow_gl_$i"} ) ? qq|<td>*</td>| : qq|<td>&nbsp;</td>|;
 
         for (@column_index) { print $column_data{$_} }
 
