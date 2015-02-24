@@ -1240,7 +1240,11 @@ sub update {
         for ( 1 .. $form->{rowcount} ) { 
             if ($form->{"tax_$_"}){
                 ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
-                $form->{"linetaxamount_$_"} = $form->{"amount_$_"} * $form->{"${taxaccno}_rate"};
+                if ($form->{taxincluded}){
+                    $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
+                } else {
+                    $form->{"linetaxamount_$_"} = $form->{"amount_$_"} * $form->{"${taxaccno}_rate"};
+                }
                 $form->{"tax_$taxaccno"} += $form->{"linetaxamount_$_"};
             } else {
                 $form->{"linetaxamount_$_"} = 0;
