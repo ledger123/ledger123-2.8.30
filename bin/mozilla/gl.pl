@@ -1173,6 +1173,7 @@ sub display_rows {
 
     $form->{totaldebit}  = 0;
     $form->{totalcredit} = 0;
+    $form->{totaltax} = 0;
 
     for $i ( 1 .. $form->{rowcount} ) {
         $source = qq|<td><input name="source_$i" size=10 value="| . $form->quote( $form->{"source_$i"} ) . qq|"></td>|;
@@ -1197,6 +1198,7 @@ sub display_rows {
         else {
             $form->{totaldebit}  += $form->{"debit_$i"};
             $form->{totalcredit} += $form->{"credit_$i"};
+            $form->{totaltaxamount} += $form->{"taxamount_$i"};
 
             for (qw(debit credit)) { $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" }
 
@@ -1413,8 +1415,9 @@ sub form_footer {
 	  <th>&nbsp;</th>
 | if $form->{selectprojectnumber};
 
-    $tax = qq|
-	  <th>&nbsp;</th>
+    $tax = qq|<th>&nbsp;</th>| if $form->{selecttax};
+    $taxamount = qq|
+	  <th class=listtotal align="right">|.$form->format_amount(\%myconfig, $form->{totaltaxamount}, 2).qq|</th>
 | if $form->{selecttax};
 
     if ( $form->{fxadj} ) {
@@ -1432,6 +1435,7 @@ sub form_footer {
 	  <th>&nbsp;</th>
 	  <th>&nbsp;</th>
       $tax
+      $taxamount
 	  $project
         </tr>
       </table>
