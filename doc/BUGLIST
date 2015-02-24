@@ -4,6 +4,14 @@ BUGLIST
   fields have been added to many screens. Upload of reference docs is listed as planned function for
   SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
 
+bp 2015/2/24
+  bug: bep_201502-03 - fixed 2015/2/24
+  'Reconciliation' transaction abort with error message: "Bad name after A' at bin/mozilla/rc.pl line 173".
+
+bp 2015/2/24
+  bug: bep_201502-03 - fixed 2015/2/24
+   transaction abort when wage pay is posted.
+
 bp 2015/2/14
   bug: bep_201502-02 - fixed 2015/2/15
   payslip incorrect, multiple issues:

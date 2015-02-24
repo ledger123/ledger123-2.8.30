@@ -1253,7 +1253,7 @@ sub post_transaction {
                 VALUES (
                 $employee_id, '$employee', '$ref->{workphone}',
 		'$ref->{workfax}', '$ref->{email}', '$ref->{notes}',
-		$vendornumber, $user_id, '$ap->{currency}',|
+		'$vendornumber', $user_id, '$ap->{currency}',|
 		.$form->dbquote($ref->{startdate}, SQL_DATE).qq|, |
 		.$form->dbquote($ref->{enddate}, SQL_DATE).qq|, |
 		.$dbh->quote($ref->{apid}).qq|, |

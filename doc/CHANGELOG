@@ -1,3 +1,15 @@
+
+bp 2015/2/24
+  bug: bep_201502-03 - fixed 2015/2/24
+  'Reconciliation' transaction abort with error message: "Bad name after A' at bin/mozilla/rc.pl line 173".
+  Programming error: missing quote in rc.pl (line 146)
+
+bp 2015/2/24
+bugfix
+  bug: bep_201502-03 - fixed 2015/2/24
+   transaction abort when wage pay is posted.
+   Programming error in HR.pm (line 1256)
+
 bp 2015/2/15
 bugfix
 bp 2015/2/14
