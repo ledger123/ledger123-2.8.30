@@ -5,6 +5,12 @@ BUGLIST
   SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
 
 bp 2015/2/24
+  bug: bep_201502-04
+  Cannot retrieve previously entered time cards. Affected programs: jc.pl and JC.pm
+  The code of jc.pl includes a new form type "storecard". It seems that the programs contain some new code
+  not activated yet.
+
+bp 2015/2/24
   bug: bep_201502-03 - fixed 2015/2/24
   'Reconciliation' transaction abort with error message: "Bad name after A' at bin/mozilla/rc.pl line 173".
 
