@@ -302,13 +302,15 @@ sub create_links {
     $ml *= -1 if $form->{type} =~ /_note/;
 
     $form->{selecttax} = "\n";
+    @rows = $form->{dbs}->query(qq|SELECT accno, description FROM chart WHERE link LIKE '%$form->{ARAP}_tax%' ORDER BY accno|)->hashes;
+    for $ref (@rows){ $form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n" if index($form->{taxaccounts}, $ref->{accno}) != -1 }
+
     foreach $key ( keys %{ $form->{"$form->{ARAP}_links"} } ) {
 
         $form->{"select$key"} = "";
         foreach $ref ( @{ $form->{"$form->{ARAP}_links"}{$key} } ) {
             if ( $key eq "$form->{ARAP}_tax" ) {
                 $form->{"select$form->{ARAP}_tax_$ref->{accno}"} = $form->escape( "$ref->{accno}--$ref->{description}", 1 );
-                $form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n";
                 next;
             }
             $form->{"select$key"} .= "$ref->{accno}--$ref->{description}\n";
@@ -1423,6 +1425,10 @@ sub update {
     $form->{creditremaining} -= ( $form->{invtotal} - $totalpaid + $form->{oldtotalpaid} - $form->{oldinvtotal} ) * $ml;
     $form->{oldinvtotal}  = $form->{invtotal};
     $form->{oldtotalpaid} = $totalpaid;
+
+    $form->{selecttax} = "\n";
+    @rows = $form->{dbs}->query(qq|SELECT accno, description FROM chart WHERE link LIKE '%$form->{ARAP}_tax%' ORDER BY accno|)->hashes;
+    for $ref (@rows){ $form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n" if index($form->{taxaccounts}, $ref->{accno}) != -1 }
 
     &display_form;
 
