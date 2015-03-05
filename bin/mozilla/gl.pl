@@ -131,6 +131,18 @@ sub edit {
             $form->{"credit_$i"} = $ref->{amount};
         }
 
+        if ($ref->{"tax"}){
+            my ($tax_accno, $null) = split(/--/, $ref->{"tax"});
+            $tax_rate = $form->{dbs}->query(qq|
+                SELECT rate
+                FROM tax
+                WHERE chart_id = (SELECT id FROM chart WHERE accno = ?)
+                AND (validto IS NULL OR validto <= ?)|, $tax_accno, $form->{transdate}
+            )->list;
+            $taxamount = $form->round_amount(($form->{"debit_$i"} + $form->{"credit_$i"}) - ($form->{"debit_$i"} + $form->{"credit_$i"}) / (1 + $tax_rate), $form->{precision});
+            $form->{"taxamount_$i"} = $taxamount;
+        }
+
         $i++;
     }
 
