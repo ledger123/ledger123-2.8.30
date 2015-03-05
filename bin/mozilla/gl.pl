@@ -125,13 +125,15 @@ sub edit {
         if ( $ref->{amount} < 0 ) {
             $form->{totaldebit} -= $ref->{amount};
             $form->{"debit_$i"} = $ref->{amount} * -1;
+            $form->{"taxamount_$i"} = $ref->{taxamount} * -1;
         }
         else {
             $form->{totalcredit} += $ref->{amount};
             $form->{"credit_$i"} = $ref->{amount};
+            $form->{"taxamount_$i"} = $ref->{taxamount};
         }
 
-        if ($ref->{"tax"}){
+        if ($ref->{"tax"} and !$ref->{taxamount}){
             my ($tax_accno, $null) = split(/--/, $ref->{"tax"});
             $tax_rate = $form->{dbs}->query(qq|
                 SELECT rate
@@ -1127,11 +1129,11 @@ sub update {
 
     @f     = ();
     $count = 0;
-    @flds  = qw(accno debit credit projectnumber tax source memo cleared fx_transaction);
+    @flds  = qw(accno debit credit taxamount projectnumber tax source memo cleared fx_transaction);
 
     for $i ( 1 .. $form->{rowcount} ) {
         unless ( ( $form->{"debit_$i"} eq "" ) && ( $form->{"credit_$i"} eq "" ) || ( $form->{"tax_$i"} eq 'auto' )) {
-            for (qw(debit credit)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
             push @f, {};
             $j = $#f;
@@ -1152,7 +1154,7 @@ sub update {
 
     # per line tax
     for $i ( 1 .. $count ) {
-        if ($form->{"tax_$i"} and $form->{"tax_$i"} ne 'auto'){
+        if ($form->{"tax_$i"} and $form->{"tax_$i"} ne 'auto' and !$form->{"taxamount_$i"}){
             my ($tax_accno, $null) = split(/--/, $form->{"tax_$i"});
             $tax_rate = $form->{dbs}->query(qq|
                 SELECT rate 
@@ -1265,8 +1267,7 @@ sub display_rows {
     $source
     $memo
     $tax
-    <td align="right">|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|</td>
-    <input type=hidden name="taxamount_$i" value='$form->{"taxamount_$i"}'>
+    <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>
     $project
   </tr>
 |;
