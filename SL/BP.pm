@@ -475,6 +475,37 @@ sub get_spoolfiles {
 
 }
 
+sub zip_spool {
+  my ($self, $myconfig, $form, $spool) = @_;
+
+  my $fileid = time;
+  my $tmpfile = "$form->{login}.$fileid.zip";
+
+  foreach my $i (1 .. $form->{rowcount}) {
+      $_ = qq|$spool/$myconfig->{dbname}/$form->{"spoolfile_$i"}|;
+      if ($form->{"ndx_$i"}) {
+	system("zip -q -u -D $spool/$tmpfile $_");
+	#system("tar -cvf $spool/$tmpfile $_");
+      }
+  }
+  
+  open(IN, "$spool/$tmpfile");
+  binmode(IN);
+
+  print qq|Content-Type: application/zip
+Content-Disposition: attachment; filename="$tmpfile"\n\n|;
+
+  open(OUT, ">-");
+
+  while (<IN>) {
+     print OUT $_;
+  }
+
+  close(IN);
+  close(OUT);
+  unlink $spool/$tmpfile;
+}
+
 
 sub delete_spool {
   my ($self, $myconfig, $form, $spool) = @_;

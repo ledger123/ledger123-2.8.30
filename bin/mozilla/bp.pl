@@ -391,6 +391,17 @@ sub yes {
 }
 
 
+sub download_zip_file {
+
+  my $selected = 0;
+  foreach my $i (1 .. $form->{rowcount}) {
+     $selected = 1 if $form->{"ndx_$i"};
+  }
+  $form->error('Nothing selected ...') if !$selected;
+
+  BP->zip_spool(\%myconfig, \%$form, $spool);
+}
+
 
 sub print {
 
@@ -929,6 +940,7 @@ function CheckAll() {
                'E-mail' => { ndx => 6, key => 'E', value => $locale->text('E-mail') },
                'Combine' => { ndx => 7, key => 'C', value => $locale->text('Combine') },
 	       'Remove' => { ndx => 8, key => 'R', value => $locale->text('Remove') },
+	       'Download zip file' => { ndx => 7, key => 'R', value => $locale->text('Download zip file') },
 	      );
 
 
@@ -943,6 +955,7 @@ function CheckAll() {
   }
   if ($form->{batch} ne 'queue') {
     delete $button{'Remove'};
+    delete $button{'Download zip file'};
   }
   if ($form->{batch} eq 'email') {
     delete $button{'Print'};
