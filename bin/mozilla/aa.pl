@@ -798,7 +798,7 @@ sub form_header {
 	  <th>| . $locale->text('Account') . qq|</th>
 	  <th>| . $locale->text('Description') . qq|</th>
 	  <th>| . $locale->text('Tax') . qq|</th>
-	  <th>| . $locale->text('Amount') . qq|</th>
+	  <th>| . $locale->text('Tax Amount') . qq|</th>
 	  $project
 	</tr>
 |;
@@ -822,7 +822,7 @@ sub form_header {
         }
 
         $linetax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, $form->{"tax_$i"} ) . qq|</select></td>|;
-        $linetaxamount = qq|<td align="right">|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|</td>|;
+        $linetaxamount = qq|<td align="right"><input type=text name="linetaxamount_$i" size=10 value="|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|"></td>|;
 
         $form->{subtotal} += $form->{"amount_$i"};
 
@@ -1242,10 +1242,12 @@ sub update {
         for ( 1 .. $form->{rowcount} ) { 
             if ($form->{"tax_$_"}){
                 ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
-                if ($form->{taxincluded}){
-                    $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
-                } else {
-                    $form->{"linetaxamount_$_"} = $form->{"amount_$_"} * $form->{"${taxaccno}_rate"};
+                if (!$form->{"linetaxamount_$_"}){
+                    if ($form->{taxincluded}){
+                        $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
+                    } else {
+                        $form->{"linetaxamount_$_"} = $form->{"amount_$_"} * $form->{"${taxaccno}_rate"};
+                    }
                 }
                 $form->{"tax_$taxaccno"} += $form->{"linetaxamount_$_"};
             } else {
