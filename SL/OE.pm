@@ -1199,18 +1199,18 @@ sub order_details {
 		AND warehouse_id = ?|;
     $sth = $dbh->prepare($query) || $form->dberror($query);
 
-    for $i (1 .. $form->{rowcount} - 1) {
-      $sth->execute($form->{"id_$i"}, $form->{warehouse_id}) || $form->dberror;
+    #for $i (1 .. $form->{rowcount} - 1) {
+    #  $sth->execute($form->{"id_$i"}, $form->{warehouse_id}) || $form->dberror;
 
-      ($qty) = $sth->fetchrow_array;
-      $sth->finish;
+    #  ($qty) = $sth->fetchrow_array;
+    #  $sth->finish;
 
-      $form->{"qty_$i"} = 0 if $qty == 0;
+    #  $form->{"qty_$i"} = 0 if $qty == 0;
       
       #if ($form->parse_amount($myconfig, $form->{"ship_$i"}) > $qty) {
 	#$form->{"ship_$i"} = $form->format_amount($myconfig, $qty);
       #}
-    }
+    #}
   }
     
 
