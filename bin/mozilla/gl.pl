@@ -1329,8 +1329,8 @@ sub form_header {
 | if $form->{selectprojectnumber};
 
     $tax = qq| 
-	  <th class=listheading>| . $locale->text('Tax') . qq|</th>
-	  <th class=listheading>| . $locale->text('Amount') . qq|</th>
+	  <th class=listheading>| . $locale->text('Tax Included') . qq|</th>
+	  <th class=listheading>| . $locale->text('Tax Amount') . qq|</th>
 | if $form->{selecttax};
 
 
