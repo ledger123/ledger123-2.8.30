@@ -31,6 +31,7 @@ sub get_vc {
 	       sales_quotation => { oe => customer },
 	       request_quotation => { oe => vendor },
 	       timecard => { jcitems => employee },
+           reminder => { ar => customer },
 	     );
   
   my $query;
