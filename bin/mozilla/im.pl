@@ -1576,7 +1576,17 @@ sub im_vc {
     $column_data{pricegroup}     = $locale->text('Pricegroup');
     $column_data{curr}           = $locale->text('Currency');
     $column_data{startdate}      = $locale->text('Startdate');
-    $column_data{enddate}        = $locale->text('Enddate');
+    $column_data{shiptoname}     = $locale->text('Shipto Name');
+    $column_data{shiptoaddress1} = $locale->text('Address1');
+    $column_data{shiptoaddress2} = $locale->text('Address2');
+    $column_data{shiptocity}     = $locale->text('City');
+    $column_data{shiptostate}    = $locale->text('State');
+    $column_data{shiptozipcode}  = $locale->text('Zip code');
+    $column_data{shiptocountry}  = $locale->text('Country');
+    $column_data{shiptocontact}  = $locale->text('Contact');
+    $column_data{shiptophone}    = $locale->text('Phone');
+    $column_data{shiptofax}      = $locale->text('Fax');
+    $column_data{shiptoemail}    = $locale->text('Email');
 
     $column_data{arap_accno} = ( $form->{type} eq 'customer' ) ? $locale->text('AR') : $locale->text('AP');
 
