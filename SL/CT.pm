@@ -896,6 +896,7 @@ sub search {
   $query .= qq|
 		 ORDER BY $sortorder|;
 
+  $form->info($query) if $form->{l_sql};
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
@@ -1104,6 +1105,7 @@ sub get_history {
 	      WHERE $where
 	      ORDER BY $sortorder|;
 
+  $form->info($query) if $form->{l_sql};
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 

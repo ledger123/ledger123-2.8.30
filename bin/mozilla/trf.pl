@@ -539,6 +539,7 @@ sub search {
    push @a, qq|<input name="l_extended" class=checkbox type=checkbox value=Y> |.$locale->text('Extended');
    push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y> |.$locale->text('Subtotal');
    push @a, qq|<input name="l_csv" class=checkbox type=checkbox value=Y> |.$locale->text('CSV');
+   push @a, qq|<input name="l_sql" class=checkbox type=checkbox value=Y> |.$locale->text('SQL');
 
    while (@a) {
      print qq|<tr>\n|;
@@ -695,7 +696,7 @@ sub list {
    $column_header{cost}      		= rpt_hdr('cost', $locale->text('Cost'), $href);
    $column_header{extended}    		= rpt_hdr('extended', $locale->text('Extended'), $href);
 
-   $form->error($query) if $form->{l_sql};
+   $form->info($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
    my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
@@ -966,7 +967,7 @@ sub delivered_form {
    $column_header{from_warehouse}	= rpt_hdr('from_warehouse', $locale->text('From WH'), $href);
    $column_header{delivereddate}      	= rpt_hdr('delivereddate', $locale->text('Delivered Date'));
 
-   $form->error($query) if $form->{l_sql};
+   $form->info($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
    my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
    for (keys %defaults) { $form->{$_} = $defaults{$_} }

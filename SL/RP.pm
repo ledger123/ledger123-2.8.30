@@ -2258,7 +2258,7 @@ sub tax_report {
   
   $query .= qq|
 	      ORDER by $sortorder|;
-
+  $form->info($query) if $form->{l_sql};
   $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
@@ -2454,6 +2454,9 @@ sub payments {
     $query .= qq|
                 ORDER BY $sortorder|;
 
+    if ($form->{l_sql}){
+        $form->info("$query<br/><br/><br/>"); 
+    }
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
 

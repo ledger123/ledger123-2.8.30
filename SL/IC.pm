@@ -1468,6 +1468,7 @@ sub all_parts {
 
   }
 
+  $form->info($query) if $form->{l_sql};
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 

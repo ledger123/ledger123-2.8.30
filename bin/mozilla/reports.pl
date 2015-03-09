@@ -2566,8 +2566,7 @@ sub onhand_search {
     push @a, qq|<input name="l_onhand" class=checkbox type=checkbox value=Y checked> | . $locale->text('Onhand');
     push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y> | . $locale->text('Subtotal');
     push @a, qq|<input name="l_csv" class=checkbox type=checkbox value=Y> | . $locale->text('CSV');
-
-    #push @a, qq|<input name="l_sql" class=checkbox type=checkbox value=Y>|.$locale->text('SQL');
+    push @a, qq|<input name="l_sql" class=checkbox type=checkbox value=Y> | . $locale->text('SQL');
 
     while (@a) {
         print qq|<tr>\n|;
@@ -2874,8 +2873,7 @@ sub iactivity_search {
     push @a, qq|<input name="l_cogs_balance" class=checkbox type=checkbox value=Y checked> | . $locale->text('Cost Balance');
     push @a, qq|<input name="l_subtotal" class=checkbox type=checkbox value=Y checked> | . $locale->text('Subtotal');
     push @a, qq|<input name="l_csv" class=checkbox type=checkbox value=Y> | . $locale->text('CSV');
-
-    #push @a, qq|<input name="l_sql class=checkbox type=checkbox value=Y> |. $locale->text('SQL');
+    push @a, qq|<input name="l_sql" class=checkbox type=checkbox value=Y> | . $locale->text('SQL');
 
     while (@a) {
         print qq|<tr>\n|;
@@ -3036,7 +3034,7 @@ sub iactivity_list {
     $column_header{cogs}         = rpt_hdr( 'cogs',         $locale->text('Total Cost'), $href );
     $column_header{cogs_balance} = rpt_hdr( 'cogs_balance', $locale->text('Cost Balance'), $href );
 
-    $form->error($query) if $form->{l_sql};
+    $form->info($query) if $form->{l_sql};
     $dbh = $form->dbconnect( \%myconfig );
     my %defaults = $form->get_defaults( $dbh, \@{ [ 'precision', 'company' ] } );
     for ( keys %defaults ) { $form->{$_} = $defaults{$_} }

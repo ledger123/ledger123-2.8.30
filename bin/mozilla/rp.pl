@@ -726,7 +726,9 @@ sub report {
 	      </tr>
 	      <tr>
 	        <td><input name="l_subtotal" class=checkbox type=checkbox value=Y></td>
-		<td>| . $locale->text('Subtotal') . qq|</td>
+		    <td>| . $locale->text('Subtotal') . qq|</td>
+	        <td><input name="l_sql" class=checkbox type=checkbox value=Y></td>
+		    <td>| . $locale->text('SQL') . qq|</td>
 	      </tr>
 	    </table>
 	  </td>
@@ -795,7 +797,9 @@ sub report {
 	      </tr>
 	      <tr>
 	        <td><input name="l_subtotal" class=checkbox type=checkbox value=Y></td>
-		<td>| . $locale->text('Subtotal') . qq|</td>
+		    <td>| . $locale->text('Subtotal') . qq|</td>
+	        <td><input name="l_sql" class=checkbox type=checkbox value=Y></td>
+		    <td>| . $locale->text('SQL') . qq|</td>
 	      </tr>
 	    </table>
 	  </td>
@@ -1076,6 +1080,7 @@ sub report {
         print qq|
 	      <tr>
 		<td><input name=l_subtotal class=checkbox type=checkbox value=Y> | . $locale->text('Subtotal') . qq|</td>
+		<td><input name=l_sql class=checkbox type=checkbox value=Y> | . $locale->text('SQL') . qq|</td>
 	      </tr>
 	    </table>
 	  </td>

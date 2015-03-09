@@ -446,6 +446,7 @@ sub search {
 		    <tr>
 		      <td nowrap><input name="l_subtotal" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|</td>
 		      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
+		      <td><input name="l_sql" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('SQL').qq|</td>
 		    </tr>
 		  </table>
 		</td>

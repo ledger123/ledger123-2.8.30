@@ -246,6 +246,9 @@ sub history {
 		<td>
 		<input name="l_serialnumber" type=checkbox class=checkbox value=Y>&nbsp;|.$locale->text('Serial Number').qq|
 		</td>
+		<td>
+		<input name="l_sql" type=checkbox class=checkbox value=Y>&nbsp;|.$locale->text('SQL').qq|
+		</td>
 	      </tr>
 	    </table>
 	  </td>
@@ -407,6 +410,7 @@ sub include_in_report {
   push @f, qq|<input name="l_remittancevoucher" type=checkbox class=checkbox value=Y> |.$locale->text('Remittance Voucher');
   push @f, qq|<input name="l_startdate" type=checkbox class=checkbox value=Y> |.$locale->text('Startdate');
   push @f, qq|<input name="l_enddate" type=checkbox class=checkbox value=Y> |.$locale->text('Enddate');
+  push @f, qq|<input name="l_sql" type=checkbox class=checkbox value=Y> |.$locale->text('SQL');
 
    
   $include = qq|
