@@ -1162,6 +1162,7 @@ sub display_form {
             th => { class => ['listheading'] },
   );
   $table1->modify( td => { align => 'right' }, 'amount' );
+  $table1->calc_totals( 'amount' );
   print $table1->output;
 
 }
