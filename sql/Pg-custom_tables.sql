@@ -172,5 +172,8 @@ CREATE TABLE generic_import (
     c20 text
 );
 
+create table credits (id serial, accno text, amount numeric(12,2));
+create table debitscredits (id serial, debit_accno text, credit_accno, amount numeric(12,2));
+create table debitscredits (id serial, debit_accno text, credit_accno text, amount numeric(12,2));
 
 -- EOF
