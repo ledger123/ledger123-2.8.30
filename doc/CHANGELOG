@@ -1,4 +1,13 @@
 
+bp 2015/4/11
+bugfix
+  bug: bep_201504-01
+  1 wage type, income tax (deduction), fixed income tax amounts based on the yealy salary, several tax brackets.
+  Wage is deferred.
+  Income tax is calculated correctly. If, however, the "Update" button is pressed afterwards the income tax calculation
+  comes to a different(lower) result.
+  Tax (deduction) calculation was incorrect (hr.pl, update_payroll function)
+
 bp 2015/2/24
   bug: bep_201502-03 - fixed 2015/2/24
   'Reconciliation' transaction abort with error message: "Bad name after A' at bin/mozilla/rc.pl line 173".

@@ -4,11 +4,24 @@ BUGLIST
   fields have been added to many screens. Upload of reference docs is listed as planned function for
   SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
 
+bp 2015/4/11
+  bug: bep_201504-02
+  Deferred wage is not printed on the payslip.
+
+bp 2015/4/7
+  bug: bep_201504-01 - fixed 2015/4/11
+  1 wage type, income tax (deduction), fixed income tax amounts based on the yealy salary, several tax brackets.
+  Wage is deferred.
+  Income tax is calculated correctly. If, however, the "Update" button is pressed afterwards the income tax calculation
+  comes to a different(lower) result.
+
 bp 2015/2/24
   bug: bep_201502-04
   Cannot retrieve previously entered time cards. Affected programs: jc.pl and JC.pm
   The code of jc.pl includes a new form type "storecard". It seems that the programs contain some new code
   not activated yet.
+  Not a bug: employee id had changed, program shows only timecards for active employees
+  Storecard is a new (inactive) function
 
 bp 2015/2/24
   bug: bep_201502-03 - fixed 2015/2/24

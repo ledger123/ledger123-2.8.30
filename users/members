@@ -1,5 +1,25 @@
 # SQL-Ledger Accounting members
 
+[admin@fctest]
+countrycode=en_GB
+dateformat=yyyy-mm-dd
+dbconnect=dbi:Pg:dbname=fctest;host=localhost;port=5432
+dbdriver=Pg
+dbhost=localhost
+dbname=fctest
+dbpasswd=*=&QM-3!9,THS=P``
+dbport=5432
+dbuser=ledger123
+menuwidth=155
+numberformat=1,000.00
+outputformat=ps
+password=adpexzg3FUZAk
+printer=BRN2270
+role=admin
+stylesheet=sql-ledger.css
+timeout=10800
+vclimit=1000
+
 [kahn@fctest]
 acs=
 company=
@@ -32,11 +52,10 @@ timeout=10800
 vclimit=1000
 warehouse=
 warehouse_id=
-password=kaa8BH2D3Ic2.
 
 
 [root login]
-password=roHFIIjdG91ZQ
+password=roXyrPyqv9wE2
 
 [tanaka]
 acs=
@@ -71,24 +90,4 @@ timeout=10800
 vclimit=1000
 warehouse=
 warehouse_id=
-
-[admin@fctest]
-countrycode=en_GB
-dateformat=yyyy-mm-dd
-dbconnect=dbi:Pg:dbname=fctest;host=localhost;port=5432
-dbdriver=Pg
-dbhost=localhost
-dbname=fctest
-dbpasswd=*=&QM-3!9,THS=P``
-dbport=5432
-dbuser=ledger123
-menuwidth=155
-numberformat=1,000.00
-outputformat=ps
-password=adpexzg3FUZAk
-printer=BRN2270
-role=admin
-stylesheet=sql-ledger-jp.css
-timeout=10800
-vclimit=1000
 

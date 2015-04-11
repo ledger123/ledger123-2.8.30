@@ -1750,6 +1750,7 @@ sub update_payroll {
     }
 
     $amount = $form->round_amount( $form->{"qty_$i"} * $form->{"amount_$i"}, 10 );
+
     $temp{gross} += $amount unless $ref->{exempt};
     $temp{net}   += $amount unless $ref->{defer};
 
@@ -1780,15 +1781,19 @@ sub update_payroll {
       $form->{"deduct_$i"}       = 0;
       # bp 2015/01 - calculate employer share separately
       $form->{"bdeduct_$i"} = 0;
+      $temp->{damount} = 0;
+      $temp->{salary} = 0;
 
       # bp 2015/01 - consider employer and employee deductions
       if ( $form->{payrolldeduction}{ $ed->{id} }{employeepays} || $form->{payrolldeduction}{ $ed->{id} }{employerpays} ) {
 #      if ( $form->{payrolldeduction}{ $ed->{id} }{employeepays} ) {
 
+#carp("deduction: $form->{\"deduction_$i\"} \n");
         my $amtset = 0;
         for $ref ( @{ $form->{all_deductionrate} } ) {
 
-           # bp 2015/01 calculate deduction amount (employee + employer)
+          # bp 2015/01 calculate deduction amount (employee + employer)
+          $form->{"damount_$i"} = 0;
           if ( $ref->{rate} eq 0 ) {
             $amtset = 1;
             $form->{"damount_$i"} = $ref->{amount};
@@ -1826,30 +1831,46 @@ sub update_payroll {
               $amount = $temp{gross} - $fromincome;
             }
 
+            $temp->{salary} = $amount * $form->{payperiod};  # bp 2015/04 a bit easier to read
             if ($amtset eq 0) {
-              if ( ( $amount * $form->{payperiod} ) > $ref->{above} ) {
-                if ( ( $amount * $form->{payperiod} ) < $ref->{below} ) {
+              if ( $temp->{salary} ge $ref->{above} ) {
+                if ( $temp->{salary} lt $ref->{below} ) {
                   $form->{"deduct_$i"} +=
-                    ( ( $amount * $form->{payperiod} ) - $ref->{above} ) * $ref->{rate} / $form->{payperiod};
+                    ( $temp->{salary} - $ref->{above} ) * $ref->{rate} / $form->{payperiod};
                   $ok = 0;
                 } else {
                   if ( $ref->{below} ) {
                     $form->{"deduct_$i"} += ( $ref->{below} - $ref->{above} ) * $ref->{rate} / $form->{payperiod};
                   } else {
                     $form->{"deduct_$i"} +=
-                      ( ( $amount * $form->{payperiod} ) - $ref->{above} ) * $ref->{rate} / $form->{payperiod};
+                      ( $temp->{salary} - $ref->{above} ) * $ref->{rate} / $form->{payperiod};
                   }
                 }
               }
             } else {
-              # bp 2015/01 range check for fixed amount setting
-              if ( ( $ref->{above} eq 0 ) || ( $amount * $form->{payperiod} > $ref-{above} ) ) {
-                if ( $ref->{below} eq 0 ) {
-                  $form->{"deduct_$i"} = $form->{"damount_$i"}; }
-                elsif ( $amount * $form->{payperiod} le $ref->{below} ) {
-                  $form->{"deduct_$i"} = $form->{"damount_$i"};
-                  $ok = 0;
-                }
+              # bp 2015/04 range check for fixed amount setting
+              ## allowed values are:
+              ##  amount   above    below   comment    amount    above  below   comment
+              ##    30               120                                      above=below=0 -> undefined
+              ##    35       120                 or          35               300
+              ##    40       300                 or          40               400
+              ##     50        400                              -                 -
+              ##  below lines: if wage is below 300 it is also below 400 -> stop at line 2 (below = 300)
+              ##  above lines: check the next row: if wage is above 300 it could also be above 400
+              ##
+#carp("yearly salary is: $temp->{salary} \n");
+              if ( ( $ref->{below} > 0 ) && ( $temp->{salary} <= $ref->{below} ) ) {
+                $form->{"deduct_$i"} = $form->{"damount_$i"};
+                $ok = 0;
+              } elsif ( ($ref->{above} > 0 ) && ( $temp->{salary} >= $ref->{above} ) ) {
+                # wage may be higher than the next tax bracket -> continue
+                $form->{"deduct_$i"} = $form->{"damount_$i"};
+                $temp->{damount} = $form->{"damount_$i"};
+              } elsif ( ( $ref->{above} > 0 ) && ( $temp->{salary} < $ref->{above} ) ) {
+                # wage is below the lower limit -> keep the previous deduction amount, end of loop
+                $form->{"deduct_$i"} = $temp->{damount};
+                $ok = 0;
+                # do it
               }
             }
           }
