@@ -1633,7 +1633,8 @@ sub payroll_header {
 |;
   }
 
-  $form->hide_form(qw(gross net withheld deduction_rows wage_rows));
+# bp 2015/04 added 'deferred' to the field list
+  $form->hide_form(qw(gross net withheld deduction_rows wage_rows deferred));
 
   print qq|
      </table>
@@ -1754,6 +1755,11 @@ sub update_payroll {
     $temp{gross} += $amount unless $ref->{exempt};
     $temp{net}   += $amount unless $ref->{defer};
 
+    # bp 2015/04/14 gross salary includes the exempt amounts
+    $form->{gross} += $amount;
+    # bp 2015/04/14 track the deferred amount
+    if ( $ref->{defer} ) { $form->{deferred} += $amount };
+
     $form->{"pay_$i"} =
       $form->format_amount( \%myconfig, $form->{"qty_$i"} * $form->{"amount_$i"}, $form->{precision} );
 
@@ -1765,7 +1771,10 @@ sub update_payroll {
   }
   $form->{wage_rows} = $i - 1;
 
-  $form->{gross} = $form->format_amount( \%myconfig, $temp{gross}, $form->{precision} );
+  # $form->{gross} = $form->format_amount( \%myconfig, $temp{gross}, $form->{precision} );
+  $form->{gross} = $form->format_amount( \%myconfig, $form->{gross}, $form->{precision} );
+  # bp provide amount deferred
+  $form->{deferred} = $form->format_amount( \%myconfig, $form->{deferred}, $form->{precision} );
 
   $form->{withheld} = 0;
 
@@ -1898,7 +1907,6 @@ sub update_payroll {
           }
 
           if ( $transdate && $dob ) {
-          # if ( $transdate && dob ) {
             if ( $form->{payrolldeduction}{ $ed->{id} }{fromage} ) {
               $d = $dob + ( $form->{payrolldeduction}{ $ed->{id} }{fromage} * 10000 );
               $dramount = 0 if $transdate <= $d;

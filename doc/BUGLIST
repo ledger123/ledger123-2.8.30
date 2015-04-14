@@ -4,6 +4,11 @@ BUGLIST
   fields have been added to many screens. Upload of reference docs is listed as planned function for
   SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
 
+bp 2015/4/14
+  bug: bep_201504-3
+  Exempt deductions are not included in the gross wage. "Exempt" means that these amounts are not included
+  in the calculation of deductions. (Deduction) exempted wage types will still be paid to the employee.
+
 bp 2015/4/11
   bug: bep_201504-02
   Deferred wage is not printed on the payslip.
