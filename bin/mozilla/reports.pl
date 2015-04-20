@@ -245,7 +245,7 @@ $selectfrom_disabled
         ORDER BY 1, 2, 6
     ~;
 
-    my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error );
+    my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error ) if $form->{runit};
 
     my ( %tabledata, %grandtotals, %totals, %subtotals );
 
