@@ -32,7 +32,7 @@ if (-f "./sql-ledger-sys.conf") {
 #
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "$userspath/carp_debug.inc") {
-  eval { require "$userspath/carp_debug.inc"; };
+#  eval { require "$userspath/carp_debug.inc"; };
 }
 ########## end ###########################################
 

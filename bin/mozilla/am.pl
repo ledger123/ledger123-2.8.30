@@ -13,7 +13,7 @@
 
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "$userspath/carp_debug.inc") {
-#  eval { require "$userspath/carp_debug.inc"; };
+  eval { require "$userspath/carp_debug.inc"; };
 }
 
 use SL::AM;
@@ -2622,7 +2622,6 @@ sub workstations {
 
 
 sub update_workstations {
-
   @p = ();
   for (1 .. $form->{numprinters}) {
     if ($form->{"printer_$_"} && $form->{"command_$_"}) {
@@ -2700,7 +2699,6 @@ sub update_workstations {
 
 
 sub save_workstations {
-
   if (AM->save_workstations(\%myconfig, \%$form)) {
     $form->redirect($locale->text('Workstations saved!'));
   } else {

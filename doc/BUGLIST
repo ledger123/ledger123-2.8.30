@@ -4,7 +4,18 @@ BUGLIST
   fields have been added to many screens. Upload of reference docs is listed as planned function for
   SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
 
+bp 2015/4/23
+  bug: bep_2015-5
+  When printing the payslip address, phone, fax, companywebsite are not printed.
+
 bp 2015/4/14
+  bug: bep_201504-4 - fixed 2015/4/23
+  Workstation transaction. Can't enter printer command with '='; everything after the sign get's cut off.
+  Reason: printer option is stored in DB like: BRN2270=lpr -PPRN2270 "-o sides=one-sided fitplot"
+  When the option is read the line is split at the '=' sign - which means that everything after "...sides" is lost
+  Workaround: put print commands in a bash script and enter the script name (incl. path) as print command into Ledger
+
+bp 2015/4/14 - fixed 2015/4/14
   bug: bep_201504-3
   Exempt deductions are not included in the gross wage. "Exempt" means that these amounts are not included
   in the calculation of deductions. (Deduction) exempted wage types will still be paid to the employee.

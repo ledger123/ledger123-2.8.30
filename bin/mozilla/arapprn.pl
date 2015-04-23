@@ -523,6 +523,9 @@ sub print_payslip {
   $form->{text_amount} = $c->num2text($whole);
   $form->{integer_amount} = $whole;
 
+  # bp retrieve company data for printing
+  my %temp = $form->get_defaults($dbh, \@{['address','tel','fax','companywebsite','businessnumber']});
+  for (keys %temp) { $form->{$_} = $temp{$_} };
 
   # before we format replace <%var%>
   $form->{description} =~ s/<%(.*?)%>/$fld = lc $1; $form->{$fld}/ge;

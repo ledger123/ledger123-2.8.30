@@ -47,21 +47,21 @@
 
 \vspace{0.5cm}
 
-<%name%> \hfill <%datepaid%> \hfill For Pay Period: <%dateto%> \hfill <%source%>
+<%name%> \hfill <%datepaid%> \hfill For Pay Period: <%dateto%> Currency: <%currency%> \hfill <%source%>
 
 \vspace{0.5cm}
 
 \begin{tabularx}{.3\textwidth}[t]{@{}lX@{}}
-  Regular & \dotfill <%regularpay%> \\
-  Overtime & \dotfill <%overtimepay%> \\
-  Travel & \dotfill <%travelpay%> \\
+  <%foreach wage%>
+  <%wage%> & <%qty%> \dotfill <%amount%> \\
+  <%end wage%>
   Stat Holiday &  \dotfill <%holidaypay%> \\\hline
   Gross & \dotfill <%gross%> \\
 \end{tabularx}
 \hfill
 \begin{tabularx}{.3\textwidth}[t]{@{}lX@{}}
   <%foreach deduction%>
-  <%deduction%> & \dotfill <%amount%> \\
+  <%deduction%> & \dotfill <%deductamt%> \\
   <%end deduction%>
   \hline Withheld & \dotfill <%withheld%> \\
 \end{tabularx}
@@ -69,7 +69,8 @@
 \begin{tabularx}{.3\textwidth}[t]{@{}lX@{}}
   Gross & \dotfill <%gross%> \\
   Withheld & \dotfill <%withheld%> \\
-  Benefits & \dotfill <%benefits%> \\\hline
+  Benefits & \dotfill <%benefits%> \\
+  Deferred & \dotfill <%deferred%> \\\hline
   Net &  \dotfill <%net%> \\
 \end{tabularx}
 
@@ -77,12 +78,15 @@
 
 \hfill
 \begin{tabular}{lrr}
-  Regular: & <%regular%> & <%regularrate%> \\
-  Overtime: & <%overtime%> & <%overtimerate%> \\
-  Travel: & <%travel%> & <%travelrate%> \\
-  Stat Holiday: & <%holiday%> & \\
+\textbf{Standard Rates:} \\
+  <%foreach payrate%>
+    <%if not limit%>
+    Regular & <%payrate%> \\
+    <%end limit%>
+    <%if limit%>
+    Overtime & <%payrate%> ( over <%limit%> hrs)\\
+    <%end limit%>
+  <%end payrate%>
 \end{tabular}
 
-
 \end{document}
-

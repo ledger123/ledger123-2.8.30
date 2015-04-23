@@ -16,6 +16,11 @@ use SL::User;
 use SL::AA;
 use SL::GL;
 
+# to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
+if ( -f "$userspath/carp_debug.inc" ) {
+#  eval { require "$userspath/carp_debug.inc"; };
+}
+
 require "$form->{path}/arap.pl";
 require "$form->{path}/arapprn.pl";
 

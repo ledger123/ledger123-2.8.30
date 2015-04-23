@@ -1,3 +1,9 @@
+bp 2015/4/23
+bugfix
+  bug: bep_2015-5
+  When printing the payslip address, phone, fax, companywebsite are not printed.
+  Amended program arapprn.pl to retrieve system defaults for address, tel, fax, companywebsite
+
 
 bp 2015/4/14
 bugfix
