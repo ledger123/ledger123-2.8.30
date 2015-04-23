@@ -3650,6 +3650,130 @@ sub import_gl {
     }
 }
 
+
+
+sub prepare_datev {
+    $form->info("Started ...\n");
+
+    $form->{dbs}->query('delete from debitscredits');
+
+    my @rows = $form->{dbs}->query(qq|
+        SELECT 
+                ac.trans_id,
+                gl.reference,
+                ap.invnumber ap_reference,
+                ar.invnumber ar_reference,
+                gl.description,
+                ar.description ar_description,
+                ap.description ap_description,
+                c.accno,
+                ac.transdate,
+
+                case 
+                when ac.amount > 0 then ac.amount
+                else 0
+                end debit,
+
+                case 
+                when ac.amount < 0 then 0 - ac.amount
+                else 0
+                end credit
+
+        FROM acc_trans ac
+        LEFT JOIN gl ON (gl.id = ac.trans_id)
+        LEFT JOIN ar ON (ar.id = ac.trans_id)
+        LEFT JOIN ap ON (ap.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
+        ORDER BY ac.trans_id
+    |)->hashes;
+
+    my $this_trans_id;
+    my $i = 1;
+    for my $row (@rows){
+        $this_trans_id = $row->{trans_id} if !$this_trans_id;
+        if ($this_trans_id != $row->{trans_id}){
+            $form->{rowcount} = $i;
+            &prepare_datev2;
+            #$form->debug;
+            $this_trans_id = $row->{trans_id};
+            $i = 1;
+        }
+        $form->{"reference_$i"} = $row->{reference} . $row->{ar_reference} . $row->{ap_reference};
+        $form->{"transdate_$i"} = $row->{transdate};
+        $form->{"description_$i"} = $row->{description} . $row->{ar_description} . $row->{ap_description};
+        $form->{"accno_$i"} = $row->{accno};
+        $form->{"debit_$i"} = $row->{debit};
+        $form->{"credit_$i"} = $row->{credit};
+        $i++;
+    }
+    $form->info("Completed ...");
+}
+
+
+sub prepare_datev2 {
+
+  $form->info("Processing $form->{reference_1}\n");
+  $form->{dbs}->query('delete from debits');
+  $form->{dbs}->query('delete from credits');
+ 
+  my %debits; my %credits;
+  for my $i (1 .. $form->{rowcount}){
+     $form->{"debit_$i"} = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
+     $form->{"credit_$i"} = $form->parse_amount(\%myconfig, $form->{"credit_$i"});
+     $form->{dbs}->query(qq|insert into debits (reference, description, transdate, accno, amount) values ('$form->{"reference_$i"}', '$form->{"description_$i"}', '$form->{"transdate_$i"}', '$form->{"accno_$i"}', $form->{"debit_$i"})|) if $form->{"debit_$i"} > 0;
+     $form->{dbs}->query(qq|insert into credits (reference, description, transdate, accno, amount) values ('$form->{"reference_$i"}', '$form->{"description_$i"}', '$form->{"transdate_$i"}', '$form->{"accno_$i"}', $form->{"credit_$i"})|) if $form->{"credit_$i"} > 0;
+  }
+
+  for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
+     for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} limit 1|)->hashes)){
+        $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
+            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount});
+        $form->{dbs}->query('delete from debits where id = ?', $row->{id});
+        $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
+     }
+  }
+
+  while (1){
+      $debitrow = $form->{dbs}->query(qq|select * from debits order by amount DESC limit 1|)->hash;
+      $creditrow = $form->{dbs}->query(qq|select * from credits order by amount DESC limit 1|)->hash;
+      if ($debitrow->{amount} and $creditrow->{amount}){
+          if ($debitrow->{amount} > $creditrow->{amount}){
+              $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
+                    $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $creditrow->{amount});
+              $form->{dbs}->query(qq|delete from credits where id = $creditrow->{id}|);
+              $form->{dbs}->query(qq|update debits set amount = amount - $creditrow->{amount} where id = $debitrow->{id}|);
+          } else {
+              $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
+                    $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $debitrow->{amount});
+              $form->{dbs}->query(qq|delete from debits where id = $debitrow->{id}|);
+              $form->{dbs}->query(qq|update credits set amount = amount - $debitrow->{amount} where id = $creditrow->{id}|);
+          }
+      } else {
+        last;
+      }
+  }
+
+  $form->{dbs}->commit;
+
+}
+
+
+sub export_datev {
+
+    $form->info('DATEV export file ...');
+    $table1 = $form->{dbs}->query(qq|SELECT reference, description, transdate, debit_accno, credit_accno, amount FROM debitscredits ORDER BY reference|)->xto(
+                tr => { class => [ 'listrow0', 'listrow1' ] },
+                th => { class => ['listheading'] },
+    );
+    $table1->set_group('reference');
+    $table1->modify( td => { align => 'right' }, 'amount' );
+    #$table1->calc_subtotals( 'amount' );
+    $table1->calc_totals( 'amount' );
+
+    print $table1->output;
+
+}
+
 # EOF
 
 ## Please see file perltidy.ERR
