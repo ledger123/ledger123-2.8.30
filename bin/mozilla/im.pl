@@ -3706,6 +3706,7 @@ sub prepare_datev {
         $form->{"credit_$i"} = $row->{credit};
         $i++;
     }
+    &prepare_datev2; # Process last transaction
     $form->info("Completed ...");
 }
 
@@ -3718,8 +3719,8 @@ sub prepare_datev2 {
  
   my %debits; my %credits;
   for my $i (1 .. $form->{rowcount}){
-     $form->{"debit_$i"} = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
-     $form->{"credit_$i"} = $form->parse_amount(\%myconfig, $form->{"credit_$i"});
+      #$form->{"debit_$i"} = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
+      #$form->{"credit_$i"} = $form->parse_amount(\%myconfig, $form->{"credit_$i"});
      $form->{dbs}->query(qq|insert into debits (reference, description, transdate, accno, amount) values ('$form->{"reference_$i"}', '$form->{"description_$i"}', '$form->{"transdate_$i"}', '$form->{"accno_$i"}', $form->{"debit_$i"})|) if $form->{"debit_$i"} > 0;
      $form->{dbs}->query(qq|insert into credits (reference, description, transdate, accno, amount) values ('$form->{"reference_$i"}', '$form->{"description_$i"}', '$form->{"transdate_$i"}', '$form->{"accno_$i"}', $form->{"credit_$i"})|) if $form->{"credit_$i"} > 0;
   }
@@ -3821,7 +3822,7 @@ sub export_datev {
         );
         $table1->set_group('reference');
         $table1->modify( td => { align => 'right' }, 'amount' );
-        $table1->map_cell( sub { return $form->format_amount( \%myconfig, shift, 2 ) }, 'amount' );
+        $table1->map_cell( sub { return $form->format_amount( \%myconfig, shift ) }, 'amount' );
         #$table1->calc_subtotals( 'amount' );
         $table1->calc_totals( 'amount' );
 
