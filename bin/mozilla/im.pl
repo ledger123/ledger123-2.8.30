@@ -3760,18 +3760,73 @@ sub prepare_datev2 {
 
 sub export_datev {
 
-    $form->info('DATEV export file ...');
-    $table1 = $form->{dbs}->query(qq|SELECT reference, description, transdate, debit_accno, credit_accno, amount FROM debitscredits ORDER BY reference|)->xto(
-                tr => { class => [ 'listrow0', 'listrow1' ] },
-                th => { class => ['listheading'] },
-    );
-    $table1->set_group('reference');
-    $table1->modify( td => { align => 'right' }, 'amount' );
-    #$table1->calc_subtotals( 'amount' );
-    $table1->calc_totals( 'amount' );
+    $form->{title} = $locale->text('DATEV Export');
 
-    print $table1->output;
+    $form->header;
+    print qq|
+<body>
+<table width="100%">
+<tr>
+    <th class="listtop">$form->{title}</th>
+</tr>
+</table>
+|;
 
+    print qq|
+<form action="$form->{script}" method="post">
+<table>
+<tr>
+    <th align="right">|.$locale->text('From').qq|</th>
+    <td><input name=fromdate type=text size=12 class=date value='$form->{fromdate}' title='$myconfig{dateformat}'></td>
+</tr>
+<tr>
+    <th align="right">|.$locale->text('To').qq|</th>
+    <td><input name=todate type=text size=12 class=date value='$form->{todate}' title='$myconfig{dateformat}'></td>
+</tr>
+</table>
+<hr/>
+<input type=hidden name=runit value=1>
+<input type=hidden name=nextsub value=export_datev>
+<input type=hidden name=path value='$form->{path}'>
+<input type=hidden name=login value='$form->{login}'>
+<input type=submit name=action class=action value='Continue'>
+</form>
+|;
+
+    my $where = ' 1 = 1 ';
+    $where = ' 1 = 2 ' if !$form->{runit};    # Display data only when Update button is pressed.
+
+    my @bind = ();
+
+    if ( $form->{fromdate} ) {
+        $where .= qq| AND transdate >= ?|;
+        push @bind, $form->{fromdate};
+    }
+
+    if ( $form->{todate} ) {
+        $where .= qq| AND transdate <= ?|;
+        push @bind, $form->{todate};
+    }
+
+    if ($form->{runit}){
+        $table1 = $form->{dbs}->query(qq|
+            SELECT reference, description, transdate, debit_accno, credit_accno, amount 
+            FROM debitscredits 
+            WHERE $where
+            ORDER BY reference|, 
+            @bind
+        )->xto(
+                    tr => { class => [ 'listrow0', 'listrow1' ] },
+                    th => { class => ['listheading'] },
+        );
+        $table1->set_group('reference');
+        $table1->modify( td => { align => 'right' }, 'amount' );
+        $table1->map_cell( sub { return $form->format_amount( \%myconfig, shift, 2 ) }, 'amount' );
+        #$table1->calc_subtotals( 'amount' );
+        $table1->calc_totals( 'amount' );
+
+        print $table1->output;
+    }
 }
 
 # EOF
