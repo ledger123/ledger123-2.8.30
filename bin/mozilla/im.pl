@@ -3721,8 +3721,16 @@ sub prepare_datev2 {
   for my $i (1 .. $form->{rowcount}){
       #$form->{"debit_$i"} = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
       #$form->{"credit_$i"} = $form->parse_amount(\%myconfig, $form->{"credit_$i"});
-     $form->{dbs}->query(qq|insert into debits (reference, description, transdate, accno, amount) values ('$form->{"reference_$i"}', '$form->{"description_$i"}', '$form->{"transdate_$i"}', '$form->{"accno_$i"}', $form->{"debit_$i"})|) if $form->{"debit_$i"} > 0;
-     $form->{dbs}->query(qq|insert into credits (reference, description, transdate, accno, amount) values ('$form->{"reference_$i"}', '$form->{"description_$i"}', '$form->{"transdate_$i"}', '$form->{"accno_$i"}', $form->{"credit_$i"})|) if $form->{"credit_$i"} > 0;
+     $form->{dbs}->query(qq|
+         insert into debits (reference, description, transdate, accno, amount)
+         values (?, ?, ?, ?, ?)|,
+         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"debit_$i"}
+     ) if $form->{"debit_$i"} > 0;
+     $form->{dbs}->query(qq|
+         insert into credits (reference, description, transdate, accno, amount) 
+         values (?, ?, ?, ?, ?)|,
+         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"credit_$i"}
+     ) if $form->{"credit_$i"} > 0;
   }
 
   for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
