@@ -229,7 +229,7 @@ sub report {
 |;
 
     if ( $form->{reportcode} eq 'trial_balance' ) {
-        @checked = qw(l_heading l_subtotal all_accounts);
+        @checked = qw(l_heading l_subtotal all_accounts l_name);
         @input   = qw(fromdate todate month year reportlogin);
         for (qw(department language_code)) {
             push @input, $_ if $form->{"select$_"};
@@ -611,7 +611,8 @@ sub report {
 	  <th align=right nowrap>| . $locale->text('Include in Report') . qq|</th>
 	  <td><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Heading') . qq|
 	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Subtotal') . qq|
-	  <input name=all_accounts class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('All Accounts') . qq|</td>
+	  <input name=all_accounts class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('All Accounts') . qq|
+	  <input name=l_name class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Company Name') . qq|</td>
 	</tr>
 |;
     }
@@ -1343,7 +1344,7 @@ sub generate_trial_balance {
     $form->helpref( "trial_balance", $myconfig{countrycode} );
 
     $form->{callback} = "$form->{script}?action=generate_trial_balance";
-    for (qw(login path nextsub fromdate todate month year interval l_heading l_subtotal all_accounts accounttype reportcode reportlogin)) { $form->{callback} .= "&$_=$form->{$_}" }
+    for (qw(login path nextsub fromdate todate month year interval l_heading l_subtotal all_accounts l_name accounttype reportcode reportlogin)) { $form->{callback} .= "&$_=$form->{$_}" }
     for (qw(department title report)) { $form->{callback} .= "&$_=" . $form->escape( $form->{$_}, 1 ) }
 
     &list_accounts;
@@ -1428,7 +1429,7 @@ sub list_accounts {
         $description = $form->escape( $ref->{description} );
 
         $href = qq|ca.pl?action=list_transactions|;
-        for (qw(path accounttype login fromdate todate l_heading l_subtotal project_id nextsub)) { $href .= "&$_=$form->{$_}" }
+        for (qw(path accounttype login fromdate todate l_heading l_name l_subtotal project_id nextsub)) { $href .= "&$_=$form->{$_}" }
         $href .= "&sort=transdate&prevreport=$callback&department=$department&projectnumber=$projectnumber&title=$title";
 
         if ( $form->{accounttype} eq 'gifi' ) {
@@ -1611,7 +1612,7 @@ sub list_accounts {
         for (qw(fromdate todate)) { delete $form->{$_} }
     }
 
-    $form->hide_form(qw(department projectnumber fromdate todate month year interval language_code l_heading l_subtotal all_accounts accounttype));
+    $form->hide_form(qw(department projectnumber fromdate todate month year interval language_code l_heading l_subtotal all_accounts l_name accounttype));
 
     $form->hide_form(qw(callback path login report reportcode reportlogin sort direction));
 
