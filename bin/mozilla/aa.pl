@@ -1146,7 +1146,29 @@ sub form_footer {
 
   print qq|
 </form>
+|;
 
+    my $arap = lc $form->{ARAP};
+	my $table = $form->{dbs}->query(qq|
+		SELECT ac.transdate, ac.amount, c.accno, c.description, ac.source, ac.memo
+		FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        WHERE ac.trans_id = ?
+		ORDER BY ac.transdate|, $form->{id}
+	)->xto(
+		tr => { class => ['listrow0', 'listrow1'] },
+		th => { class => ['listheading'] },
+	);
+    $table->set_group([qw(transdate)]);
+    $table->calc_totals([qw(amount)]);
+    $table->calc_subtotals([qw(amount)]);
+	$table->modify(td => {align => 'right'}, 'amount');
+
+	print $table->output;
+
+
+
+print qq|
 </body>
 </html>
 |;
