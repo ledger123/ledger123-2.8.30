@@ -3918,11 +3918,19 @@ sub update_defaults {
 	      WHERE fldname = '$fld'|;
   $dbh->do($query) || $self->dberror($query);
 
+  my %audittrail = ( tablename  => 'newnumber',
+                     reference  => $dbvar,
+		     formname   => $fld,
+		     action     => 'newnumber',
+		     id         => 1 );
+ 
+  $self->audittrail($dbh, "", \%audittrail);
+
+
   if ($disconnect) {
     $dbh->commit;
     $dbh->disconnect;
   }
-
   $var;
 
 }
