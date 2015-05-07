@@ -4,8 +4,19 @@ BUGLIST
   fields have been added to many screens. Upload of reference docs is listed as planned function for
   SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
 
+bp 2015/5/4
+  bug: bep_201505-2
+  The optional loading of the "exchangerate_lookup.pl" caused a browser 500 error because the Finance::Quote
+  was not available.
+
+bp 2015/5/4
+  bug: bep_201505-1
+  After updating to Debian jessie and Perl 5.20 many "wide error in print" messages are showing.
+  Problem shows if the used encoding is UTF-8. Posting of data is not possible anymore.
+
+
 bp 2015/4/23
-  bug: bep_2015-5
+  bug: bep_201504-5
   When printing the payslip address, phone, fax, companywebsite are not printed.
 
 bp 2015/4/14

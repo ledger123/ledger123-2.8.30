@@ -31,7 +31,8 @@ if (-f "./sql-ledger-sys.conf") {
 }
 
 # bp 2014/11 load the exchange rate lookup program if defined in sql-ledger-sys.conf
-require "./$get_exrate_prog" if ( $get_exrate_prog );
+my $res = eval { require "./$get_exrate_prog" if ( $get_exrate_prog ); };
+if ( $res == 0 ) { $get_exrate_prog = '' };
 
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "$userspath/carp_debug.inc") {

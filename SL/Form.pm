@@ -2164,6 +2164,9 @@ sub print_button {
 sub dbconnect {
   my ($self, $myconfig) = @_;
 
+# bp 2015/05 - perl5.20 - 'wide character in print' messages
+  binmode STDOUT, ":utf8";
+
   # connect to database
 
   my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}) or $self->dberror;
