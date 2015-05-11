@@ -3692,7 +3692,7 @@ sub prepare_datev {
     for my $row (@rows){
         $this_trans_id = $row->{trans_id} if !$this_trans_id;
         if ($this_trans_id != $row->{trans_id}){
-            $form->{rowcount} = $i+1;
+            $form->{rowcount} = $i;
             &prepare_datev2;
             $this_trans_id = $row->{trans_id};
             $i = 1;
@@ -3705,7 +3705,7 @@ sub prepare_datev {
         $form->{"credit_$i"} = $row->{credit};
         $i++;
     }
-    $form->{rowcount} = $i+1;
+    $form->{rowcount} = $i;
     &prepare_datev2; # Process last transaction
     $form->info("Completed ...");
 }
@@ -3731,6 +3731,7 @@ sub prepare_datev2 {
          values (?, ?, ?, ?, ?)|,
          $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"credit_$i"}
      ) if $form->{"credit_$i"} > 0;
+     for (qw(reference description transdate accno debit credit)){ delete $form->{"${_}_$i"} }
   }
 
   for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
