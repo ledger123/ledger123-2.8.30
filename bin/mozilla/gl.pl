@@ -1157,7 +1157,7 @@ sub display_form {
 
   $form->{dbs}->commit;
 
-  $table1 = $form->{dbs}->query(qq|SELECT * FROM debitscredits ORDER BY debit_accno|)->xto(
+  $table1 = $form->{dbs}->query(qq|SELECT * FROM debitscredits ORDER BY reference, amount DESC|)->xto(
             tr => { class => [ 'listrow0', 'listrow1' ] },
             th => { class => ['listheading'] },
   );

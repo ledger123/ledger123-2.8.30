@@ -3670,12 +3670,12 @@ sub prepare_datev {
                 ac.transdate,
 
                 case 
-                when ac.amount > 0 then ac.amount
+                when ac.amount < 0 then 0-ac.amount
                 else 0
                 end debit,
 
                 case 
-                when ac.amount < 0 then 0 - ac.amount
+                when ac.amount > 0 then ac.amount
                 else 0
                 end credit
 
@@ -3692,9 +3692,8 @@ sub prepare_datev {
     for my $row (@rows){
         $this_trans_id = $row->{trans_id} if !$this_trans_id;
         if ($this_trans_id != $row->{trans_id}){
-            $form->{rowcount} = $i;
+            $form->{rowcount} = $i+1;
             &prepare_datev2;
-            #$form->debug;
             $this_trans_id = $row->{trans_id};
             $i = 1;
         }
@@ -3706,6 +3705,7 @@ sub prepare_datev {
         $form->{"credit_$i"} = $row->{credit};
         $i++;
     }
+    $form->{rowcount} = $i+1;
     &prepare_datev2; # Process last transaction
     $form->info("Completed ...");
 }
@@ -3785,6 +3785,10 @@ sub export_datev {
 <form action="$form->{script}" method="post">
 <table>
 <tr>
+    <th align="right">|.$locale->text('Reference').qq|</th>
+    <td><input name=reference type=text size=12 value='$form->{reference}'></td>
+</tr>
+<tr>
     <th align="right">|.$locale->text('From').qq|</th>
     <td><input name=fromdate type=text size=12 class=date value='$form->{fromdate}' title='$myconfig{dateformat}'></td>
 </tr>
@@ -3807,11 +3811,15 @@ sub export_datev {
 
     my @bind = ();
 
+    if ($form->{reference}){
+        my $reference = $form->like(lc $form->{reference});
+        $where .= qq| AND LOWER(reference) LIKE ?|;
+        push @bind, $reference;
+    }
     if ( $form->{fromdate} ) {
         $where .= qq| AND transdate >= ?|;
         push @bind, $form->{fromdate};
     }
-
     if ( $form->{todate} ) {
         $where .= qq| AND transdate <= ?|;
         push @bind, $form->{todate};
@@ -3822,7 +3830,7 @@ sub export_datev {
             SELECT reference, description, transdate, debit_accno, credit_accno, amount 
             FROM debitscredits 
             WHERE $where
-            ORDER BY reference|, 
+            ORDER BY reference, amount DESC|, 
             @bind
         )->xto(
                     tr => { class => [ 'listrow0', 'listrow1' ] },
