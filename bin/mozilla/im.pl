@@ -3685,7 +3685,6 @@ sub prepare_datev {
         LEFT JOIN ar ON (ar.id = ac.trans_id)
         LEFT JOIN ap ON (ap.id = ac.trans_id)
         JOIN chart c ON (c.id = ac.chart_id)
-        WHERE trans_id = 12319
         ORDER BY ac.trans_id, ac.transdate
     ~)->hashes;
 
@@ -3830,7 +3829,13 @@ sub export_datev {
 
     if ($form->{runit}){
         $table1 = $form->{dbs}->query(qq|
-            SELECT reference, description, transdate, debit_accno, credit_accno, amount 
+            SELECT reference, description, transdate, debit_accno, credit_accno, amount,
+                CASE
+                    WHEN debit_accno = credit_accno THEN
+                    'ERROR'
+                    ELSE
+                    ''
+                END error
             FROM debitscredits 
             WHERE $where
             ORDER BY reference, amount DESC|, 
