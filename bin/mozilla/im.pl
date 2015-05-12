@@ -3657,8 +3657,9 @@ sub prepare_datev {
 
     $form->{dbs}->query('delete from debitscredits');
 
-    my @rows = $form->{dbs}->query(qq|
+    my @rows = $form->{dbs}->query(qq~
         SELECT 
+                ac.trans_id::varchar || ac.transdate::varchar trans_group,
                 ac.trans_id,
                 gl.reference,
                 ap.invnumber ap_reference,
@@ -3684,17 +3685,18 @@ sub prepare_datev {
         LEFT JOIN ar ON (ar.id = ac.trans_id)
         LEFT JOIN ap ON (ap.id = ac.trans_id)
         JOIN chart c ON (c.id = ac.chart_id)
-        ORDER BY ac.trans_id
-    |)->hashes;
+        WHERE trans_id = 12319
+        ORDER BY ac.trans_id, ac.transdate
+    ~)->hashes;
 
-    my $this_trans_id;
+    my $this_trans_group;
     my $i = 1;
     for my $row (@rows){
-        $this_trans_id = $row->{trans_id} if !$this_trans_id;
-        if ($this_trans_id != $row->{trans_id}){
+        $this_trans_group = $row->{trans_group} if !$this_trans_group;
+        if ($this_trans_group != $row->{trans_group}){
             $form->{rowcount} = $i;
             &prepare_datev2;
-            $this_trans_id = $row->{trans_id};
+            $this_trans_group = $row->{trans_group};
             $i = 1;
         }
         $form->{"reference_$i"} = $row->{reference} . $row->{ar_reference} . $row->{ap_reference};
