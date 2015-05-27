@@ -190,13 +190,16 @@ sub create_links {
     }
 
     # tax accounts
-    $form->{selecttax} = "\n";
-    my @taxaccounts = $form->{dbs}->query(qq|
-          SELECT accno, description FROM chart WHERE id IN 
-            (SELECT chart_id FROM tax WHERE validto >= ? OR validto IS NULL)
-          |, $form->{transdate}
-    )->hashes;
-    for (@taxaccounts) { $form->{selecttax} .= qq|$_->{accno}--$_->{description}\n| }
+    my ($linetax) = $form->{dbh}->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='linetax'");
+    if ($linetax){
+        $form->{selecttax} = "\n";
+        my @taxaccounts = $form->{dbs}->query(qq|
+              SELECT accno, description FROM chart WHERE id IN 
+                (SELECT chart_id FROM tax WHERE validto >= ? OR validto IS NULL)
+              |, $form->{transdate}
+        )->hashes;
+        for (@taxaccounts) { $form->{selecttax} .= qq|$_->{accno}--$_->{description}\n| }
+    }
 
     # departments
     # armaghan 12-apr-2012 restrict user to his department
@@ -1201,7 +1204,10 @@ sub display_rows {
             }
 
             if ( $form->{selecttax} ) {
-                $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, undef, 0 ) . qq|</select></td>|;
+                $tax = qq|
+                    <td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, undef, 0 ) . qq|</select></td>
+                    <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>
+                |;
             }
 
             if ( $form->{fxadj} ) {
@@ -1228,7 +1234,9 @@ sub display_rows {
 
                 if ( $form->{selecttax} ) {
                     $tax = $form->{"tax_$i"};
-                    $tax = qq|<td>$tax</td>|;
+                    $tax = qq|
+                        <td>$tax</td>
+                        <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
                 }
 
                 if ( $form->{fxadj} ) {
@@ -1267,7 +1275,6 @@ sub display_rows {
     $source
     $memo
     $tax
-    <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>
     $project
   </tr>
 |;
