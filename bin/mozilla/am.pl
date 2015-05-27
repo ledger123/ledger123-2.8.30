@@ -2203,6 +2203,7 @@ sub defaults {
   my %checked;
   $checked{cash} = "checked" if $form->{method} eq 'cash';
   $checked{cdt} = "checked" if $form->{cdt};
+  $checked{linetax} = "checked" if $form->{linetax};
   $checked{namesbynumber} = "checked" if $form->{namesbynumber};
   $checked{company} = "checked" unless $form->{typeofcontact};
   $checked{person} = "checked" if $form->{typeofcontact} eq 'person';
@@ -2295,6 +2296,10 @@ sub defaults {
 		<td><input name=weightunit size=5 value="$form->{weightunit}"></td>
 	      </tr>
 	      <tr>
+            <th align=right>|.$locale->text('Line Tax').qq|</th>
+            <td><input name=linetax class=checkbox type=checkbox value="1" $checked{linetax}>&nbsp;|.$locale->text('Yes').qq|</td>
+         </tr>
+         <tr>
 		<th align=right>|.$locale->text('Sort Names by').qq|</th>
 		<td><input name=namesbynumber class=checkbox type=checkbox value="1" $checked{namesbynumber}>&nbsp;|.$locale->text('Number').qq|
 		</td>
@@ -2412,7 +2417,7 @@ sub defaults {
 </table>
 |;
 
-  $form->{optional} = "company address tel fax companyemail companywebsite yearend weightunit businessnumber closedto revtrans audittrail method cdt namesbynumber typeofcontact roundchange referenceurl";
+  $form->{optional} = "company address tel fax companyemail companywebsite yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax namesbynumber typeofcontact roundchange referenceurl";
 
   @f = qw(closedto revtrans audittrail);
   
