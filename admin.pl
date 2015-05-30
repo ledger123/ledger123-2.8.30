@@ -15,7 +15,6 @@
 #
 #######################################################################
 
-
 # setup defaults, DO NOT CHANGE
 $userspath = "users";
 $spool = "spool";
@@ -25,17 +24,22 @@ $memberfile = "users/members";
 $sendmail = "| /usr/sbin/sendmail -t";
 %printer = ();
 
+# bp 2015/05 utf8 mode
+use feature 'unicode_strings';
+use open IO => ':encoding(utf8)';
+use open ':std';
+
 #bp 2014/11 we need latex and environment variables - used to be in sql-ledger.conf
 if (-f "./sql-ledger-sys.conf") {
   eval { require "./sql-ledger-sys.conf"; };
 }
+
 #
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "$userspath/carp_debug.inc") {
 #  eval { require "$userspath/carp_debug.inc"; };
 }
 ########## end ###########################################
-
 
 $| = 1;
 
@@ -128,7 +132,7 @@ if ($form{path}) {
     map { $ARGV[0] .= "&${_}=$form{$_}" } keys %form;
 
     require "bin/$form{terminal}/$script";
-    
+
   } else {
 
     print "Content-Type: text/html\n\n" if $ENV{HTTP_USER_AGENT};

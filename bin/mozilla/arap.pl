@@ -364,7 +364,6 @@ sub rebuild_vc {
 
 
 sub add_transaction {
-
   $form->{action} = "add";
 
   $form->{callback} = $form->escape($form->{callback},1);

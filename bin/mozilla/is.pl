@@ -22,14 +22,17 @@ if (-f "$userspath/carp_debug.inc") {
 }
 ##
 
+# bp 2015/05 utf8 mode
+use feature 'unicode_strings';
+
+use URI::Encode qw(uri_encode uri_decode);
+use Encode;
 
 use SL::IS;
 use SL::PE;
 
 require "$form->{path}/arap.pl";
 require "$form->{path}/io.pl";
-
-#carp("this is is.pl \n");
 
 1;
 # end of main
@@ -48,7 +51,6 @@ sub add {
 
 
 sub edit {
-
   $form->{shipto} = 1;
   &invoice_links;
   &prepare_invoice;
@@ -220,7 +222,7 @@ sub invoice_links {
 
     $form->{"select$key"} = "";
     foreach $ref (@{ $form->{AR_links}{$key} }) {
-      $form->{"select$key"} .= "$ref->{accno}--$ref->{description}\n";
+       $form->{"select$key"} .= "$ref->{accno}--$ref->{description}\n";
     }
     $form->{"select$key"} = $form->escape($form->{"select$key"},1);
 
@@ -1228,11 +1230,8 @@ sub update {
 
   # if last row empty, check the form otherwise retrieve new item
   if (($form->{"partnumber_$i"} eq "") && ($form->{"description_$i"} eq "") && ($form->{"partsgroup_$i"} eq "" && $form->{"partsgroupcode_$i"} eq "")) {
-
     &check_form;
-
   } else {
-
     IS->retrieve_item(\%myconfig, \%$form);
 
     $rows = scalar @{ $form->{item_list} };
@@ -1260,7 +1259,6 @@ sub update {
     if ($rows) {
 
       if ($rows > 1) {
-
 	&select_item;
 	exit;
 
@@ -1270,7 +1268,7 @@ sub update {
 
 	$sellprice = $form->parse_amount(\%myconfig, $form->{"sellprice_$i"});
 
-        for (qw(partnumber description unit)) { $form->{item_list}[$i]{$_} = $form->quote($form->{item_list}[$i]{$_}) }
+       for (qw(partnumber description unit)) { $form->{item_list}[$i]{$_} = $form->quote($form->{item_list}[$i]{$_}) }
 
 	for (keys %{ $form->{item_list}[0] }) {
 	  $form->{"${_}_$i"} = $form->{item_list}[0]{$_};
@@ -1356,8 +1354,6 @@ sub update {
 
 
 sub post {
-
-
   $form->isblank("transdate", $locale->text('Invoice Date missing!'));
   $form->isblank("customer", $locale->text('Customer missing!'));
   # armaghan 12-apr-2012
@@ -1397,18 +1393,17 @@ sub post {
       $form->error($locale->text('Cannot post payment for a closed period!')) if ($datepaid <= $form->{closedto});
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
-	$form->isblank("exchangerate_$i", $locale->text('Exchange rate for payment missing!'));
+        $form->isblank("exchangerate_$i", $locale->text('Exchange rate for payment missing!'));
       }
 
       if ($form->{selectpaymentmethod}) {
-	$roundto = $roundchange{$form->{"paymentmethod_$i"}};
+        $roundto = $roundchange{$form->{"paymentmethod_$i"}};
       }
     }
   }
 
   $AR_paid = $form->{"AR_paid_$form->{paidaccounts}"};
   $paymentmethod = $form->{"paymentmethod_$form->{paidaccounts}"};
-
   $form->{label} = $locale->text('Invoice');
 
   if (! $form->{repost}) {
@@ -1417,7 +1412,6 @@ sub post {
       exit;
     }
   }
-
 
   # add discount to payments
   if ($form->{discount_paid}) {
@@ -1442,7 +1436,7 @@ sub post {
       $form->error($locale->text('Cash discount date past due!')) if ($datepaid > $expired);
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
-	$form->isblank("exchangerate_$i", $locale->text('Exchange rate for cash discount missing!'));
+        $form->isblank("exchangerate_$i", $locale->text('Exchange rate for cash discount missing!'));
       }
     }
   }
@@ -1453,10 +1447,10 @@ sub post {
 
     if ($cashover) {
       if ($form->round_amount($paid, $form->{precision}) == $form->round_amount($total, $form->{precision})) {
-	$i = ++$form->{paidaccounts};
-	$form->{"paid_$i"} = $form->format_amount(\%myconfig, $cashover, $form->{precision});
-	$form->{"datepaid_$i"} = $datepaid;
-	$form->{"AR_paid_$i"} = $form->{cashovershort};
+        $i = ++$form->{paidaccounts};
+        $form->{"paid_$i"} = $form->format_amount(\%myconfig, $cashover, $form->{precision});
+        $form->{"datepaid_$i"} = $datepaid;
+        $form->{"AR_paid_$i"} = $form->{cashovershort};
       }
     }
   }
@@ -1464,7 +1458,6 @@ sub post {
   $i = ++$form->{paidaccounts};
   $form->{"AR_paid_$i"} = $AR_paid;
   $form->{"paymentmethod_$i"} = $paymentmethod;
-
 
   if (IS->post_invoice(\%myconfig, \%$form)) {
     $form->redirect($locale->text('Invoice')." $form->{invnumber} ".$locale->text('posted!'));

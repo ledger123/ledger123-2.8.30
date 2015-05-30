@@ -542,7 +542,7 @@ sub search_name {
 
   &vc_autocomplete;
 
-  print qq|
+print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
 
 <div align="center" class="redirectmsg">$form->{redirectmsg}</div>

@@ -25,6 +25,11 @@ $sendmail = "| /usr/sbin/sendmail -t";
 $latex = 0;
 %printer = ();
 
+# bp 2015/05 utf8 mode
+use feature 'unicode_strings';
+use open IO => ':encoding(utf8)';
+use open ':std';
+
 #bp 2014/11 we need latex and environment variables - used to be in sql-ledger.conf
 if (-f "./sql-ledger-sys.conf") {
   eval { require "./sql-ledger-sys.conf"; };
@@ -68,7 +73,7 @@ $form->db_init(\%myconfig);
 
 if ($@) {
   $locale = new Locale "$language", "$script";
-  
+
   $form->{callback} = "";
   $msg1 = $locale->text('You are logged out!');
   $msg2 = $locale->text('Login');
@@ -114,7 +119,7 @@ if (-f "$userspath/$myconfig{dbname}.LCK" && $form->{login} ne "admin\@$myconfig
     $form->error($message);
   }
   $form->error($locale->text('Dataset currently down for maintenance!'));
-} 
+}
 
 # pull in the main code
 require "$form->{path}/$form->{script}";

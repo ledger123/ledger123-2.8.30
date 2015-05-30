@@ -11,18 +11,25 @@ use DBIx::Simple;
 
 package Form;
 
+use URI::Encode qw(uri_encode uri_decode);
+use Encode;
+use URI::Escape::XS qw/uri_escape uri_unescape/;
+
+#use warnings;
+
 #use Data::Dumper;
 #    use feature 'say';
 
 $userspath = "users";
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "./users/carp_debug.inc") {
-#  eval { require "./users/carp_debug.inc"; };
+  eval { require "./users/carp_debug.inc"; };
 }
-
 
 sub new {
   my ($type, $userspath) = @_;
+
+#carp("Form.pm - new \n");
 
   my $self = {};
 
@@ -35,6 +42,9 @@ sub new {
   if ($ARGV[0]) {
     $_ = $ARGV[0];
   }
+
+# bp
+#carp("argv: $_ \n");
 
   %$self = split /[&=]/;
 
@@ -58,50 +68,49 @@ sub new {
 
       last if $line =~ /${boundary}--/;
       if ($line =~ /${boundary}/) {
-	next;
+        next;
       }
 
       if ($line =~ /Content-Disposition: form-data;/) {
 
-	my @b = split /; /, $line;
-	my @c = split /=/, $b[1];
-	$c[1] =~ s/(^"|"$)//g;
-	$var = $c[1];
+        my @b = split /; /, $line;
+        my @c = split /=/, $b[1];
+        $c[1] =~ s/(^"|"$)//g;
+        $var = $c[1];
 
-	if ($b[2]) {
-	  @c = split /=/, $b[2];
-	  $c[1] =~ s/(^"|"$)//g;
-	  $self->{$c[0]} = $c[1];
-	}
-	next;
+        if ($b[2]) {
+          @c = split /=/, $b[2];
+          $c[1] =~ s/(^"|"$)//g;
+          $self->{$c[0]} = $c[1];
+        }
+        next;
       }
       if ($line =~ /Content-Type:/) {
-	($null, $self->{"content-type"}) = split /: /, $line;
-	$data = $var;
-	next;
+        ($null, $self->{"content-type"}) = split /: /, $line;
+        $data = $var;
+        next;
       }
 
       if ($self->{$var}) {
-	$self->{$var} .= "\r\n$line";
+        $self->{$var} .= "\r\n$line";
       } else {
-	$self->{$var} = "$line";
+        $self->{$var} = "$line";
       }
 
     }
-
     if ($data) {
       $self->{tmpfile} = time;
       $self->{tmpfile} .= $$;
       my (@e) = split /\./, $self->{filename};
       if ($#e >= 1) {
-	$self->{tmpfile} .= ".$e[$#e]";
+        $self->{tmpfile} .= ".$e[$#e]";
       }
       if (! open(FH, ">$userspath/$self->{tmpfile}")) {
-	if ($ENV{HTTP_USER_AGENT}) {
-	  print "Content-Type: text/html\n\n";
-	}
-	print "$userspath/$self->{tmpfile} : $!";
-	die;
+        if ($ENV{HTTP_USER_AGENT}) {
+          print "Content-Type: text/html\n\n";
+        }
+        print "$userspath/$self->{tmpfile} : $!";
+        die;
       }
       print FH $self->{$data};
       close(FH);
@@ -126,7 +135,7 @@ sub new {
 
   $self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
-  $self->{version} = "3.0.3";
+  $self->{version} = "3.0.6";
   $self->{dbversion} = "3.0.0";
 
   bless $self, $type;
@@ -169,11 +178,16 @@ sub escape {
   my ($self, $str, $beenthere) = @_;
 
   # for Apache 2 we escape strings twice
-  if (($ENV{SERVER_SIGNATURE} =~ /Apache\/2\.(\d+)\.(\d+)/) && !$beenthere) {
-    $str = $self->escape($str, 1) if $1 == 0 && $2 < 44;
-  }
+#  if (($ENV{SERVER_SIGNATURE} =~ /Apache\/2\.(\d+)\.(\d+)/) && !$beenthere) {
+#    $str = $self->escape($str, 1) if $1 == 0 && $2 < 44;
+#  }
 
-  $str =~ s/([^a-zA-Z0-9_.-])/sprintf("%%%02x", ord($1))/ge;
+#  $str =~ s/([^a-zA-Z0-9_.-])/sprintf("%%%02x", ord($1))/ge;
+
+  $str = uri_escape($str);
+
+#carp("escape str: $str \n");
+
   $str;
 
 }
@@ -181,26 +195,35 @@ sub escape {
 
 sub unescape {
   my ($self, $str) = @_;
+#carp("unescape str: $str \n");
 
+#  $str =~ s/%([0-9a-fA-Z]{2})/pack("c",hex($1))/eg;
+#  $str =~ s/\r?\n/\n/g;
+
+# bp 2015/05 Due to "use open IO => ':encoding(utf8)';" output gets encoded again - which is incorrect
+  Encode::_utf8_off($str);
+  $str = Encode::decode_utf8( uri_unescape($str), Encode::FB_QUIET );
   $str =~ tr/+/ /;
+  $str =~ s/\r?\n/\n/g;
   $str =~ s/\\$//;
 
-  $str =~ s/%([0-9a-fA-Z]{2})/pack("c",hex($1))/eg;
-  $str =~ s/\r?\n/\n/g;
+#carp("unescape str now: $str \n");
 
-  $str;
+  return $str;
 
 }
 
 
 sub quote {
   my ($self, $str) = @_;
-
   if ($str && ! ref($str)) {
+#carp("quote: $str \n");
     $str =~ s/"/&quot;/g;
     $str =~ s/\+/\&#43;/g;
-  }
 
+# bp 2015/05 - escape the @ in the login string
+    $str =~ s/@/\@/g;
+  }
   $str;
 
 }
@@ -210,7 +233,10 @@ sub unquote {
   my ($self, $str) = @_;
 
   if ($str && ! ref($str)) {
+#carp("unquote: $str \n");
     $str =~ s/&quot;/"/g;
+    $str =~ s/\\@/\@/g;
+
   }
 
   $str;
@@ -345,7 +371,7 @@ sub select_option {
 sub hide_form {
   my $self = shift;
 
-  my $str;
+  my $str = '';
 
   if (@_) {
     for (@_) { $str .= qq|<input type="hidden" name="$_" value="|.$self->quote($self->{$_}).qq|">\n| }
@@ -581,13 +607,10 @@ sub set_cookie {
 
 sub redirect {
   my ($self, $msg) = @_;
-
   if ($self->{callback}) {
-
     $self->{callback} .= "&redirectmsg=$msg";
     my ($script, $argv) = split(/\?/, $self->{callback});
     exec ("perl", $script, $argv);
-
   } else {
 
     $self->info($msg);
@@ -786,10 +809,10 @@ sub parse_template {
 
 # bp 2014/11 adjust template directory
   if (-f "$self->{templates}/$self->{dbname}/$self->{language_code}/$self->{IN}") {
-    open(IN, "$self->{templates}/$self->{dbname}/$self->{language_code}/$self->{IN}") or $self->error("$self->{templates}/$self->{dbname}/$self->{language_code}/$self->{IN} : $!");
+    open(IN, "<:utf8", "$self->{templates}/$self->{dbname}/$self->{language_code}/$self->{IN}") or $self->error("$self->{templates}/$self->{dbname}/$self->{language_code}/$self->{IN} : $!");
 #    open(IN, "$self->{templates}/$self->{language_code}/$self->{IN}") or $self->error("$self->{templates}/$self->{language_code}/$self->{IN} : $!");
   } else {
-    open(IN, "$self->{templates}/$self->{dbname}/$self->{IN}") or $self->error("$self->{templates}/$self->{dbname}/$self->{IN} : $!");
+    open(IN, "<:utf8", "$self->{templates}/$self->{dbname}/$self->{IN}") or $self->error("$self->{templates}/$self->{dbname}/$self->{IN} : $!");
 #    open(IN, "$self->{templates}/$self->{IN}") or $self->error("$self->{templates}/$self->{IN} : $!");
   }
 
@@ -801,22 +824,21 @@ sub parse_template {
   my $fileid = time;
   $fileid .= $$;
   my $tmpfile = $self->{IN};
+
   $tmpfile =~ s/\./_$self->{fileid}./ if $self->{fileid};
   $self->{tmpfile} = "$userspath/${fileid}_${tmpfile}";
 
   if ($self->{format} =~ /(ps|pdf)/ || $self->{media} eq 'email') {
     $out = $self->{OUT};
-    $self->{OUT} = ">$self->{tmpfile}";
+    $self->{OUT} = "$self->{tmpfile}";
   }
 
-
+  # bp 2015/05 open files for utf8 output - working fine
   if ($self->{OUT}) {
-    open(OUT, "$self->{OUT}") or $self->error("$self->{OUT} : $!");
+    open(OUT, ">:utf8", "$self->{OUT}") or $self->error("$self->{OUT} : $!");
   } else {
-    open(OUT, ">-") or $self->error("STDOUT : $!");
-
+    open(OUT, ">-:utf8") or $self->error("STDOUT : $!");
     $self->header;
-
   }
 
   $self->{copies} ||= 1;
@@ -1179,8 +1201,8 @@ sub process_template {
 	$var = $k[2];
 
 # bp 2014/11 updates template location
-	unless (open(INC, "$self->{templates}/$self->{dbname}/$self->{language_code}/$var")) {
-#	unless (open(INC, "$self->{templates}/$self->{language_code}/$var")) {
+#	unless (open(INC, "<:utf8", "$self->{templates}/$self->{dbname}/$self->{language_code}/$var")) {
+	unless (open(INC, "$self->{templates}/$self->{language_code}/$var")) {
 	  $err = $!;
 	  $self->cleanup;
 	  $self->error("$self->{templates}/$self->{dbname}/$self->{language_code}/$var : $err");
@@ -1224,14 +1246,12 @@ sub process_template {
       # assume loop after 10 includes of the same file
       next if $include{$var} > 10;
 
-# bp 2014/11 updates template location
-      unless (open(INC, "$self->{templates}/$self->{dbname}/$self->{language_code}/$var")) {
-#      unless (open(INC, "$self->{templates}/$self->{language_code}/$var")) {
-	$err = $!;
-	$self->cleanup;
+# bp 2014/11 updates template location, open utf8 file
+      unless (open(INC, "<:utf8", "$self->{templates}/$self->{dbname}/$self->{language_code}/$var")) {
+        $err = $!;
+        $self->cleanup;
 
         $self->error("$self->{templates}/$self->{dbname}/$self->{language_code}/$var : $err");
-#	$self->error("$self->{templates}/$self->{language_code}/$var : $err");
       }
       unshift(@_, <INC>);
       close(INC);
@@ -1447,8 +1467,6 @@ sub process_tex {
     $self->error("$self->{tmpfile} : $err");
   }
 
-  binmode(IN);
-
   chdir("$self->{cwd}");
 
   if ($self->{OUT}) {
@@ -1462,7 +1480,6 @@ sub process_tex {
     # launch application
     print qq|Content-Type: application/$self->{format}
 Content-Disposition: attachment; filename="$self->{tmpfile}"\n\n|;
-
     unless (open(OUT, ">-")) {
       $err = $!;
       $self->cleanup;
@@ -1471,8 +1488,9 @@ Content-Disposition: attachment; filename="$self->{tmpfile}"\n\n|;
 
   }
 
-  binmode(OUT);
-
+  # bp 2015/05 use binary mode to read and write PDF file
+  binmode IN;
+  binmode OUT;
   while (<IN>) {
     print OUT $_;
   }
@@ -2164,20 +2182,19 @@ sub print_button {
 sub dbconnect {
   my ($self, $myconfig) = @_;
 
-# bp 2015/05 - perl5.20 - 'wide character in print' messages
-  binmode STDOUT, ":utf8";
-
   # connect to database
+#    my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd} ) or $self->dberror;
 
-  my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}) or $self->dberror;
+  # bp 2015/01 pg_enable_utf8: default=-1 strings are marked as utf8, 0 nothing marked, 1 strings always marked regardless of client_encoding
+    my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd},
+      { pg_enable_utf8 => 1 } ) or $self->dberror;
 
   # set db options
   if ($myconfig->{dboptions}) {
     $dbh->do($myconfig->{dboptions}) || $self->dberror($myconfig->{dboptions});
   }
 
-  $dbh;
-
+  $dbh
 }
 
 
@@ -2185,8 +2202,11 @@ sub dbconnect_noauto {
   my ($self, $myconfig) = @_;
 
   # connect to database
+#    my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}, {AutoCommit => 0} ) or $self->dberror;
 
-  my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}, {AutoCommit => 0}) or $self->dberror;
+  # bp 2015/01 pg_enable_utf8: default=-1 strings are marked as utf8, 0 nothing marked, 1 strings always marked regardless of client_encoding
+    my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd},
+      {AutoCommit => 0, pg_enable_utf8 => 1} ) or $self->dberror;
 
   # set db options
   if ($myconfig->{dboptions}) {
@@ -2927,20 +2947,19 @@ sub create_links {
 
   $self->get_peripherals($dbh);
 
-
   $self->{cashovershort_accno_id} *= 1;
   $query = qq|SELECT accno
               FROM chart
-	      WHERE id = $self->{cashovershort_accno_id}|;
+          WHERE id = $self->{cashovershort_accno_id}|;
   ($self->{cashovershort}) = $dbh->selectrow_array($query);
 
   # now get the account numbers
   $query = qq|SELECT c.accno, c.description, c.link,
               l.description AS translation
               FROM chart c
-	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-	      WHERE c.link LIKE '%$module%'
-	      ORDER BY c.accno|;
+          LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
+          WHERE c.link LIKE '%$module%'
+          ORDER BY c.accno|;
   $sth = $dbh->prepare($query);
   $sth->execute || $self->dberror($query);
 
@@ -2949,13 +2968,12 @@ sub create_links {
 
     foreach my $key (split /:/, $ref->{link}) {
       if ($key =~ /$module/) {
-	# cross reference for keys
-	$xkeyref{$ref->{accno}} = $key;
+        # cross reference for keys
+        $xkeyref{$ref->{accno}} = $key;
 
-	$ref->{description} = $ref->{translation} if $ref->{translation};
-
-	push @{ $self->{"${module}_links"}{$key} }, { accno => $ref->{accno},
-                                       description => $ref->{description} };
+        $ref->{description} = $ref->{translation} if $ref->{translation};
+        push @{ $self->{"${module}_links"}{$key} }, { accno => $ref->{accno},
+                                           description => $ref->{description} };
 
         $self->{accounts} .= "$ref->{accno} " if $key !~ /tax/;
       }
@@ -2970,29 +2988,29 @@ sub create_links {
   if ($self->{id}) {
 
     $query = qq|SELECT a.invnumber, a.transdate,
-                a.${vc}_id, a.datepaid, a.duedate, a.ordnumber,
-		a.taxincluded, a.curr AS currency, a.notes, a.intnotes,
-		a.terms, a.cashdiscount, a.discountterms,
-		c.name AS $vc, c.${vc}number, a.department_id,
-		d.description AS department,
-		a.amount AS oldinvtotal, a.paid AS oldtotalpaid,
-		a.employee_id, e.name AS employee, c.language_code,
-		a.ponumber, a.approved,
-		br.id AS batchid, br.description AS batchdescription,
-		a.description, a.onhold, a.exchangerate, a.dcn,
-		ch.accno AS bank_accno, ch.description AS bank_accno_description,
-		t.description AS bank_accno_translation,
-		pm.description AS paymentmethod, a.paymentmethod_id
-		FROM $arap a
-		JOIN $vc c ON (a.${vc}_id = c.id)
-		LEFT JOIN employee e ON (e.id = a.employee_id)
-		LEFT JOIN department d ON (d.id = a.department_id)
-		LEFT JOIN vr ON (vr.trans_id = a.id)
-		LEFT JOIN br ON (br.id = vr.br_id)
-		LEFT JOIN chart ch ON (ch.id = a.bank_id)
-		LEFT JOIN translation t ON (t.trans_id = ch.id AND t.language_code = '$myconfig->{countrycode}')
-		LEFT JOIN paymentmethod pm ON (pm.id = a.paymentmethod_id)
-		WHERE a.id = $self->{id}|;
+    a.${vc}_id, a.datepaid, a.duedate, a.ordnumber,
+    a.taxincluded, a.curr AS currency, a.notes, a.intnotes,
+    a.terms, a.cashdiscount, a.discountterms,
+    c.name AS $vc, c.${vc}number, a.department_id,
+    d.description AS department,
+    a.amount AS oldinvtotal, a.paid AS oldtotalpaid,
+    a.employee_id, e.name AS employee, c.language_code,
+    a.ponumber, a.approved,
+    br.id AS batchid, br.description AS batchdescription,
+    a.description, a.onhold, a.exchangerate, a.dcn,
+    ch.accno AS bank_accno, ch.description AS bank_accno_description,
+    t.description AS bank_accno_translation,
+    pm.description AS paymentmethod, a.paymentmethod_id
+    FROM $arap a
+    JOIN $vc c ON (a.${vc}_id = c.id)
+    LEFT JOIN employee e ON (e.id = a.employee_id)
+    LEFT JOIN department d ON (d.id = a.department_id)
+    LEFT JOIN vr ON (vr.trans_id = a.id)
+    LEFT JOIN br ON (br.id = vr.br_id)
+    LEFT JOIN chart ch ON (ch.id = a.bank_id)
+    LEFT JOIN translation t ON (t.trans_id = ch.id AND t.language_code = '$myconfig->{countrycode}')
+    LEFT JOIN paymentmethod pm ON (pm.id = a.paymentmethod_id)
+    WHERE a.id = $self->{id}|;
     $sth = $dbh->prepare($query);
     $sth->execute || $self->dberror($query);
 
@@ -3026,7 +3044,7 @@ sub create_links {
     # get printed, emailed
     $query = qq|SELECT s.printed, s.emailed, s.spoolfile, s.formname
                 FROM status s
-		WHERE s.trans_id = $self->{id}|;
+    WHERE s.trans_id = $self->{id}|;
     $sth = $dbh->prepare($query);
     $sth->execute || $self->dberror($query);
 
@@ -3046,18 +3064,18 @@ sub create_links {
     #            and ac.fxamount (line item in ap/ar currency)
     $query = qq|SELECT c.accno, c.description, ac.source, ac.amount, ac.fx_transaction,
                 ac.memo, ac.transdate, ac.cleared, ac.project_id, ac.fxamount,
-		p.projectnumber, ac.id, y.exchangerate,
-		l.description AS translation,
-		pm.description AS paymentmethod, y.paymentmethod_id, y.fxamount as amountpaid
-		FROM acc_trans ac
-		JOIN chart c ON (c.id = ac.chart_id)
-		LEFT JOIN project p ON (p.id = ac.project_id)
-		LEFT JOIN payment y ON (y.trans_id = ac.trans_id AND ac.id = y.id)
-		LEFT JOIN paymentmethod pm ON (pm.id = y.paymentmethod_id)
-		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		WHERE ac.trans_id = $self->{id}
-		AND ac.fx_transaction = '0'
-		ORDER BY ac.transdate|;
+    p.projectnumber, ac.id, y.exchangerate,
+    l.description AS translation,
+    pm.description AS paymentmethod, y.paymentmethod_id, y.fxamount as amountpaid
+    FROM acc_trans ac
+    JOIN chart c ON (c.id = ac.chart_id)
+    LEFT JOIN project p ON (p.id = ac.project_id)
+    LEFT JOIN payment y ON (y.trans_id = ac.trans_id AND ac.id = y.id)
+    LEFT JOIN paymentmethod pm ON (pm.id = y.paymentmethod_id)
+    LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
+    WHERE ac.trans_id = $self->{id}
+    AND ac.fx_transaction = '0'
+    ORDER BY ac.transdate|;
     $sth = $dbh->prepare($query);
     $sth->execute || $self->dberror($query);
 

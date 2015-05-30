@@ -2244,7 +2244,7 @@ sub ex_payment {
     JS->check_all(qw(allbox ndx_));
 
     print qq|
-  
+
 <body>
 
 <form method=post action=$form->{script}>
@@ -2878,8 +2878,6 @@ sub export_payments {
 
     open( OUT, ">-" ) or $form->error("STDOUT : $!");
 
-    binmode(OUT);
-
     print qq|Content-Type: application/file;
 Content-Disposition: attachment; filename="$form->{filename}.$form->{filetype}"\n\n|;
 
@@ -3107,10 +3105,10 @@ sub import_parts_customers {
             $form->{"sellprice_$i"}     *= 1;
 
             $query = qq|INSERT INTO partscustomer(
-			parts_id, customer_id, 
-			pricegroup_id, pricebreak, 
-			sellprice, validfrom, 
-			validto, curr) 
+			parts_id, customer_id,
+			pricegroup_id, pricebreak,
+			sellprice, validfrom,
+			validto, curr)
 		VALUES ($form->{"parts_id_$i"}, $form->{"customer_id_$i"},
 			$form->{"pricegroup_id_$i"}, $form->{"pricebreak_$i"},
 			$form->{"sellprice_$i"}, $form->{"validfrom_$i"},
@@ -3225,10 +3223,10 @@ sub import_parts_customers {
             $form->{"sellprice_$i"}     *= 1;
 
             $query = qq|INSERT INTO partscustomer(
-			parts_id, customer_id, 
-			pricegroup_id, pricebreak, 
-			sellprice, validfrom, 
-			validto, curr) 
+			parts_id, customer_id,
+			pricegroup_id, pricebreak,
+			sellprice, validfrom,
+			validto, curr)
 		VALUES ($form->{"parts_id_$i"}, $form->{"customer_id_$i"},
 			$form->{"pricegroup_id_$i"}, $form->{"pricebreak_$i"},
 			$form->{"sellprice_$i"}, $form->{"validfrom_$i"},
@@ -3256,10 +3254,10 @@ sub import_parts_vendors {
             $form->{"lastcost_$i"}  *= 1;
 
             $query = qq|INSERT INTO partsvendor(
-			vendor_id, parts_id, 
-			partnumber, leadtime, 
+			vendor_id, parts_id,
+			partnumber, leadtime,
 			lastcost, curr)
-		VALUES ($form->{"vendor_id_$i"}, $form->{"parts_id_$i"}, 
+		VALUES ($form->{"vendor_id_$i"}, $form->{"parts_id_$i"},
 			'$form->{"vendorpartnumber_$i"}', $form->{"leadtime_$i"},
 			$form->{"lastcost_$i"}, '$form->{"curr_$i"}'
 		)|;

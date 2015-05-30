@@ -14,6 +14,11 @@
 use Data::Dumper;
 use feature 'say';
 
+# bp 2015/05 utf8 mode
+use feature 'unicode_strings';
+use open IO => ':encoding(utf8)';
+use open ':std';
+
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if ( -f "$userspath/carp_debug.inc" ) {
 #  eval { require "$userspath/carp_debug.inc"; };
@@ -1687,7 +1692,6 @@ sub convert {
 }
 
 sub search {
-
   $form->create_links( $form->{ARAP}, \%myconfig, $form->{vc} );
 
   $form->{"select$form->{ARAP}"} = "\n";
@@ -2056,7 +2060,6 @@ sub search {
 }
 
 sub transactions {
-
   if ( $form->{ $form->{vc} } ) {
     ( $form->{ $form->{vc} }, $form->{"$form->{vc}_id"} ) = split( /--/, $form->{ $form->{vc} } );
   }
@@ -2362,7 +2365,6 @@ sub transactions {
 
   # escape callback for href
   $callback = $form->escape($callback);
-
   if ( @{ $form->{transactions} } ) {
     $sameitem = $form->{transactions}->[0]->{ $form->{sort} };
   }
@@ -2590,7 +2592,6 @@ qq|<td><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref
 |;
 
   $form->{helpref} = $form->escape( $form->{helpref}, 1 );
-
   $form->hide_form( "$form->{vc}", "$form->{vc}_id" );
   $form->hide_form(qw(helpref callback path login));
 

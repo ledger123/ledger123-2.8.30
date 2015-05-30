@@ -838,13 +838,13 @@ sub transaction {
 
   if ($form->{id}) {
     $query = qq|SELECT g.*,
-                d.description AS department,
-		br.id AS batchid, br.description AS batchdescription
-                FROM gl g
-	        LEFT JOIN department d ON (d.id = g.department_id)
-		LEFT JOIN vr ON (vr.trans_id = g.id)
-		LEFT JOIN br ON (br.id = vr.br_id)
-	        WHERE g.id = $form->{id}|;
+          d.description AS department,
+          br.id AS batchid, br.description AS batchdescription
+          FROM gl g
+          LEFT JOIN department d ON (d.id = g.department_id)
+          LEFT JOIN vr ON (vr.trans_id = g.id)
+          LEFT JOIN br ON (br.id = vr.br_id)
+          WHERE g.id = $form->{id}|;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
 

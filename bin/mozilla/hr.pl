@@ -1802,7 +1802,6 @@ sub update_payroll {
       if ( $form->{payrolldeduction}{ $ed->{id} }{employeepays} || $form->{payrolldeduction}{ $ed->{id} }{employerpays} ) {
 #      if ( $form->{payrolldeduction}{ $ed->{id} }{employeepays} ) {
 
-#carp("deduction: $form->{\"deduction_$i\"} \n");
         my $amtset = 0;
         for $ref ( @{ $form->{all_deductionrate} } ) {
 
@@ -1872,7 +1871,6 @@ sub update_payroll {
               ##  below lines: if wage is below 300 it is also below 400 -> stop at line 2 (below = 300)
               ##  above lines: check the next row: if wage is above 300 it could also be above 400
               ##
-#carp("yearly salary is: $temp->{salary} \n");
               if ( ( $ref->{below} > 0 ) && ( $temp->{salary} <= $ref->{below} ) ) {
                 $form->{"deduct_$i"} = $form->{"damount_$i"};
                 $ok = 0;

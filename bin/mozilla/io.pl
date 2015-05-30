@@ -11,6 +11,11 @@
 #
 #======================================================================
 
+# bp 2015/05 utf8 mode
+use feature 'unicode_strings';
+use open IO => ':encoding(utf8)';
+use open ':std';
+
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "$userspath/carp_debug.inc") {
 #  eval { require "$userspath/carp_debug.inc"; };
@@ -25,6 +30,7 @@ if ( -f "$form->{path}/$form->{login}_io.pl" ) {
 }
 
 require "$form->{path}/js.pl";
+
 
 
 1;
@@ -1127,6 +1133,7 @@ sub validate_items {
 
     for $i ( 1 .. $form->{rowcount} - 1 ) {
         $form->isblank( "partnumber_$i", $locale->text('Number missing in Row') . " $i" );
+
     }
 
 }

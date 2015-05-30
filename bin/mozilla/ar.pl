@@ -11,6 +11,9 @@
 #
 #======================================================================
 
+# bp 2015/05 utf8 mode
+use feature 'unicode_strings';
+
 use SL::PE;
 use SL::IS;
 

@@ -25,6 +25,11 @@ $sendmail = "| /usr/sbin/sendmail -t";
 $latex = 0;
 %printer = ();
 
+# bp 2015/05 utf8 mode
+use feature 'unicode_strings';
+use open IO => ':encoding(utf8)';
+use open ':std';
+
 #bp 2014/11 we need latex and environment variables - used to be in sql-ledger.conf
 if (-f "./sql-ledger-sys.conf") {
   eval { require "./sql-ledger-sys.conf"; };
@@ -37,7 +42,7 @@ if ( $res == 0 ) { $get_exrate_prog = '' };
 #
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "./users/carp_debug.inc") {
-  eval { require "./users/carp_debug.inc"; };
+#  eval { require "./users/carp_debug.inc"; };
 }
 ########## end ###########################################
 

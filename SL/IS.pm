@@ -862,7 +862,6 @@ sub project_description {
 sub post_invoice {
   my ( $self, $myconfig, $form, $dbh ) = @_;
 
-
   my $disconnect = ($dbh) ? 0 : 1;
 
   # connect to database, turn off autocommit
@@ -1656,7 +1655,7 @@ sub post_invoice {
 
   $dbh->disconnect if $disconnect;
 
-  # $rc;
+  return $rc;
 
 }
 

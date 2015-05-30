@@ -25,6 +25,11 @@ $sendmail = "| /usr/sbin/sendmail -t";
 $latex = 0;
 %printer = ();
 
+# bp 2015/05 utf8 mode
+use feature 'unicode_strings';
+use open IO => ':encoding(utf8)';
+use open ':std';
+
 #bp 2014/11 we need latex and environment variables - used to be in sql-ledger.conf
 if (-f "./sql-ledger-sys.conf") {
   eval { require "./sql-ledger-sys.conf"; };
@@ -37,11 +42,10 @@ if ( $res == 0 ) { $get_exrate_prog = '' };
 #
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "$userspath/carp_debug.inc") {
-  eval { require "$userspath/carp_debug.inc"; };
+#  eval { require "$userspath/carp_debug.inc"; };
 }
 
-carp("this is is.pl \n");
-carp("res: $res \n");
+#carp("this is is.pl \n");
 ########## end ###########################################
 
 $| = 1;
@@ -97,6 +101,8 @@ $SIG{__DIE__} = sub { eval { $form->error($_[0]); exit; } };
 #$myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
 map { $form->{$_} = $myconfig{$_} } qw(stylesheet timeout) unless ($form->{type} eq 'preferences');
 
+#carp("login: $form->{login} - path: $form->{path} \n");
+
 $form->{path} =~ s/\.\.//g;
 if ($form->{path} !~ /^bin\//) {
   $form->error($locale->text('Invalid path!')."\n");
@@ -137,12 +143,13 @@ if (-f "$form->{path}/$form->{login}_$form->{script}") {
   eval { require "$form->{path}/$form->{login}_$form->{script}"; };
 }
 
-
 if ($form->{action}) {
   # window title bar, user info
   $form->{titlebar} = "SQL-Ledger ".$locale->text('Version'). " $form->{version} - $myconfig{name} - $myconfig{dbname}";
 
   &check_password;
+
+#$form->{notes} = Encode::decode_utf8($form->{notes});
 
   if (substr($form->{action}, 0, 1) =~ /( |\.)/) {
     &{ $form->{nextsub} };
