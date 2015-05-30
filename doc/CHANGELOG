@@ -4,6 +4,14 @@ bp 2015/5/7
   was not available.
   Fix: load the program with 'eval'. If the program is not correct reset the $get_exrate_prog variable
 
+bp 2015/05/26
+bugfix
+  bug: bep_201505-3
+  Following the upgrade to Debian 8 (Jessie) Ledger didn't work anymore. Sreen showed one or more lines reading:
+  "Wide characters in print", Japanese strings were partly garbled and transactions could not be entered.
+  Fix: Jessie ships with Perl 5.20 - and in this Perl version the Unicode handling is stricter than in previous
+  versions. Main problems were the correct declaration of an UTF-8 environment and escaping/unescaping of UTF-8
+  strings.
 
 bp 2015/5/7
 bugfix

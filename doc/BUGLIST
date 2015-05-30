@@ -4,6 +4,11 @@ BUGLIST
   fields have been added to many screens. Upload of reference docs is listed as planned function for
   SQL-Ledger (what's ahead). So, strictly speaking not a bug but an uncompleted function.
 
+bp 2015/05/02
+  bug: bep_201505-3
+  Following the upgrade to Debian 8 (Jessie) Ledger didn't work anymore. Sreen showed one or more lines reading:
+  "Wide characters in print", Japanese strings were partly garbled and transactions could not be entered.
+
 bp 2015/5/4
   bug: bep_201505-2
   The optional loading of the "exchangerate_lookup.pl" caused a browser 500 error because the Finance::Quote
