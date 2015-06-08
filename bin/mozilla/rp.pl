@@ -211,6 +211,7 @@ sub report {
             for (@curr) { $form->{selectcurrency} .= "$_\n" }
 
             $curr = qq|
+            <input type=hidden name=fx_transaction value=1>
           <tr>
 	    <th align=right>| . $locale->text('Currency') . qq|</th>
 	    <td><select name=currency>|
@@ -1429,7 +1430,7 @@ sub list_accounts {
         $description = $form->escape( $ref->{description} );
 
         $href = qq|ca.pl?action=list_transactions|;
-        for (qw(path accounttype login fromdate todate l_heading l_subtotal project_id nextsub)) { $href .= "&$_=$form->{$_}" }
+        for (qw(path accounttype login fromdate todate l_heading l_subtotal project_id nextsub fx_transaction)) { $href .= "&$_=$form->{$_}" }
         $href .= "&sort=transdate&prevreport=$callback&department=$department&projectnumber=$projectnumber&title=$title";
 
         if ( $form->{accounttype} eq 'gifi' ) {
