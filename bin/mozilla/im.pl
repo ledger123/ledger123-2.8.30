@@ -3735,6 +3735,17 @@ sub prepare_datev2 {
      for (qw(reference description transdate accno debit credit)){ delete $form->{"${_}_$i"} }
   }
 
+  # matching amounts and accounts should not be same
+  for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
+     for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} and accno <> '$row->{accno}' limit 1|)->hashes)){
+        $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
+            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount});
+        $form->{dbs}->query('delete from debits where id = ?', $row->{id});
+        $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
+     }
+  }
+
+  # matching amount but accounts can be same
   for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
      for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} limit 1|)->hashes)){
         $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
