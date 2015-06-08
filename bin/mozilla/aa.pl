@@ -121,7 +121,7 @@ sub edit {
   
   $form->helpref("${arap}_$form->{type}", $myconfig{countrycode});
  
-  &display_form;
+  &update;
 
 }
 
