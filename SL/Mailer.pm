@@ -16,7 +16,7 @@ package Mailer;
 $userspath = "users";
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "$userspath/carp_debug.inc") {
-#  eval { require "$userspath/carp_debug.inc"; };
+  eval { require "$userspath/carp_debug.inc"; };
 }
 
 sub new {
@@ -29,7 +29,7 @@ sub new {
 
 sub send {
   my ($self, $out) = @_;
-
+carp("send \n");
   my $boundary = time;
   $boundary = "SL-$self->{version}-$boundary";
   my $domain = $self->{from};
@@ -45,8 +45,11 @@ sub send {
     open(OUT, ">-") or return "STDOUT : $!";
   }
 
+  # bp 2015/06
+  binmode OUT,":utf8";
+
   $self->{contenttype} ||= "text/plain";
-  
+
   my %h;
   for (qw(from to cc bcc)) {
     $self->{$_} =~ s/\&lt;/</g;
@@ -54,11 +57,13 @@ sub send {
     $self->{$_} =~ s/(\/|\\|\$)//g;
     $h{$_} = $self->{$_};
   }
- 
+
+carp("from: $h{from} - to: $h{to} - cc: $h{cc} - bcc: $h{bcc} email: $self->{email} - emply. $self->{employee} \n");
+
   $h{cc} = "Cc: $h{cc}\n" if $self->{cc};
   $h{bcc} = "Bcc: $h{bcc}\n" if $self->{bcc};
   $h{subject} = ($self->{subject} =~ /([\x00-\x1F]|[\x7B-\xFFFF])/) ? "Subject: =?$self->{charset}?B?".&encode_base64($self->{subject},"")."?=" : "Subject: $self->{subject}";
-  
+
   if ($self->{notify}) {
     if ($self->{notify} =~ /\@/) {
       $h{notify} = "Disposition-Notification-To: $self->{notify}\n";
@@ -66,7 +71,7 @@ sub send {
       $h{notify} = "Disposition-Notification-To: $h{from}\n";
     }
   }
-  
+
   print OUT qq|From: $h{from}
 To: $h{to}
 $h{cc}$h{bcc}$h{subject}
@@ -93,18 +98,16 @@ $self->{message}
     foreach my $attachment (@{ $self->{attachments} }) {
 
       my $application = ($attachment =~ /(^\w+$)|\.(html|text|txt|sql)$/) ? "text" : "application";
-      
       unless (open IN, $attachment) {
-	close(OUT);
-	return "$attachment : $!";
+        close(OUT);
+        return "$attachment : $!";
       }
 
       binmode(IN);
-      
+
       my $filename = $attachment;
       # strip path
       $filename =~ s/(.*\/|$self->{fileid})//g;
-      
       print OUT qq|--${boundary}
 Content-Type: $application/$self->{format}; name="$filename"; charset="$self->{charset}"
 Content-Transfer-Encoding: BASE64
@@ -117,7 +120,7 @@ Content-Disposition: attachment; filename="$filename"\n\n|;
       print OUT &encode_base64($msg);
 
       close(IN);
-      
+
     }
     print OUT qq|--${boundary}--\n|;
 
@@ -131,7 +134,7 @@ $self->{message}
   close(OUT);
 
   return "";
-  
+
 }
 
 
@@ -156,7 +159,7 @@ sub encode_base64 ($;$) {
     $res =~ s/(.{1,60})/$1$eol/g;
   }
   return $res;
-  
+
 }
 
 

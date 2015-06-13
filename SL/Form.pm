@@ -23,13 +23,11 @@ use URI::Escape::XS qw/uri_escape uri_unescape/;
 $userspath = "users";
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "./users/carp_debug.inc") {
-  eval { require "./users/carp_debug.inc"; };
+#  eval { require "./users/carp_debug.inc"; };
 }
 
 sub new {
   my ($type, $userspath) = @_;
-
-#carp("Form.pm - new \n");
 
   my $self = {};
 
@@ -42,9 +40,6 @@ sub new {
   if ($ARGV[0]) {
     $_ = $ARGV[0];
   }
-
-# bp
-#carp("argv: $_ \n");
 
   %$self = split /[&=]/;
 
@@ -186,8 +181,6 @@ sub escape {
 
   $str = uri_escape($str);
 
-#carp("escape str: $str \n");
-
   $str;
 
 }
@@ -195,7 +188,6 @@ sub escape {
 
 sub unescape {
   my ($self, $str) = @_;
-#carp("unescape str: $str \n");
 
 #  $str =~ s/%([0-9a-fA-Z]{2})/pack("c",hex($1))/eg;
 #  $str =~ s/\r?\n/\n/g;
@@ -207,8 +199,6 @@ sub unescape {
   $str =~ s/\r?\n/\n/g;
   $str =~ s/\\$//;
 
-#carp("unescape str now: $str \n");
-
   return $str;
 
 }
@@ -217,10 +207,8 @@ sub unescape {
 sub quote {
   my ($self, $str) = @_;
   if ($str && ! ref($str)) {
-#carp("quote: $str \n");
     $str =~ s/"/&quot;/g;
     $str =~ s/\+/\&#43;/g;
-
 # bp 2015/05 - escape the @ in the login string
     $str =~ s/@/\@/g;
   }
@@ -233,10 +221,8 @@ sub unquote {
   my ($self, $str) = @_;
 
   if ($str && ! ref($str)) {
-#carp("unquote: $str \n");
     $str =~ s/&quot;/"/g;
     $str =~ s/\\@/\@/g;
-
   }
 
   $str;
@@ -904,43 +890,42 @@ sub parse_template {
 
       # if we send html or plain text inline
       if (($self->{format} =~ /(html|txt|xml)/) && ($self->{sendmode} eq 'inline')) {
-	my $br = "";
-	$br = "<br>" if $self->{format} eq 'html';
+        my $br = "";
+        $br = "<br>" if $self->{format} eq 'html';
 
-	$mail->{contenttype} = "text/$self->{format}";
+        $mail->{contenttype} = "text/$self->{format}";
 
         $mail->{message} =~ s/\r?\n/$br\n/g;
-	$myconfig->{signature} =~ s/\\n/$br\n/g;
-	$mail->{message} .= "$br\n-- $br\n$myconfig->{signature}\n$br" if $myconfig->{signature};
+        $myconfig->{signature} =~ s/\\n/$br\n/g;
+        $mail->{message} .= "$br\n-- $br\n$myconfig->{signature}\n$br" if $myconfig->{signature};
 
-	unless (open(IN, $self->{tmpfile})) {
-	  $err = $!;
-	  $self->cleanup;
-	  $self->error("$self->{tmpfile} : $err");
-	}
+        unless (open(IN, "<:utf8", $self->{tmpfile})) {
+          $err = $!;
+          $self->cleanup;
+          $self->error("$self->{tmpfile} : $err");
+        }
+        while (<IN>) {
+          $mail->{message} .= $_;
+        }
 
-	while (<IN>) {
-	  $mail->{message} .= $_;
-	}
-
-	close(IN);
+        close(IN);
 
       } else {
+        # not inline
+        @{ $mail->{attachments} } = ($self->{tmpfile});
 
-	@{ $mail->{attachments} } = ($self->{tmpfile});
-
-	$myconfig->{signature} =~ s/\\n/\n/g;
-	$mail->{message} .= "\n-- \n$myconfig->{signature}" if $myconfig->{signature};
+        $myconfig->{signature} =~ s/\\n/\n/g;
+        $mail->{message} .= "\n-- \n$myconfig->{signature}" if $myconfig->{signature};
 
       }
 
       if ($err = $mail->send($out)) {
-	$self->cleanup;
-	$self->error($err);
+        $self->cleanup;
+        $self->error($err);
       }
 
     } else {
-
+      # not email
       $self->process_tex($out);
 
     }

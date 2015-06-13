@@ -107,7 +107,7 @@ $sf
 	      <tr>
 		<th align=right>|.$locale->text('Name').qq|</th>
 		<td><input class=login name=login size=30></td>
-	      </tr> 
+	      </tr>
 	      <tr>
 		<th align=right>|.$locale->text('Password').qq|</th>
 		<td><input class=login type=password name=password size=30></td>
@@ -129,7 +129,7 @@ $sf
     </td>
   </tr>
 </table>
-  
+
 </body>
 </html>
 |;
@@ -139,7 +139,7 @@ $sf
 
 sub selectdataset {
   my ($login) = @_;
-  
+
   if (-f "css/sql-ledger.css") {
     $form->{stylesheet} = "sql-ledger.css";
   }
@@ -176,7 +176,7 @@ sub selectdataset {
 	      <tr>
 		<th align=right>|.$locale->text('Name').qq|</th>
 		<td>$form->{login}</td>
-	      </tr> 
+	      </tr>
 	      <tr>
 		<th align=right>|.$locale->text('Password').qq|</th>
 		<td><input class=login type=password name=password size=30 value="$form->{password}"></td>
@@ -184,9 +184,9 @@ sub selectdataset {
 	      <tr>
 		<th align=right>|.$locale->text('Company').qq|</th>
 		<td>|;
-		
+
 		$form->hide_form(qw(js path));
-	      
+
 		$checked = "checked";
 		for (sort { $login{$a} cmp $login{$b} } keys %{ $login }) {
 		  print qq|
@@ -210,7 +210,7 @@ sub selectdataset {
     </td>
   </tr>
 </table>
-  
+
 </body>
 </html>
 |;
@@ -222,7 +222,7 @@ sub selectdataset {
 sub login {
   $form->{stylesheet} = "sql-ledger.css";
   $form->{favicon} = "sql-ledger.ico";
-  
+
   $form->error($locale->text('You did not enter a name!')) unless ($form->{login});
 
   if (! $form->{beenthere}) {
@@ -249,18 +249,18 @@ sub login {
 	    $_ = shift @members;
 	  } until /^\s+$/;
 	}
-    } 
+    }
 
       if (keys %login > 1) {
         &selectdataset(\%login);
         exit;
       } else {
         if ($form->{login} !~ /\@/) {
-	  $form->{login} .= "\@$dbname";
+          $form->{login} .= "\@$dbname";
          }
       }
-    } # while  
-  } # beenthere 
+    } # while
+  } # beenthere
 
 #$form->info("entered: $form->{login}\n");
 
@@ -297,7 +297,7 @@ sub login {
             $form->error($msg);
           }
         }
-      
+
        } else {
         # upgrade dataset and log in again
         open FH, ">$userspath/$user->{dbname}.LCK" or $form->error($!);
