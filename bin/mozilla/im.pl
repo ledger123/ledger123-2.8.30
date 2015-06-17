@@ -3784,6 +3784,13 @@ sub export_datev {
 
     $form->{title} = $locale->text('DATEV Export');
 
+    $accounttype_standard = 'checked';
+    $accounttype_gifi = '';
+    if ($form->{accounttype} eq 'gifi'){
+        $accounttype_gifi = 'checked';
+        $accounttype_standard = '';
+    }
+
     $form->header;
     print qq|
 <body>
@@ -3809,6 +3816,13 @@ sub export_datev {
     <th align="right">|.$locale->text('To').qq|</th>
     <td><input name=todate type=text size=12 class=date value='$form->{todate}' title='$myconfig{dateformat}'></td>
 </tr>
+<tr>
+  <th align=right>| . $locale->text('Accounts') . qq|</th>
+  <td>
+      <input name=accounttype class=radio type=radio value=standard $accounttype_standard> | . $locale->text('Standard') . qq|
+      <input name=accounttype class=radio type=radio value=gifi $accounttype_gifi> | . $locale->text('GIFI') . qq|
+  </td>
+</tr>
 </table>
 <hr/>
 <input type=hidden name=runit value=1>
@@ -3824,6 +3838,7 @@ sub export_datev {
 
     my @bind = ();
 
+    my $query;
     if ($form->{reference}){
         my $reference = $form->like(lc $form->{reference});
         $where .= qq| AND LOWER(reference) LIKE ?|;
@@ -3839,7 +3854,8 @@ sub export_datev {
     }
 
     if ($form->{runit}){
-        $table1 = $form->{dbs}->query(qq|
+        if ($form->{accounttype} eq 'standard'){
+           $query = qq|
             SELECT reference, description, transdate, debit_accno, credit_accno, amount,
                 CASE
                     WHEN debit_accno = credit_accno THEN
@@ -3849,8 +3865,25 @@ sub export_datev {
                 END error
             FROM debitscredits 
             WHERE $where
-            ORDER BY reference, amount DESC|, 
-            @bind
+            ORDER BY reference, amount DESC
+            |;
+        } else {
+            $query = qq|
+            SELECT dc.reference, dc.description, dc.transdate, debit.gifi_accno debit_accno, credit.gifi_accno credit_accno, dc.amount,
+                CASE
+                    WHEN dc.debit_accno = dc.credit_accno THEN
+                    'ERROR'
+                    ELSE
+                    ''
+                END error
+            FROM debitscredits dc
+            JOIN chart debit ON (debit.accno = dc.debit_accno)
+            JOIN chart credit ON (credit.accno = dc.credit_accno)
+            WHERE $where
+            ORDER BY reference, amount DESC
+            |;
+        }
+        $table1 = $form->{dbs}->query($query, @bind
         )->xto(
                     tr => { class => [ 'listrow0', 'listrow1' ] },
                     th => { class => ['listheading'] },
