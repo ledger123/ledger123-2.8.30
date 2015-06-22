@@ -3653,6 +3653,31 @@ sub import_gl {
 
 
 sub prepare_datev {
+
+    if (!$form->{ok}){
+        $form->{title} = $locale->text('Prepare DATEV export');
+        $form->header;
+        print qq|
+<body>
+<table width="100%">
+<tr>
+    <th class="listtop">$form->{title}</th>
+</tr>
+</table>
+<h2>|.$locale->text('This process can take a while depending upon volumn of your data ...').qq|
+<form action="$form->{script}" method="post">
+<hr/>
+<input type=hidden name=ok value=1>
+<input type=hidden name=nextsub value=prepare_datev>
+<input type=hidden name=path value='$form->{path}'>
+<input type=hidden name=login value='$form->{login}'>
+<input type=submit name=action class=submit value='Continue'>
+</form>
+|;
+        exit;
+    }
+
+
     $form->info("Started ...\n");
 
     $form->{dbs}->query('delete from debitscredits');
