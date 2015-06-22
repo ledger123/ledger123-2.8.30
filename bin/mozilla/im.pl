@@ -16,6 +16,7 @@ use SL::CP;
 use SL::JS;
 
 require "$form->{path}/sr.pl";
+require "$form->{path}/mylib.pl";
 
 1;
 
@@ -3816,8 +3817,9 @@ sub export_datev {
         $accounttype_standard = '';
     }
 
-    $form->header;
-    print qq|
+    if (!$form->{l_csv}){
+        $form->header;
+        print qq|
 <body>
 <table width="100%">
 <tr>
@@ -3826,7 +3828,7 @@ sub export_datev {
 </table>
 |;
 
-    print qq|
+        print qq|
 <form action="$form->{script}" method="post">
 <table>
 <tr>
@@ -3848,15 +3850,21 @@ sub export_datev {
       <input name=accounttype class=radio type=radio value=gifi $accounttype_gifi> | . $locale->text('GIFI') . qq|
   </td>
 </tr>
+<tr>
+      <th align="right">|.$locale->text('Options').qq|</th>
+      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
+</tr>
 </table>
 <hr/>
 <input type=hidden name=runit value=1>
 <input type=hidden name=nextsub value=export_datev>
 <input type=hidden name=path value='$form->{path}'>
 <input type=hidden name=login value='$form->{login}'>
-<input type=submit name=action class=action value='Continue'>
+<input type=submit name=action class=submit value='Continue'>
 </form>
 |;
+    }
+
 
     my $where = ' 1 = 1 ';
     $where = ' 1 = 2 ' if !$form->{runit};    # Display data only when Update button is pressed.
@@ -3908,6 +3916,13 @@ sub export_datev {
             ORDER BY reference, amount DESC
             |;
         }
+
+        if ($form->{l_csv} eq 'Y'){
+           my $dbh = $form->dbconnect(\%myconfig);
+           &export_to_csv($dbh, $query, 'datev');
+           exit;
+        }
+
         $table1 = $form->{dbs}->query($query, @bind
         )->xto(
                     tr => { class => [ 'listrow0', 'listrow1' ] },
