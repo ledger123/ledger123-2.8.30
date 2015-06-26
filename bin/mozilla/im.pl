@@ -3874,16 +3874,13 @@ sub export_datev {
     my $query;
     if ($form->{reference}){
         my $reference = $form->like(lc $form->{reference});
-        $where .= qq| AND LOWER(reference) LIKE ?|;
-        push @bind, $reference;
+        $where .= qq| AND LOWER(reference) LIKE '$reference'|;
     }
     if ( $form->{fromdate} ) {
-        $where .= qq| AND transdate >= ?|;
-        push @bind, $form->{fromdate};
+        $where .= qq| AND transdate >= '$form->{fromdate}'|;
     }
     if ( $form->{todate} ) {
-        $where .= qq| AND transdate <= ?|;
-        push @bind, $form->{todate};
+        $where .= qq| AND transdate <= '$form->{todate}'|;
     }
 
     if ($form->{runit}){
@@ -3923,7 +3920,7 @@ sub export_datev {
            exit;
         }
 
-        $table1 = $form->{dbs}->query($query, @bind
+        $table1 = $form->{dbs}->query($query
         )->xto(
                     tr => { class => [ 'listrow0', 'listrow1' ] },
                     th => { class => ['listheading'] },
