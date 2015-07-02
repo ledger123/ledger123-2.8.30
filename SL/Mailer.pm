@@ -16,7 +16,7 @@ package Mailer;
 $userspath = "users";
 # to enable debugging rename file carp_debug.inc.bak to carp_debug.inc and enable the following line
 if (-f "$userspath/carp_debug.inc") {
-  eval { require "$userspath/carp_debug.inc"; };
+#  eval { require "$userspath/carp_debug.inc"; };
 }
 
 sub new {
@@ -29,7 +29,6 @@ sub new {
 
 sub send {
   my ($self, $out) = @_;
-carp("send \n");
   my $boundary = time;
   $boundary = "SL-$self->{version}-$boundary";
   my $domain = $self->{from};
@@ -57,8 +56,6 @@ carp("send \n");
     $self->{$_} =~ s/(\/|\\|\$)//g;
     $h{$_} = $self->{$_};
   }
-
-carp("from: $h{from} - to: $h{to} - cc: $h{cc} - bcc: $h{bcc} email: $self->{email} - emply. $self->{employee} \n");
 
   $h{cc} = "Cc: $h{cc}\n" if $self->{cc};
   $h{bcc} = "Bcc: $h{bcc}\n" if $self->{bcc};
