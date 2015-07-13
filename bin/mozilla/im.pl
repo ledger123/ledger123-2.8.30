@@ -14,6 +14,7 @@
 use SL::IM;
 use SL::CP;
 use SL::JS;
+use SL::GL;
 
 require "$form->{path}/sr.pl";
 
