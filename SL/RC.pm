@@ -75,6 +75,7 @@ sub payment_transactions {
 	      JOIN chart ch ON (ch.id = ac.chart_id)
 	      WHERE ch.accno = '$form->{accno}'
 	      AND ac.approved = '1'
+          AND ac.fx_transaction <> '1'
 	      $transdate
 	      $cleared
 	      |;
@@ -92,7 +93,6 @@ sub payment_transactions {
 	      |;
   ($form->{fx_balance}) = $dbh->selectrow_array($query) if $form->{fromdate};
   
-
   $transdate = "";
   $cleared = "";
   if ($form->{todate}) {
