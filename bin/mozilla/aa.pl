@@ -120,6 +120,8 @@ sub edit {
   $arap = lc $form->{ARAP};
   
   $form->helpref("${arap}_$form->{type}", $myconfig{countrycode});
+
+  for $i (1 .. $form->{rowcount}) { $form->{"amount_$i"} = $form->format_amount(\%myconfig, $form->{"amount_$i"}, $form->{precision}) }
  
   &update;
 
