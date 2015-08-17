@@ -319,6 +319,7 @@ WHERE trans_id NOT IN
   $sth->execute;
   print qq|<table>|;
   print qq|<tr class=listheading>|;
+  print qq|<th class=listheading>|.$locale->text('ID').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Invoice Number').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
@@ -326,6 +327,7 @@ WHERE trans_id NOT IN
   $i = 0;
   while ($ref = $sth->fetchrow_hashref(NAME_lc)){
      print qq|<tr class=listrow$i>|;
+     print qq|<td>$ref->{id}</td>|;
      print qq|<td>$ref->{invnumber}</td>|;
      print qq|<td>$ref->{transdate}</td>|;
      print qq|<td align=right>$ref->{amount}</td>|;
