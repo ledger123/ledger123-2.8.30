@@ -295,8 +295,47 @@ WHERE trans_id NOT IN
   }
   print qq|
 </table>
-</body>
-</html>|;
+|;
+
+
+  #-----------------------------
+  # 6a. Invoices with Deleted Parts
+  #-----------------------------
+  print qq|<h3>Invoices with missing customer.</h3>|;
+  $query = qq|
+		SELECT 'AR', id, invnumber, transdate, amount 
+		FROM ar
+		WHERE customer_id NOT IN (SELECT id FROM customer)
+
+        UNION ALL
+
+		SELECT 'AP', id, invnumber, transdate, amount 
+		FROM ap
+		WHERE vendor_id NOT IN (SELECT id FROM vendor)
+
+        ORDER BY 1, 3
+  |;
+  $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute;
+  print qq|<table>|;
+  print qq|<tr class=listheading>|;
+  print qq|<th class=listheading>|.$locale->text('Invoice Number').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
+  print qq|</tr>|;
+  $i = 0;
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     print qq|<tr class=listrow$i>|;
+     print qq|<td>$ref->{invnumber}</td>|;
+     print qq|<td>$ref->{transdate}</td>|;
+     print qq|<td align=right>$ref->{amount}</td>|;
+     print qq|</tr>|;
+  }
+  print qq|
+</table>
+|;
+
+
 
   #-----------------------------
   # 7. invoice table with blank dates
