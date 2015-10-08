@@ -709,9 +709,12 @@ sub format_amount {
 sub parse_amount {
   my ($self, $myconfig, $amount) = @_;
 
-  if (($myconfig->{numberformat} eq '1.000,00') ||
-      ($myconfig->{numberformat} eq '1000,00')) {
+  if ($myconfig->{numberformat} eq '1.000,00') {
     $amount =~ s/\.//g;
+    $amount =~ s/,/\./;
+  }
+
+  if ($myconfig->{numberformat} eq '1000,00') {
     $amount =~ s/,/\./;
   }
 
