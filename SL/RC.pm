@@ -74,7 +74,6 @@ sub payment_transactions {
 	      FROM acc_trans ac
 	      JOIN chart ch ON (ch.id = ac.chart_id)
 	      WHERE ch.accno = '$form->{accno}'
-	      AND ac.approved = '1'
 	      $transdate
 	      $cleared
 	      |;
