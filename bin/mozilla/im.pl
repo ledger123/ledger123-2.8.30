@@ -3734,9 +3734,27 @@ sub prepare_datev {
     }
     $form->{rowcount} = $i;
     &prepare_datev2; # Process last transaction
+
+    # Now process any error rows
+    @errorrows = $form->{dbs}->query('SELECT * FROM debitscredits WHERE debit_accno = credit_accno')->hashes;
+    for (@errorrows){
+	$similarrow = $form->{dbs}->query('
+		SELECT *
+		FROM debitscredits
+		WHERE reference = ? 
+		AND transdate = ?
+		AND amount = ?
+		LIMIT 1
+	', $_->{reference}, $_->{transdate}, $_->{amount})->hash;
+	if ($similarrow){
+	    $form->{dbs}->query('UPDATE debitscredits SET credit_accno = ? WHERE id =?', $_->{credit_accno}, $similarrow->{id});
+	    $form->{dbs}->query('UPDATE debitscredits SET credit_accno = ? WHERE id =?', $similarrow->{credit_accno}, $_->{id});
+	}
+    }
+    $form->{dbs}->commit;
+
     $form->info("Completed ...");
 }
-
 
 sub prepare_datev2 {
 
