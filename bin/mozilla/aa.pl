@@ -118,13 +118,11 @@ sub edit {
   }
 
   $arap = lc $form->{ARAP};
-
+  
   $form->helpref("${arap}_$form->{type}", $myconfig{countrycode});
-
-  for $i (1 .. $form->{rowcount}) { $form->{"amount_$i"} = $form->format_amount(\%myconfig, $form->{"amount_$i"}, $form->{precision}) }
-  for $i (1 .. $form->{paidaccounts}) { $form->{"paid_$i"} = $form->format_amount(\%myconfig, $form->{"paid_$i"}, $form->{precision}) }
  
-  $form->{firsttime} = 1; # do not use parse_amount if is first time and amounts are not formatted.
+for $i (1 .. $form->{rowcount}) { $form->{"amount_$i"} = $form->format_amount(\%myconfig, $form->{"amount_$i"}, $form->{precision}) }
+
   &update;
 
 }
@@ -1165,7 +1163,7 @@ sub update {
 
     $form->{invtotal} = 0;
     
-    $form->{exchangerate} = $form->parse_amount(\%myconfig, $form->{exchangerate}) if !$form->{firsttime};
+    $form->{exchangerate} = $form->parse_amount(\%myconfig, $form->{exchangerate});
     
     @flds = (qw(referencedescription referenceid));
     $count = 0;
@@ -1187,7 +1185,7 @@ sub update {
     $count = 0;
     @f = ();
     for $i (1 .. $form->{rowcount}) {
-      $form->{"amount_$i"} = $form->parse_amount(\%myconfig, $form->{"amount_$i"}) if !$form->{firsttime};
+      $form->{"amount_$i"} = $form->parse_amount(\%myconfig, $form->{"amount_$i"});
       if ($form->{"amount_$i"}) {
 	push @f, {};
 	$j = $#f;
@@ -1208,8 +1206,8 @@ sub update {
       $form->{exchangerate} = $form->check_exchangerate(\%myconfig, $form->{currency}, $form->{transdate});
     }
 
-    $form->{cashdiscount} = $form->parse_amount(\%myconfig, $form->{cashdiscount}) if !$form->{firsttime};
-    $form->{discount_paid} = $form->parse_amount(\%myconfig, $form->{discount_paid}) if !$form->{firsttime};
+    $form->{cashdiscount} = $form->parse_amount(\%myconfig, $form->{cashdiscount});
+    $form->{discount_paid} = $form->parse_amount(\%myconfig, $form->{discount_paid});
     
     if ($newname = &check_name($form->{vc})) {
       &rebuild_vc($form->{vc}, $form->{ARAP}, $form->{transdate});
@@ -1254,7 +1252,7 @@ sub update {
   # recalculate taxes
   @taxaccounts = split / /, $form->{taxaccounts};
   
-  for (@taxaccounts) { $form->{"tax_$_"} = $form->parse_amount(\%myconfig, $form->{"tax_$_"}) if !$form->{firsttime} }
+  for (@taxaccounts) { $form->{"tax_$_"} = $form->parse_amount(\%myconfig, $form->{"tax_$_"}) }
   
   if ($form->{taxincluded}) {
 
@@ -1342,7 +1340,7 @@ sub update {
   for $i (1 .. $form->{paidaccounts}) {
     if ($form->{"paid_$i"}) {
       for (qw(olddatepaid datepaid source memo cleared paymentmethod)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
-      for (qw(paid exchangerate)) { $form->{"${_}_$j"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) if !$form->{firsttime} }
+      for (qw(paid exchangerate)) { $form->{"${_}_$j"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
 
       $totalpaid += $form->{"paid_$j"};
 
