@@ -1157,14 +1157,15 @@ sub display_form {
 
   $form->{dbs}->commit;
 
-  $table1 = $form->{dbs}->query(qq|SELECT * FROM debitscredits ORDER BY reference, amount DESC|)->xto(
+  if ($form->{id}){
+  	$table1 = $form->{dbs}->query(qq|SELECT * FROM debitscredits ORDER BY reference, amount DESC|)->xto(
             tr => { class => [ 'listrow0', 'listrow1' ] },
             th => { class => ['listheading'] },
-  );
-  $table1->modify( td => { align => 'right' }, 'amount' );
-  $table1->calc_totals( 'amount' );
-  print $table1->output;
-
+  	);
+  	$table1->modify( td => { align => 'right' }, 'amount' );
+  	$table1->calc_totals( 'amount' );
+  	print $table1->output;
+  }
 }
 
 
