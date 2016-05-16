@@ -1,0 +1,11 @@
+$self{texts} = {
+};
+
+$self{subs} = {
+  'continue'                    => 'continue',
+  'list'                        => 'list',
+  'print_table'                 => 'print_table',
+};
+
+1;
+

@@ -1,0 +1,13 @@
+$self{texts} = {
+};
+
+$self{subs} = {
+  'continue'                    => 'continue',
+  'process_datev'               => 'process_datev',
+  'process_domus'               => 'process_domus',
+  'search_datev'                => 'search_datev',
+  'search_domus'                => 'search_domus',
+};
+
+1;
+

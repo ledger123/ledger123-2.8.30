@@ -1,0 +1,16 @@
+$self{texts} = {
+};
+
+$self{subs} = {
+  'acc_menu'                    => 'acc_menu',
+  'display'                     => 'display',
+  'display_frame'               => 'display_frame',
+  'jsmenu'                      => 'jsmenu',
+  'jsmenu_frame'                => 'jsmenu_frame',
+  'menubar'                     => 'menubar',
+  'mlmenu'                      => 'mlmenu',
+  'section_menu'                => 'section_menu',
+};
+
+1;
+
