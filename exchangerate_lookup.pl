@@ -7,7 +7,12 @@
 #
 #======================================================================
 #use strict;
+#use warnings;
 use Finance::Quote;
+BEGIN {
+ require XSLoader;
+ XSLoader::load(__PACKAGE__, $VERSION);
+}
 
 1;
 

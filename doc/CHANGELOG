@@ -1,3 +1,8 @@
+bp 2017/08/01
+  bug: bep_201708-1
+  Following the upgrade to Debian 9 (stretch) the invoices of certain customers could not be displayed
+  any more. Error message: can't locate object method "tid" via package "threads" at /usr/share/perl/5.24/XSLoader.pm line 114
+  Problem was solved by adding "require XSLader; XSLoader::load(__PACKAGE__,VERSION);" to the exchangerate_lookup.pl program.
 
 bp 2015/06/13
   bug: bep_201506-2
