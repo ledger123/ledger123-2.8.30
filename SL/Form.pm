@@ -474,6 +474,10 @@ sub header {
   $favicon
   $stylesheet
   $charset
+
+  <script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
+  <script src="js/rma.js" type="text/javascript"></script>
 </head>
 
 $self->{pre}
